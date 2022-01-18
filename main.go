@@ -37,8 +37,9 @@ func Bencher(count int, f func(int), concurrently bool) {
 }
 
 func main() {
-	Bencher(10, func(index int) {
+	Bencher(1, func(index int) {
 		channelfoo.GoRoutineExitThenCloseChannel()
 		// channelfoo.ListenerBlockedChannel()
-	}, true)
+		// channelfoo.GoRoutineExitThenCloseChannel_SimpleCase()
+	}, false)
 }

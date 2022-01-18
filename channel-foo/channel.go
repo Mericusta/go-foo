@@ -11,11 +11,14 @@ import (
 // - 通过 receiverGoroutineExitChan 通知接收协程退出
 // - 随机时间点发送退出通知并结束协程
 // 接收协程
+// - 监听 receiverGoroutineOpenChan
 // - 监听 receiverGoroutineNoticeChan
 // - 监听 receiverGoroutineExitChan
 // - 通过 mainGoroutineExitChan 通知主协程退出
 // - 退出时通知主协程退出并结束协程
 // GoRoutineExitThenCloseChannel 接收协程监听已关闭 channel 的表现
+// 从一个 nil channel 中接收数据会一直被 block
+// 从一个被 close 的 channel 中接收数据不会被阻塞，而是立即返回，接收完已发送的数据后会返回元素类型的零值(zero value)
 func GoRoutineExitThenCloseChannel() {
 	receiverGoroutineExitChan := make(chan struct{})
 	receiverGoroutineNoticeChan := make(chan int)
@@ -34,6 +37,7 @@ func GoRoutineExitThenCloseChannel() {
 			case _, ok := <-receiverGoroutineOpenChan:
 				if waitingExit {
 					loopCounter++
+					fmt.Println("receiver go routine continue at case <-receiverGoroutineOpenChan")
 					continue
 				}
 				if !ok {
@@ -42,6 +46,7 @@ func GoRoutineExitThenCloseChannel() {
 			case v, ok := <-receiverGoroutineNoticeChan:
 				if waitingExit {
 					loopCounter++
+					fmt.Println("receiver go routine continue at case <-receiverGoroutineNoticeChan")
 					continue
 				}
 				if !ok {
@@ -68,9 +73,11 @@ func GoRoutineExitThenCloseChannel() {
 				break
 			}
 		}
-		receiverGoroutineExitChan <- struct{}{}
+		// receiverGoroutineExitChan <- struct{}{} // 在这发送退出信号不会导致接收协程空转
 		close(receiverGoroutineNoticeChan)
-		time.Sleep(time.Second) // 模拟业务等待时间
+		receiverGoroutineNoticeChan = nil       // 如果无法在 close(receiverGoroutineNoticeChan) 前发送退出信号，则需要通过“置空”来禁用监听该 channel 的 select case
+		time.Sleep(time.Millisecond)            // 模拟业务等待时间
+		receiverGoroutineExitChan <- struct{}{} // 在这发送退出信号会导致接收协程空转
 		close(receiverGoroutineExitChan)
 	}()
 
@@ -127,4 +134,24 @@ func ListenerBlockedChannel() {
 	<-mainGoroutineExitChan
 	time.Sleep(time.Second * time.Duration(3))
 	close(mainGoroutineExitChan)
+}
+
+func GoRoutineExitThenCloseChannel_SimpleCase() {
+	c := make(chan int)
+	close(c)
+
+	loopCounter := 0
+	for {
+		loopCounter++
+		if loopCounter > 100 {
+			fmt.Println("return at loop counter greater than 100")
+			return
+		}
+		select {
+		case _, ok := <-c:
+			if !ok {
+				continue
+			}
+		}
+	}
 }
