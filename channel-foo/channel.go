@@ -15,7 +15,7 @@ import (
 // - 监听 receiverGoroutineExitChan
 // - 通过 mainGoroutineExitChan 通知主协程退出
 // - 退出时通知主协程退出并结束协程
-// GoRoutineExitThenCloseChannel 发送协程退出并关闭 channel 时接收协程的表现
+// GoRoutineExitThenCloseChannel 接收协程监听已关闭 channel 的表现
 func GoRoutineExitThenCloseChannel() {
 	receiverGoroutineExitChan := make(chan struct{})
 	receiverGoroutineNoticeChan := make(chan int)
@@ -26,18 +26,20 @@ func GoRoutineExitThenCloseChannel() {
 			mainGoroutineExitChan <- struct{}{}
 			close(mainGoroutineExitChan)
 		}()
+		loopCounter := 0
 		for {
 			select {
 			case <-receiverGoroutineExitChan:
-				fmt.Println("receiver go routine receive sender go routine exit")
+				fmt.Println("receiver go routine receive sender go routine exit at loop", loopCounter)
 				return
 			case v, ok := <-receiverGoroutineNoticeChan:
 				if !ok {
 					fmt.Println("receiver go routine receive sender go routine notice chan is closed")
-					return
+					continue
 				}
 				fmt.Println("receiver go routine receive sender go routine notice value", v)
 			}
+			loopCounter++
 		}
 	}()
 

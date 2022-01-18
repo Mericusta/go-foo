@@ -11,6 +11,6 @@ func init() {
 }
 
 func main() {
-	// channelfoo.GoRoutineExitThenCloseChannel()
-	channelfoo.ListenerBlockedChannel()
+	channelfoo.GoRoutineExitThenCloseChannel()
+	// channelfoo.ListenerBlockedChannel()
 }
