@@ -19,6 +19,7 @@ import (
 func GoRoutineExitThenCloseChannel() {
 	receiverGoroutineExitChan := make(chan struct{})
 	receiverGoroutineNoticeChan := make(chan int)
+	receiverGoroutineOpenChan := make(chan int)
 	mainGoroutineExitChan := make(chan struct{})
 
 	go func() {
@@ -27,25 +28,38 @@ func GoRoutineExitThenCloseChannel() {
 			close(mainGoroutineExitChan)
 		}()
 		loopCounter := 0
+		waitingExit := false
 		for {
 			select {
-			case <-receiverGoroutineExitChan:
-				fmt.Println("receiver go routine receive sender go routine exit at loop", loopCounter)
-				return
+			case _, ok := <-receiverGoroutineOpenChan:
+				if waitingExit {
+					loopCounter++
+					continue
+				}
+				if !ok {
+					waitingExit = true
+				}
 			case v, ok := <-receiverGoroutineNoticeChan:
+				if waitingExit {
+					loopCounter++
+					continue
+				}
 				if !ok {
 					fmt.Println("receiver go routine receive sender go routine notice chan is closed")
+					waitingExit = true
 					continue
 				}
 				fmt.Println("receiver go routine receive sender go routine notice value", v)
+			case <-receiverGoroutineExitChan:
+				fmt.Println("receiver go routine receive sender go routine exit at loop", loopCounter)
+				return
 			}
-			loopCounter++
 		}
 	}()
 
 	go func() {
 		totalIndex := 100
-		exitIndex := rand.Intn(totalIndex)
+		exitIndex := rand.Intn(totalIndex / 10)
 		fmt.Println("sender go routine rand exit index", exitIndex)
 		for index := 0; index != totalIndex; index++ {
 			receiverGoroutineNoticeChan <- index
@@ -56,10 +70,12 @@ func GoRoutineExitThenCloseChannel() {
 		}
 		receiverGoroutineExitChan <- struct{}{}
 		close(receiverGoroutineNoticeChan)
+		time.Sleep(time.Second) // 模拟业务等待时间
 		close(receiverGoroutineExitChan)
 	}()
 
 	<-mainGoroutineExitChan
+	close(receiverGoroutineOpenChan)
 }
 
 // 发送协程
