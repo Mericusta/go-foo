@@ -16,10 +16,10 @@ import (
 // - 监听 receiverGoroutineExitChan
 // - 通过 mainGoroutineExitChan 通知主协程退出
 // - 退出时通知主协程退出并结束协程
-// GoRoutineExitThenCloseChannel 接收协程监听已关闭 channel 的表现
+// GoroutineExitThenCloseChannel 接收协程监听已关闭 channel 的表现
 // 从一个 nil channel 中接收数据会一直被 block
 // 从一个被 close 的 channel 中接收数据不会被阻塞，而是立即返回，接收完已发送的数据后会返回元素类型的零值(zero value)
-func GoRoutineExitThenCloseChannel() {
+func GoroutineExitThenCloseChannel() {
 	receiverGoroutineExitChan := make(chan struct{})
 	receiverGoroutineNoticeChan := make(chan int)
 	receiverGoroutineOpenChan := make(chan int)
@@ -136,7 +136,7 @@ func ListenerBlockedChannel() {
 	close(mainGoroutineExitChan)
 }
 
-func GoRoutineExitThenCloseChannel_SimpleCase() {
+func GoroutineExitThenCloseChannel_SimpleCase() {
 	c := make(chan int)
 	close(c)
 
@@ -154,4 +154,20 @@ func GoRoutineExitThenCloseChannel_SimpleCase() {
 			}
 		}
 	}
+}
+
+func GoroutineOutputOrder() (int, int) {
+	s := []int{1, 2, 3, -1, -2, -3}
+	c := make(chan int)
+	sumFunc := func(s []int, sc chan int) {
+		sum := 0
+		for _, v := range s {
+			sum += v
+		}
+		sc <- sum
+	}
+	go sumFunc(s[:len(s)/2], c)
+	go sumFunc(s[len(s)/2:], c)
+	x, y := <-c, <-c
+	return x, y
 }

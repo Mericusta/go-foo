@@ -37,9 +37,15 @@ func Bencher(count int, f func(int), concurrently bool) {
 }
 
 func main() {
-	Bencher(1, func(index int) {
-		channelfoo.GoRoutineExitThenCloseChannel()
-		// channelfoo.ListenerBlockedChannel()
-		// channelfoo.GoRoutineExitThenCloseChannel_SimpleCase()
+	counterMapLocker := &sync.Mutex{}
+	xCounterMap, yCounterMap := make(map[int]int), make(map[int]int)
+	Bencher(100, func(index int) {
+		x, y := channelfoo.GoroutineOutputOrder()
+		counterMapLocker.Lock()
+		xCounterMap[x]++
+		yCounterMap[y]++
+		counterMapLocker.Unlock()
 	}, false)
+	fmt.Printf("x counter map = %v\n", xCounterMap)
+	fmt.Printf("y counter map = %v\n", yCounterMap)
 }
