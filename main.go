@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	channelfoo "go-foo/channel-foo"
+	structfoo "go-foo/struct-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -37,15 +37,7 @@ func Bencher(count int, f func(int), concurrently bool) {
 }
 
 func main() {
-	counterMapLocker := &sync.Mutex{}
-	xCounterMap, yCounterMap := make(map[int]int), make(map[int]int)
-	Bencher(100, func(index int) {
-		x, y := channelfoo.GoroutineOutputOrder()
-		counterMapLocker.Lock()
-		xCounterMap[x]++
-		yCounterMap[y]++
-		counterMapLocker.Unlock()
+	Bencher(1, func(index int) {
+		structfoo.SwapStructValueOneLine()
 	}, false)
-	fmt.Printf("x counter map = %v\n", xCounterMap)
-	fmt.Printf("y counter map = %v\n", yCounterMap)
 }
