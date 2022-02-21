@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	structfoo "go-foo/struct-foo"
+	regexpfoo "go-foo/regexp-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -38,6 +38,13 @@ func Bencher(count int, f func(int), concurrently bool) {
 
 func main() {
 	Bencher(1, func(index int) {
-		structfoo.SwapStructValueOneLine()
+		regexpfoo.RegexpTest(-1,
+			regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_CONTENT,
+			regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_EXPRESSION,
+			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_NAME,
+			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE,
+			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_FROM,
+			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_META,
+		)
 	}, false)
 }
