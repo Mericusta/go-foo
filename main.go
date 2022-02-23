@@ -38,13 +38,31 @@ func Bencher(count int, f func(int), concurrently bool) {
 
 func main() {
 	Bencher(1, func(index int) {
+		// regexpfoo.RegexpTest(-1,
+		// 	regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_CONTENT,
+		// 	regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_EXPRESSION,
+		// 	regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_NAME,
+		// 	regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE,
+		// 	regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_FROM,
+		// 	regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_META,
+		// )
+
+		// regexpfoo.RegexpTest(-1,
+		// 	regexpfoo.GO_IMPORT_SCOPE_CONTENT,
+		// 	regexpfoo.GO_IMPORT_SCOPE_EXPRESSION,
+		// )
+
+		// regexpfoo.RegexpTest(-1,
+		// 	regexpfoo.GO_EACH_IMPORT_CONTENT,
+		// 	regexpfoo.GO_EACH_IMPORT_EXPRESSION,
+		// 	regexpfoo.GO_EACH_IMPORT_SUBMATCH_ALIAS,
+		// 	regexpfoo.GO_EACH_IMPORT_SUBMATCH_PATH,
+		// )
+
 		regexpfoo.RegexpTest(-1,
-			regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_CONTENT,
-			regexpfoo.GO_STRUCT_MEMBER_IDENTIFIER_EXPRESSION,
-			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_NAME,
-			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE,
-			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_FROM,
-			regexpfoo.GO_STRUCT_MEMBER_SUBMATCH_TYPE_META,
+			regexpfoo.GO_PACKAGE_SCOPE_CONTENT,
+			regexpfoo.GO_PACKAGE_SCOPE_EXPRESSION,
+			regexpfoo.GO_PACKAGE_SCOPE_SUBMATCH_NAME,
 		)
 	}, false)
 }
