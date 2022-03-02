@@ -70,11 +70,13 @@ func main() {
 		// 	regexpfoo.GO_VARIABLE_TYPE_MAP_DECLARATION_EXPRESSION_SUBMATCH_VALUE,
 		// )
 
-		regexpfoo.RegexpTest(-1,
-			regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_CONTENT,
-			regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION,
-			regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION_SUBMATCH_VALUE,
-		)
+		// regexpfoo.RegexpTest(-1,
+		// 	regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_CONTENT,
+		// 	regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION,
+		// 	regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION_SUBMATCH_ELEMENT,
+		// )
+
+		regexpfoo.TraitGoVariableTypeDeclaration(regexpfoo.GO_VARIABLE_TYPE_SLICE_DECLARATION_CONTENT)
 
 		// regexpfoo.RegexpTest(-1,
 		// 	regexpfoo.GO_VARIABLE_SHORT_IDENTIFIER_CONTENT,
@@ -103,5 +105,11 @@ func main() {
 		// 	regexpfoo.GO_VARIABLE_TYPE_SLICE_IDENTIFIER_EXPRESSION,
 		// 	regexpfoo.GO_VARIABLE_TYPE_SLICE_IDENTIFIER_EXPRESSION_SUBMATCH_VALUE,
 		// )
+
+		// structfoo.StructThisMemberDiff()
+		// structfoo.DerivativeWithPointerBase()
+		// structfoo.BaseStructTrace()
+		// structfoo.SubStructAssign()
+		// structfoo.SubStructDerivative()
 	}, false)
 }
