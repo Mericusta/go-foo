@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	extractorfoo "go-foo/extractor-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -44,9 +43,11 @@ func main() {
 		// structfoo.SubStructAssign()
 		// structfoo.SubStructDerivative()
 
-		typeDeclarationContent := "[][]map[Float]map[A.Int][]*B.Int"
-		d := extractorfoo.ExtractGoVariableTypeDeclaration(typeDeclarationContent)
-		d.Traversal(0)
+		// typeDeclarationContent := "[][]map[Float]map[A.Int][]*B.Int"
+		// d := extractorfoo.ExtractGoVariableTypeDeclaration(typeDeclarationContent)
+		// d.Traversal(0)
+
+		// algorithmfoo.ConvertCamelCase2SnakeCaseWithPhrase
 
 		// httpfoo.RequestExample(index)
 	}, false)

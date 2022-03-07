@@ -47,6 +47,20 @@ func (d *GoTypeDeclaration) Traversal(deep int) {
 	fmt.Printf("%v- MakeUp: %v\n", strings.Repeat("\t", deep), d.MakeUp())
 }
 
+func (d *GoTypeDeclaration) TraversalFunc(f func(v *GoTypeDeclaration) bool) {
+	if !f(d) {
+		return
+	}
+	if d.KeyType != nil {
+		f(d.KeyType)
+		d.KeyType.TraversalFunc(f)
+	}
+	if d.ElementType != nil {
+		f(d.ElementType)
+		d.ElementType.TraversalFunc(f)
+	}
+}
+
 func (d *GoTypeDeclaration) MakeUp() string {
 	switch d.MetaType {
 	case GO_META_TYPE_POINTER:
