@@ -3,6 +3,7 @@ package channelfoo
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -170,4 +171,68 @@ func GoroutineOutputOrder() (int, int) {
 	go sumFunc(s[len(s)/2:], c)
 	x, y := <-c, <-c
 	return x, y
+}
+
+// 两个协程交叉按顺序打印 1~10
+func GoroutineOutputOrder2() {
+	// s := strings.Builder{}
+
+	// c1 := make(chan int)
+	// wg := sync.WaitGroup{}
+	// wg.Add(2)
+	// go func() {
+	// 	time.Sleep(10 * time.Second)
+	// 	for i := 0; i < 10; i += 2 {
+	// 		fmt.Printf("g1 c1 <- 1 start\n")
+	// 		c1 <- 1
+	// 		fmt.Printf("g1 c1 <- 1 done\n")
+	// 		fmt.Printf("g1 output %v\n", i)
+	// 	}
+	// 	wg.Done()
+	// }()
+	// go func() {
+	// 	for i := 1; i < 10; i += 2 {
+	// 		fmt.Printf("g2 <-c1 start\n")
+	// 		<-c1
+	// 		fmt.Printf("g2 <-c1 done\n")
+	// 		fmt.Printf("g2 output %v\n", i)
+	// 	}
+	// 	wg.Done()
+	// }()
+	// wg.Wait()
+
+	s := make([]int, 0, 10)
+
+	c1 := make(chan int)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		for i := 0; i < 10; i += 2 {
+			c1 <- 1
+			// fmt.Printf("g1 %v\n", i)
+			if i%2 == 0 {
+				fmt.Printf("g1 even %v\n", i)
+				s = append(s, i)
+			} else {
+				fmt.Printf("g1 odd %v\n", i)
+			}
+		}
+		wg.Done()
+	}()
+	go func() {
+		for i := 1; i < 10; i += 2 {
+			<-c1
+			// fmt.Printf("g2 %v\n", i)
+			if i%2 == 1 {
+				fmt.Printf("g2 odd %v\n", i)
+				s = append(s, i)
+			} else {
+				fmt.Printf("g2 even %v\n", i)
+			}
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	fmt.Println()
+	fmt.Printf("%v\n", s)
 }
