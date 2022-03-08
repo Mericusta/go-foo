@@ -1,6 +1,89 @@
 package extractorfoo
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+const (
+	GO_META_TYPE_POINTER = iota + 1
+	GO_META_TYPE_INTEGER
+	GO_META_TYPE_FLOATING
+	GO_META_TYPE_COMPLEX
+	GO_META_TYPE_SPEC
+	GO_META_TYPE_STRUCT
+	GO_META_TYPE_SLICE
+	GO_META_TYPE_MAP
+)
+
+// package ex
+// [][]map[Float]map[A.Int][]*B.Int
+// [] + []map[Float]map[A.Int][]*B.Int
+// [] + [] + map[Float]map[A.Int][]*B.Int
+// [] + [] + map + ex.Float + map[A.Int][]*B.Int
+// [] + [] + map + ex.Float + map + A.Int + []*B.Int
+// [] + [] + map + ex.Float + map + A.Int + [] + * + B.Int
+
+type GoTypeDeclaration struct {
+	Content      string
+	MetaType     int
+	FromPkgAlias string
+	FromPkgPath  string
+	KeyType      *GoTypeDeclaration
+	ElementType  *GoTypeDeclaration
+}
+
+func (d *GoTypeDeclaration) Traversal(deep int) {
+	fmt.Printf("%v- Content: %v\n", strings.Repeat("\t", deep), d.Content)
+	fmt.Printf("%v- MetaType: %v\n", strings.Repeat("\t", deep), d.MetaType)
+	fmt.Printf("%v- FromPkgAlias: %v\n", strings.Repeat("\t", deep), d.FromPkgAlias)
+	fmt.Printf("%v- FromPkgPath: %v\n", strings.Repeat("\t", deep), d.FromPkgPath)
+	if d.KeyType != nil {
+		fmt.Printf("%v- KeyType:\n", strings.Repeat("\t", deep))
+		d.KeyType.Traversal(deep + 1)
+	}
+	if d.ElementType != nil {
+		fmt.Printf("%v- ElementType:\n", strings.Repeat("\t", deep))
+		d.ElementType.Traversal(deep + 1)
+	}
+	fmt.Printf("%v- MakeUp: %v\n", strings.Repeat("\t", deep), d.MakeUp())
+}
+
+func (d *GoTypeDeclaration) TraversalFunc(f func(v *GoTypeDeclaration) bool) {
+	if !f(d) {
+		return
+	}
+	if d.KeyType != nil {
+		f(d.KeyType)
+		d.KeyType.TraversalFunc(f)
+	}
+	if d.ElementType != nil {
+		f(d.ElementType)
+		d.ElementType.TraversalFunc(f)
+	}
+}
+
+func (d *GoTypeDeclaration) MakeUp() string {
+	switch d.MetaType {
+	case GO_META_TYPE_POINTER:
+		return fmt.Sprintf("*%v", d.ElementType.MakeUp())
+	case GO_META_TYPE_INTEGER, GO_META_TYPE_FLOATING, GO_META_TYPE_COMPLEX, GO_META_TYPE_SPEC:
+		return d.Content
+	case GO_META_TYPE_STRUCT:
+		if len(d.FromPkgAlias) == 0 {
+			return d.Content
+		} else {
+			return fmt.Sprintf("%v.%v", d.FromPkgAlias, d.Content)
+		}
+	case GO_META_TYPE_SLICE:
+		return fmt.Sprintf("[]%v", d.ElementType.MakeUp())
+	case GO_META_TYPE_MAP:
+		return fmt.Sprintf("map[%v]%v", d.KeyType.MakeUp(), d.ElementType.MakeUp())
+	default:
+		panic("unknown meta type")
+	}
+}
 
 var (
 	// GO_VARIABLE_DECLARATION in func declaration or struct member declaration
@@ -19,7 +102,7 @@ var (
 	GoVariableTypeFloatingDeclarationRegexp                         = regexp.MustCompile(GO_VARIABLE_TYPE_FLOATING_DECLARATION_EXPRESSION)
 	GO_VARIABLE_TYPE_COMPLEX_DECLARATION_EXPRESSION          string = `^complex(64|128)`
 	GoVariableTypeComplexDeclarationRegexp                          = regexp.MustCompile(GO_VARIABLE_TYPE_COMPLEX_DECLARATION_EXPRESSION)
-	GO_VARIABLE_TYPE_SPEC_DECLARATION_EXPRESSION             string = `^(byte|rune|uintptr)`
+	GO_VARIABLE_TYPE_SPEC_DECLARATION_EXPRESSION             string = `^(string|byte|rune|uintptr|bool)`
 	GoVariableTypeSpecDeclarationRegexp                             = regexp.MustCompile(GO_VARIABLE_TYPE_SPEC_DECLARATION_EXPRESSION)
 	GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION            string = `^\[\](?P<ELEMENT>\S+)`
 	GoVariableTypeSliceDeclarationRegexp                            = regexp.MustCompile(GO_VARIABLE_TYPE_SLICE_DECLARATION_EXPRESSION)
@@ -42,8 +125,6 @@ func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 	d := &GoTypeDeclaration{
 		Content: content,
 	}
-
-	// fmt.Printf("content = |%v|\n", d.Content)
 
 	// 为了避免在 expression 中定义识别关键字，select 必须有先后顺序：先做带有关键字的判断，最后再做非关键字判断
 	switch {
@@ -71,49 +152,40 @@ func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 	case GoVariableTypeStructDeclarationRegexp.MatchString(content):
 		d.MetaType = GO_META_TYPE_STRUCT
 		submatchSlice := GoVariableTypeStructDeclarationRegexp.FindStringSubmatch(content)
-		d.FromPkg = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchFromIndex]
-		// d.ElementType = &GoTypeDeclaration{
-		// 	Content:  submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex],
-		// 	MetaType: GO_META_TYPE_STRUCT,
-		// }
+		d.FromPkgAlias = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchFromIndex]
+		d.Content = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex]
 	}
-
-	// fmt.Printf("meta type = |%v|\n", d.MetaType)
-	// fmt.Printf("is pointer = %v\n", d.IsPointer)
-	// fmt.Printf("from pkg = |%v|\n", d.FromPkg)
-	// fmt.Printf("key type = |%+v|\n", d.KeyType)
-	// fmt.Printf("element type = |%+v|\n", d.ElementType)
 	return d
 }
 
 func ExtractGoTypeDeclarationImportPkg(d *GoTypeDeclaration) map[string]map[string]struct{} {
 	importMap := make(map[string]map[string]struct{})
-	if len(d.FromPkg) != 0 {
-		if _, has := importMap[d.FromPkg]; !has {
-			importMap[d.FromPkg] = make(map[string]struct{})
+	if len(d.FromPkgAlias) != 0 {
+		if _, has := importMap[d.FromPkgAlias]; !has {
+			importMap[d.FromPkgAlias] = make(map[string]struct{})
 		}
-		importMap[d.FromPkg][d.Content] = struct{}{}
+		importMap[d.FromPkgAlias][d.Content] = struct{}{}
 	}
 	if d.KeyType != nil {
 		if keyTypeImportPkgMap := ExtractGoTypeDeclarationImportPkg(d.KeyType); len(keyTypeImportPkgMap) > 0 {
-			for keyTypeImportPkg, keyTypeImportStructMap := range keyTypeImportPkgMap {
-				if _, has := importMap[keyTypeImportPkg]; !has {
-					importMap[keyTypeImportPkg] = make(map[string]struct{})
+			for keyTypeImportPkgAlias, keyTypeImportStructMap := range keyTypeImportPkgMap {
+				if _, has := importMap[keyTypeImportPkgAlias]; !has {
+					importMap[keyTypeImportPkgAlias] = make(map[string]struct{})
 				}
 				for keyTypeImportStruct := range keyTypeImportStructMap {
-					importMap[keyTypeImportPkg][keyTypeImportStruct] = struct{}{}
+					importMap[keyTypeImportPkgAlias][keyTypeImportStruct] = struct{}{}
 				}
 			}
 		}
 	}
 	if d.ElementType != nil {
 		if elementTypeImportPkgMap := ExtractGoTypeDeclarationImportPkg(d.ElementType); len(elementTypeImportPkgMap) > 0 {
-			for elementTypeImportPkg, elementTypeImportStructMap := range elementTypeImportPkgMap {
-				if _, has := importMap[elementTypeImportPkg]; !has {
-					importMap[elementTypeImportPkg] = make(map[string]struct{})
+			for elementTypeImportPkgAlias, elementTypeImportStructMap := range elementTypeImportPkgMap {
+				if _, has := importMap[elementTypeImportPkgAlias]; !has {
+					importMap[elementTypeImportPkgAlias] = make(map[string]struct{})
 				}
 				for elementTypeImportStruct := range elementTypeImportStructMap {
-					importMap[elementTypeImportPkg][elementTypeImportStruct] = struct{}{}
+					importMap[elementTypeImportPkgAlias][elementTypeImportStruct] = struct{}{}
 				}
 			}
 		}
