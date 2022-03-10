@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	workerfoo "go-foo/worker-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -50,5 +51,9 @@ func main() {
 		// algorithmfoo.ConvertCamelCase2SnakeCaseWithPhrase
 
 		// httpfoo.RequestExample(index)
+		// channelfoo.GoroutineOutputOrder2()
+
+		workerfoo.MakeMapTest()
+		workerfoo.MakeSliceTest()
 	}, false)
 }

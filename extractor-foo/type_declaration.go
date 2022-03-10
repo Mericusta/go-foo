@@ -55,11 +55,9 @@ func (d *GoTypeDeclaration) TraversalFunc(f func(v *GoTypeDeclaration) bool) {
 		return
 	}
 	if d.KeyType != nil {
-		f(d.KeyType)
 		d.KeyType.TraversalFunc(f)
 	}
 	if d.ElementType != nil {
-		f(d.ElementType)
 		d.ElementType.TraversalFunc(f)
 	}
 }
