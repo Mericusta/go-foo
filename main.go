@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	workerfoo "go-foo/worker-foo"
+	extractorfoo "go-foo/extractor-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -38,22 +38,8 @@ func Bencher(count int, f func(int), concurrently bool) {
 
 func main() {
 	Bencher(1, func(index int) {
-		// structfoo.StructThisMemberDiff()
-		// structfoo.DerivativeWithPointerBase()
-		// structfoo.BaseStructTrace()
-		// structfoo.SubStructAssign()
-		// structfoo.SubStructDerivative()
-
-		// typeDeclarationContent := "[][]map[Float]map[A.Int][]*B.Int"
-		// d := extractorfoo.ExtractGoVariableTypeDeclaration(typeDeclarationContent)
-		// d.Traversal(0)
-
-		// algorithmfoo.ConvertCamelCase2SnakeCaseWithPhrase
-
-		// httpfoo.RequestExample(index)
-		// channelfoo.GoroutineOutputOrder2()
-
-		workerfoo.MakeMapTest()
-		workerfoo.MakeSliceTest()
+		extractorfoo.ExtractGoFileStructDeclarationTest()
+		// workerfoo.MakeMapTest()
+		// workerfoo.MakeSliceTest()
 	}, false)
 }

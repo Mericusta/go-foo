@@ -29,7 +29,7 @@ func GetAnotherPunctuationMark(r rune) rune {
 	return ' '
 }
 
-// CalculatePunctuationMarksContentLength 计算成对符号的内容长度
+// CalculatePunctuationMarksContentLength 计算成对符号的内容长度，去除结束符号
 // @contentAfterLeftPunctuationMark 待计算的字符串，不包括起始符号
 // @leftPunctuationMark 符号左边界字符
 // @rightPunctuationMark 符号右边界字符
@@ -75,5 +75,5 @@ func CalculatePunctuationMarksContentLength(contentAfterLeftPunctuationMark stri
 		}
 		return leftCount == rightCount
 	})
-	return length
+	return length - 1
 }

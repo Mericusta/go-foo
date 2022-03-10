@@ -83,6 +83,41 @@ func (d *GoTypeDeclaration) MakeUp() string {
 	}
 }
 
+func (d *GoTypeDeclaration) ExtractImportPkg() map[string]map[string]struct{} {
+	importMap := make(map[string]map[string]struct{})
+	if len(d.FromPkgAlias) != 0 {
+		if _, has := importMap[d.FromPkgAlias]; !has {
+			importMap[d.FromPkgAlias] = make(map[string]struct{})
+		}
+		importMap[d.FromPkgAlias][d.Content] = struct{}{}
+	}
+	if d.KeyType != nil {
+		if keyTypeImportPkgMap := d.KeyType.ExtractImportPkg(); len(keyTypeImportPkgMap) > 0 {
+			for keyTypeImportPkgAlias, keyTypeImportStructMap := range keyTypeImportPkgMap {
+				if _, has := importMap[keyTypeImportPkgAlias]; !has {
+					importMap[keyTypeImportPkgAlias] = make(map[string]struct{})
+				}
+				for keyTypeImportStruct := range keyTypeImportStructMap {
+					importMap[keyTypeImportPkgAlias][keyTypeImportStruct] = struct{}{}
+				}
+			}
+		}
+	}
+	if d.ElementType != nil {
+		if elementTypeImportPkgMap := d.ElementType.ExtractImportPkg(); len(elementTypeImportPkgMap) > 0 {
+			for elementTypeImportPkgAlias, elementTypeImportStructMap := range elementTypeImportPkgMap {
+				if _, has := importMap[elementTypeImportPkgAlias]; !has {
+					importMap[elementTypeImportPkgAlias] = make(map[string]struct{})
+				}
+				for elementTypeImportStruct := range elementTypeImportStructMap {
+					importMap[elementTypeImportPkgAlias][elementTypeImportStruct] = struct{}{}
+				}
+			}
+		}
+	}
+	return importMap
+}
+
 var (
 	// GO_VARIABLE_DECLARATION in func declaration or struct member declaration
 	// in func declaration: func([param variable declaration] [param type declaration])
@@ -154,39 +189,4 @@ func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 		d.Content = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex]
 	}
 	return d
-}
-
-func ExtractGoTypeDeclarationImportPkg(d *GoTypeDeclaration) map[string]map[string]struct{} {
-	importMap := make(map[string]map[string]struct{})
-	if len(d.FromPkgAlias) != 0 {
-		if _, has := importMap[d.FromPkgAlias]; !has {
-			importMap[d.FromPkgAlias] = make(map[string]struct{})
-		}
-		importMap[d.FromPkgAlias][d.Content] = struct{}{}
-	}
-	if d.KeyType != nil {
-		if keyTypeImportPkgMap := ExtractGoTypeDeclarationImportPkg(d.KeyType); len(keyTypeImportPkgMap) > 0 {
-			for keyTypeImportPkgAlias, keyTypeImportStructMap := range keyTypeImportPkgMap {
-				if _, has := importMap[keyTypeImportPkgAlias]; !has {
-					importMap[keyTypeImportPkgAlias] = make(map[string]struct{})
-				}
-				for keyTypeImportStruct := range keyTypeImportStructMap {
-					importMap[keyTypeImportPkgAlias][keyTypeImportStruct] = struct{}{}
-				}
-			}
-		}
-	}
-	if d.ElementType != nil {
-		if elementTypeImportPkgMap := ExtractGoTypeDeclarationImportPkg(d.ElementType); len(elementTypeImportPkgMap) > 0 {
-			for elementTypeImportPkgAlias, elementTypeImportStructMap := range elementTypeImportPkgMap {
-				if _, has := importMap[elementTypeImportPkgAlias]; !has {
-					importMap[elementTypeImportPkgAlias] = make(map[string]struct{})
-				}
-				for elementTypeImportStruct := range elementTypeImportStructMap {
-					importMap[elementTypeImportPkgAlias][elementTypeImportStruct] = struct{}{}
-				}
-			}
-		}
-	}
-	return importMap
 }
