@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	extractorfoo "go-foo/extractor-foo"
+	workerfoo "go-foo/worker-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -38,7 +38,7 @@ func Bencher(count int, f func(int), concurrently bool) {
 
 func main() {
 	Bencher(1, func(index int) {
-		extractorfoo.ExtractGoFileStructDeclarationTest()
+		workerfoo.ExtractGoFileStructDeclarationTest()
 		// workerfoo.MakeMapTest()
 		// workerfoo.MakeSliceTest()
 	}, false)
