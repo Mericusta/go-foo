@@ -3,6 +3,7 @@ package algorithmfoo
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 func ConvertCamelCase2SnakeCaseWithPhraseTest() {
@@ -60,4 +61,28 @@ func ConvertCamelCase2SnakeCaseWithPhrase(camelCase string, phraseMap map[string
 	builder.WriteRune('_')
 	builder.WriteString(phraseBuilder.String())
 	return builder.String()
+}
+
+// CalculateYearsOld 根据出生时间戳计算当前年龄
+func CalculateYearsOld(birthTimstamp int64) int {
+	birthTime := time.Unix(birthTimstamp, 0)
+	nowTime := time.Now()
+	if nowTime.Month() < birthTime.Month() || (nowTime.Month() == birthTime.Month() && nowTime.Day() < birthTime.Day()) {
+		return nowTime.Year() - birthTime.Year() - 1
+	}
+	return nowTime.Year() - birthTime.Year()
+}
+
+func CalculateYearsOldTest() {
+	// 1995.6.5 15:00
+	birthTimestamp := 802335600
+	fmt.Printf("now from 1995.6.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
+
+	// 1995.3.5 15:00
+	birthTimestamp = 794386800
+	fmt.Printf("now from 1995.3.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
+
+	// 1995.2.5 15:00
+	birthTimestamp = 791967600
+	fmt.Printf("now from 1995.2.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
 }
