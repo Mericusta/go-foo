@@ -7,10 +7,11 @@ import (
 )
 
 type JsonData struct {
-	BirthTimestamp      int64 `json:"birth_timestamp,omitempty"`
-	LastLoginTimestamp  int64 `json:"last_login_timestamp,omitempty"`
-	DailyOnlineSeconds  int64 `json:"daily_online_seconds,omitempty"`
-	WeeklyOnlineSeconds int64 `json:"weekly_online_seconds,omitempty"`
+	CurrentLoginTimestamp int64
+	BirthTimestamp        int64 `json:"birth_timestamp,omitempty"`
+	LastLoginTimestamp    int64 `json:"last_login_timestamp,omitempty"`
+	DailyOnlineSeconds    int64 `json:"daily_online_seconds,omitempty"`
+	WeeklyOnlineSeconds   int64 `json:"weekly_online_seconds,omitempty"`
 }
 
 func JsonFoo() {

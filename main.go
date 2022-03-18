@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	jsonfoo "go-foo/json-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -42,6 +41,6 @@ func main() {
 		// workerfoo.MakeMapTest()
 		// workerfoo.MakeSliceTest()
 		// algorithmfoo.CalculateYearsOldTest()
-		jsonfoo.JsonFoo()
+		// jsonfoo.JsonFoo()
 	}, false)
 }
