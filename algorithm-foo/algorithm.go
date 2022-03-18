@@ -99,7 +99,7 @@ const AntiAddictionSpecialDateFromat string = "2006.01.02"
 
 type antiAddictionNormalCfg struct {
 	onlineTimeLimit          map[int]int
-	onlineSecondsLimit       int32
+	dailyOnlineSecondsLimit  int32
 	weeklyOnlineSecondsLimit int32
 }
 
@@ -172,10 +172,10 @@ func (a *AntiAddictionData) GetReleaseOnlineTime(ts int64, antiAddictionNormalCf
 		timeReleaseSeconds = endTimestamp - nowTime.Unix()
 
 		// 时长限制
-		if aanc.onlineSecondsLimit > 0 {
-			durationReleaseSeconds = int64(aanc.onlineSecondsLimit)
+		if aanc.dailyOnlineSecondsLimit > 0 {
+			durationReleaseSeconds = int64(aanc.dailyOnlineSecondsLimit)
 			if lastLoginTime.Day() == nowTime.Day() {
-				if a.DailyOnlineSeconds >= aanc.onlineSecondsLimit {
+				if a.DailyOnlineSeconds >= aanc.dailyOnlineSecondsLimit {
 					return 0
 				}
 				durationReleaseSeconds -= int64(a.DailyOnlineSeconds)

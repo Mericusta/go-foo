@@ -11,43 +11,43 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 		1: {
 			1: &antiAddictionNormalCfg{
 				onlineTimeLimit:          nil,
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			2: &antiAddictionNormalCfg{
 				onlineTimeLimit:          nil,
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			3: &antiAddictionNormalCfg{
 				onlineTimeLimit:          nil,
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			4: &antiAddictionNormalCfg{
 				onlineTimeLimit:          nil,
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			5: &antiAddictionNormalCfg{
 				onlineTimeLimit: map[int]int{
 					20: 21,
 				},
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			6: &antiAddictionNormalCfg{
 				onlineTimeLimit: map[int]int{
 					20: 21,
 				},
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 			0: &antiAddictionNormalCfg{
 				onlineTimeLimit: map[int]int{
 					20: 21,
 				},
-				onlineSecondsLimit:       0,
+				dailyOnlineSecondsLimit:  0,
 				weeklyOnlineSecondsLimit: 0,
 			},
 		},
@@ -77,7 +77,7 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 					13: 14,
 					20: 21,
 				},
-				onlineSecondsLimit:       3600,
+				dailyOnlineSecondsLimit:  3600,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			2: &antiAddictionNormalCfg{
@@ -85,7 +85,7 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 					13: 14,
 					20: 21,
 				},
-				onlineSecondsLimit:       3600,
+				dailyOnlineSecondsLimit:  3600,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			3: &antiAddictionNormalCfg{
@@ -93,7 +93,7 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 					13: 14,
 					20: 21,
 				},
-				onlineSecondsLimit:       3600,
+				dailyOnlineSecondsLimit:  3600,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			4: &antiAddictionNormalCfg{
@@ -101,7 +101,7 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 					13: 14,
 					20: 21,
 				},
-				onlineSecondsLimit:       3600,
+				dailyOnlineSecondsLimit:  3600,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			5: &antiAddictionNormalCfg{
@@ -109,21 +109,21 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 					13: 14,
 					20: 21,
 				},
-				onlineSecondsLimit:       3600,
+				dailyOnlineSecondsLimit:  3600,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			6: &antiAddictionNormalCfg{
 				onlineTimeLimit: map[int]int{
 					9: 21,
 				},
-				onlineSecondsLimit:       10800,
+				dailyOnlineSecondsLimit:  10800,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 			0: &antiAddictionNormalCfg{
 				onlineTimeLimit: map[int]int{
 					9: 21,
 				},
-				onlineSecondsLimit:       10800,
+				dailyOnlineSecondsLimit:  10800,
 				weeklyOnlineSecondsLimit: 21600,
 			},
 		},
