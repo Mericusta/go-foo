@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	mysqlfoo "go-foo/mysql-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -42,5 +43,7 @@ func main() {
 		// workerfoo.MakeSliceTest()
 		// algorithmfoo.CalculateYearsOldTest()
 		// jsonfoo.JsonFoo()
+		// functionfoo.ReturnExampleStructTest()
+		mysqlfoo.BatchInsertPrayRecordData()
 	}, false)
 }
