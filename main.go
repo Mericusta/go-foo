@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	mysqlfoo "go-foo/mysql-foo"
+	regexpfoo "go-foo/regexp-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -44,6 +44,9 @@ func main() {
 		// algorithmfoo.CalculateYearsOldTest()
 		// jsonfoo.JsonFoo()
 		// functionfoo.ReturnExampleStructTest()
-		mysqlfoo.BatchInsertPrayRecordData()
+		// mysqlfoo.BatchInsertPrayRecordData()
+		// algorithmfoo.OptimusTest()
+		// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
+		regexpfoo.AllRegexpTest()
 	}, false)
 }

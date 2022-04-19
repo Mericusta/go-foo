@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	optimus "github.com/pjebs/optimus-go"
 )
 
 func ConvertCamelCase2SnakeCaseWithPhraseTest() {
@@ -211,4 +213,41 @@ func (a *AntiAddictionData) GetReleaseOnlineTime(ts int64, antiAddictionNormalCf
 			return durationReleaseSeconds
 		}
 	}
+}
+
+const PrimeNum = 233323327
+const RandNum = 214748365
+
+var optimusPrime optimus.Optimus
+
+func EncodeID(ID int64) int64 {
+	return int64(optimusPrime.Encode(uint64(ID)))
+}
+
+func DecodeID(identifier int64) int64 {
+	return int64(optimusPrime.Decode(uint64(identifier)))
+}
+
+func OptimusTest() {
+	// m := make(map[uint64]uint64)
+
+	optimusPrime = optimus.NewCalculated(PrimeNum, RandNum)
+
+	uint64MAX := ^uint64(0)
+	uint32MAX := ^uint32(0)
+
+	fmt.Printf("encode uint64MAX-1 %v to %v\n", uint64MAX-1, optimusPrime.Encode(uint64MAX-1))
+	fmt.Printf("encode uint32MAX-1 %v to %v\n", uint32MAX-1, optimusPrime.Encode(uint64(uint32MAX-1)))
+
+	// for index := uint64MAX; uint64(index) >= 0; index-- {
+	// 	v1 := optimusPrime.Encode(uint64(index))
+	// 	if _, has := m[v1]; has {
+	// 		panic(fmt.Sprintf("Note: ID = %v Repeated !!!\n", v1))
+	// 	}
+	// 	m[v1] = uint64(index)
+	// 	v2 := optimusPrime.Decode(v1)
+	// 	if m[v1] != uint64(index) {
+	// 		panic(fmt.Sprintf("Note: ID = %v:%v Decode Error !!!\n", v1, v2))
+	// 	}
+	// }
 }
