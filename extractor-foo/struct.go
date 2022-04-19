@@ -1,4 +1,4 @@
-package workerfoo
+package extractorfoo
 
 import (
 	"fmt"
@@ -8,14 +8,9 @@ import (
 	"strings"
 )
 
-type GoStructMemberDefinition struct {
-	MemberSignature string
-	TypeDeclaration *GoTypeDeclaration
-}
-
 type GoStructInfo struct {
 	Name                 string
-	MemberDeclarationMap map[string]*GoStructMemberDefinition
+	MemberDeclarationMap map[string]*GoVariableDefinition
 }
 
 var (
@@ -50,7 +45,7 @@ func ExtractGoFileStructDeclaration(r io.Reader) map[string]*GoStructInfo {
 		structName := submatchSlice[GoStructRegexpSubmatchNameIndex]
 		fileStructDeclarationMap[structName] = &GoStructInfo{
 			Name:                 structName,
-			MemberDeclarationMap: make(map[string]*GoStructMemberDefinition),
+			MemberDeclarationMap: make(map[string]*GoVariableDefinition),
 		}
 
 		// fmt.Println()
@@ -88,14 +83,14 @@ func ExtractGoFileStructDeclaration(r io.Reader) map[string]*GoStructInfo {
 			// fmt.Printf("|%v|", trimSpaceString)
 			// fmt.Println()
 
-			submatchSlice := GoVariableDeclarationRegexp.FindStringSubmatch(lineContent)
+			submatchSlice := GoVariableDeclarationRegexp.FindStringSubmatch(trimSpaceString)
 			if len(submatchSlice) == 0 {
 				continue
 			}
 			memberName := submatchSlice[GoVariableDeclarationRegexpSubmatchNameIndex]
-			fileStructDeclarationMap[structName].MemberDeclarationMap[memberName] = &GoStructMemberDefinition{
-				MemberSignature: memberName,
-				TypeDeclaration: ExtractGoVariableTypeDeclaration(submatchSlice[GoVariableDeclarationRegexpSubmatchTypeIndex]),
+			fileStructDeclarationMap[structName].MemberDeclarationMap[memberName] = &GoVariableDefinition{
+				VariableSignature: memberName,
+				TypeDeclaration:   ExtractGoVariableTypeDeclaration(submatchSlice[GoVariableDeclarationRegexpSubmatchTypeIndex]),
 			}
 
 			// fmt.Println()

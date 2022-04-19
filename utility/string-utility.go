@@ -77,3 +77,8 @@ func CalculatePunctuationMarksContentLength(contentAfterLeftPunctuationMark stri
 	})
 	return length - 1
 }
+
+// SplitContentByPunctuationMark 用分隔标点符号做
+func SplitContentByPunctuationMark() {
+
+}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	regexpfoo "go-foo/regexp-foo"
+	extractorfoo "go-foo/extractor-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -38,15 +38,13 @@ func Bencher(count int, f func(int), concurrently bool) {
 
 func main() {
 	Bencher(1, func(index int) {
-		// workerfoo.ExtractGoFileStructDeclarationTest()
-		// workerfoo.MakeMapTest()
-		// workerfoo.MakeSliceTest()
 		// algorithmfoo.CalculateYearsOldTest()
 		// jsonfoo.JsonFoo()
 		// functionfoo.ReturnExampleStructTest()
 		// mysqlfoo.BatchInsertPrayRecordData()
 		// algorithmfoo.OptimusTest()
 		// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
-		regexpfoo.AllRegexpTest()
+		// regexpfoo.AllRegexpTest()
+		extractorfoo.ExtractGoFileInterfaceDeclarationTest()
 	}, false)
 }

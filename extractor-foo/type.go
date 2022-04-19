@@ -1,4 +1,4 @@
-package workerfoo
+package extractorfoo
 
 import (
 	"fmt"
@@ -34,29 +34,6 @@ type GoTypeDeclaration struct {
 	ElementType  *GoTypeDeclaration
 }
 
-// MakeUp 生成该 go 类型的类型声明
-func (d *GoTypeDeclaration) String() string {
-	switch d.MetaType {
-	case GO_META_TYPE_POINTER:
-		return fmt.Sprintf("*%v", d.ElementType.String())
-	case GO_META_TYPE_INTEGER, GO_META_TYPE_FLOATING, GO_META_TYPE_COMPLEX, GO_META_TYPE_SPEC:
-		return d.Content
-	case GO_META_TYPE_STRUCT:
-		if len(d.FromPkgAlias) == 0 {
-			return d.Content
-		} else {
-			return fmt.Sprintf("%v.%v", d.FromPkgAlias, d.Content)
-		}
-	case GO_META_TYPE_SLICE:
-		return fmt.Sprintf("[]%v", d.ElementType.String())
-	case GO_META_TYPE_MAP:
-		return fmt.Sprintf("map[%v]%v", d.KeyType.String(), d.ElementType.String())
-	default:
-		panic("unknown meta type")
-	}
-}
-
-// Traversal 递归遍历并输出 go 变量的类型声明
 func (d *GoTypeDeclaration) Traversal(deep int) {
 	fmt.Printf("%v- Content: %v\n", strings.Repeat("\t", deep), d.Content)
 	fmt.Printf("%v- MetaType: %v\n", strings.Repeat("\t", deep), d.MetaType)
@@ -70,10 +47,9 @@ func (d *GoTypeDeclaration) Traversal(deep int) {
 		fmt.Printf("%v- ElementType:\n", strings.Repeat("\t", deep))
 		d.ElementType.Traversal(deep + 1)
 	}
-	fmt.Printf("%v- String: %v\n", strings.Repeat("\t", deep), d.String())
+	fmt.Printf("%v- MakeUp: %v\n", strings.Repeat("\t", deep), d.MakeUp())
 }
 
-// TraversalFunc 递归遍历 go 变量的类型声明
 func (d *GoTypeDeclaration) TraversalFunc(f func(v *GoTypeDeclaration) bool) {
 	if !f(d) {
 		return
@@ -86,7 +62,27 @@ func (d *GoTypeDeclaration) TraversalFunc(f func(v *GoTypeDeclaration) bool) {
 	}
 }
 
-// ExtractImportPkg 从 go 变量的类型声明中提取引入的包的别名和结构体
+func (d *GoTypeDeclaration) MakeUp() string {
+	switch d.MetaType {
+	case GO_META_TYPE_POINTER:
+		return fmt.Sprintf("*%v", d.ElementType.MakeUp())
+	case GO_META_TYPE_INTEGER, GO_META_TYPE_FLOATING, GO_META_TYPE_COMPLEX, GO_META_TYPE_SPEC:
+		return d.Content
+	case GO_META_TYPE_STRUCT:
+		if len(d.FromPkgAlias) == 0 {
+			return d.Content
+		} else {
+			return fmt.Sprintf("%v.%v", d.FromPkgAlias, d.Content)
+		}
+	case GO_META_TYPE_SLICE:
+		return fmt.Sprintf("[]%v", d.ElementType.MakeUp())
+	case GO_META_TYPE_MAP:
+		return fmt.Sprintf("map[%v]%v", d.KeyType.MakeUp(), d.ElementType.MakeUp())
+	default:
+		panic("unknown meta type")
+	}
+}
+
 func (d *GoTypeDeclaration) ExtractImportPkg() map[string]map[string]struct{} {
 	importMap := make(map[string]map[string]struct{})
 	if len(d.FromPkgAlias) != 0 {
@@ -123,16 +119,9 @@ func (d *GoTypeDeclaration) ExtractImportPkg() map[string]map[string]struct{} {
 }
 
 var (
-	// GO_VARIABLE_DECLARATION in func declaration or struct member declaration
-	// in func declaration: func([param variable declaration] [param type declaration])
-	// in struct member declaration: [member variable declaration] [member type declaration]
 	GO_VARIABLE_TYPE_POINTER_DECLARATION_EXPRESSION          string = `^\*(?P<TYPE>.*)`
 	GoVariableTypePointerDeclarationRegexp                          = regexp.MustCompile(GO_VARIABLE_TYPE_POINTER_DECLARATION_EXPRESSION)
 	GoVariableTypePointerDeclarationRegexpSubmatchTypeIndex         = GoVariableTypePointerDeclarationRegexp.SubexpIndex("TYPE")
-	GO_VARIABLE_DECLARATION_EXPRESSION                       string = `(?P<NAME>\w+)\s+(?P<TYPE>\S+)\s+`
-	GoVariableDeclarationRegexp                                     = regexp.MustCompile(GO_VARIABLE_DECLARATION_EXPRESSION)
-	GoVariableDeclarationRegexpSubmatchNameIndex                    = GoVariableDeclarationRegexp.SubexpIndex("NAME")
-	GoVariableDeclarationRegexpSubmatchTypeIndex                    = GoVariableDeclarationRegexp.SubexpIndex("TYPE")
 	GO_VARIABLE_TYPE_INTEGER_DECLARATION_EXPRESSION          string = `^(u)?int(8|16|32|64)?`
 	GoVariableTypeIntegerDeclarationRegexp                          = regexp.MustCompile(GO_VARIABLE_TYPE_INTEGER_DECLARATION_EXPRESSION)
 	GO_VARIABLE_TYPE_FLOATING_DECLARATION_EXPRESSION         string = `^float(32|64)`
@@ -154,7 +143,6 @@ var (
 	GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex          = GoVariableTypeStructDeclarationRegexp.SubexpIndex("TYPE")
 )
 
-// ExtractGoVariableTypeDeclaration 提取 go 变量的类型声明
 func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 	if len(content) == 0 {
 		return nil
@@ -194,34 +182,4 @@ func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 		d.Content = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex]
 	}
 	return d
-}
-
-var (
-	MAKE_MAP_TEMPLATE                = `make(map[[RP_MAP_KEY_TYPE]][RP_MAP_ELEMENT_TYPE])`
-	REPLACE_KEYWORD_MAP_KEY_TYPE     = "[RP_MAP_KEY_TYPE]"
-	REPLACE_KEYWORD_MAP_ELEMENT_TYPE = "[RP_MAP_ELEMENT_TYPE]"
-)
-
-// go 类型：指针，整数，浮点数，复数，特殊，结构体，切片，集合，
-// MakeUp 构造声明
-// 提取声明
-
-// MakeMap 生成该 map 的 make 构造方法
-func MakeMap(keyD, elementD *GoTypeDeclaration) string {
-	s := strings.Replace(MAKE_MAP_TEMPLATE, REPLACE_KEYWORD_MAP_KEY_TYPE, keyD.String(), -1)
-	s = strings.Replace(s, REPLACE_KEYWORD_MAP_ELEMENT_TYPE, elementD.String(), -1)
-	return s
-}
-
-var (
-	MAKE_SLICE_TEMPLATE                = `make([][RP_SLICE_ELEMENT_TYPE], 0[RP_SLICE_CAPACITY])`
-	REPLACE_KEYWORD_SLICE_ELEMENT_TYPE = "[RP_SLICE_ELEMENT_TYPE]"
-	REPLACE_KEYWORD_SLICE_CAPACITY     = "[RP_SLICE_CAPACITY]"
-)
-
-// MakeSlice 生成该 slice 的 make 构造方法
-func MakeSlice(elementD *GoTypeDeclaration, capacity int) string {
-	s := strings.Replace(MAKE_SLICE_TEMPLATE, REPLACE_KEYWORD_SLICE_ELEMENT_TYPE, elementD.String(), -1)
-	s = strings.Replace(s, REPLACE_KEYWORD_SLICE_CAPACITY, fmt.Sprintf(", %v", capacity), -1)
-	return s
 }
