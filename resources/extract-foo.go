@@ -42,6 +42,7 @@ type GoInterfaceDeclaration interface {
 	FunctionDeclaration7(int, int64) (int, int64)
 	FunctionDeclaration8(int, func() int32) (int, int64)
 	FunctionDeclaration9(*extractorfoo.GoVariableDefinition, func(int, int) int32) (*extractorfoo.GoVariableDefinition, int64)
+	FunctionDeclaration0()
 	// FunctionDeclaration9(*extractorfoo.GoStructMemberDefinition, func() int32) (*extractorfoo.GoStructMemberDefinition, int64)
 }
 
@@ -546,4 +547,12 @@ type IPrayComponent interface {
 	GetMissCountAndNextGuaranteeNumber(int32) (int32, int32, int32)
 	Pray(int32, int32) ([]*msg_def.SinglePray, int32)
 	GetPrayGroupCount(int32) int32
+}
+
+func ExtractFunction(a, b int, c []string, d *msg_def.SinglePray, e func(int, int) map[string]interface{}, f func() map[string]interface{}) ([]*msg_def.SinglePray, func() int) {
+	return nil, nil
+}
+
+func (this *ThisStruct) ExtractMemberFunction(a, b int, c []string, d *msg_def.SinglePray) []*msg_def.SinglePray {
+	return nil
 }

@@ -2,6 +2,7 @@ package extractorfoo
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -39,10 +40,27 @@ func ExtractGoFileInterfaceDeclarationTest() {
 	}
 
 	fileInterfaceDeclarationMap := ExtractGoFileInterfaceDeclaration(f)
-	for interfaceName, interfaceInfo := range fileInterfaceDeclarationMap {
+	for interfaceName := range fileInterfaceDeclarationMap {
 		fmt.Printf("- %v\n", interfaceName)
-		for _, functionDeclaration := range interfaceInfo.FunctionDeclarationMap {
-			fmt.Printf("\t- %v\n", functionDeclaration.MakeUp())
-		}
+		// for _, functionDeclaration := range interfaceInfo.FunctionDeclarationMap {
+		// 	fmt.Printf("\t- %v\n", functionDeclaration.MakeUp())
+		// }
 	}
+}
+
+func ExtractGoFileFunctionScopeTest() {
+	testFilePath := "resources/extract-foo.go"
+	GoFmtFile(testFilePath)
+
+	f, e := os.Open(testFilePath)
+	if f == nil || e != nil {
+		panic(e)
+	}
+
+	testFileContent, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	ExtractGoFileFunctionDeclaration(testFileContent)
 }

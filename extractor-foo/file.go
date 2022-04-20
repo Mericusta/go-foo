@@ -1,9 +1,12 @@
 package extractorfoo
 
 import (
+	"bytes"
+	"fmt"
 	"go-foo/utility"
 	"io"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 )
 
@@ -73,4 +76,18 @@ func CleanFileComment(r io.Reader) string {
 	}
 
 	return builder.String()
+}
+
+// go fmt 格式化文件
+func GoFmtFile(p string) {
+	if !utility.IsExist(p) {
+		panic(fmt.Sprintf("%v not exist", p))
+	}
+	cmd := exec.Command("go", "fmt", p)
+	cmd.Stdout = &bytes.Buffer{}
+	cmd.Stderr = &bytes.Buffer{}
+	err := cmd.Run()
+	if err != nil {
+		panic(cmd.Stderr.(*bytes.Buffer).String())
+	}
 }

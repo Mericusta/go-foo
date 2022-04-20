@@ -27,3 +27,9 @@ func ReadFileLineOneByOne(filename string, f func(string) bool) error {
 
 	return nil
 }
+
+// IsExist 检查文件或文件夹是否存在
+func IsExist(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}

@@ -45,6 +45,7 @@ func main() {
 		// algorithmfoo.OptimusTest()
 		// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
 		// regexpfoo.AllRegexpTest()
-		extractorfoo.ExtractGoFileInterfaceDeclarationTest()
+		// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
+		extractorfoo.ExtractGoFileFunctionScopeTest()
 	}, false)
 }
