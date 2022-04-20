@@ -45,7 +45,11 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 		functionName := strings.TrimSpace(string(content[functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchNameIndex*2]:functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchNameIndex*2+1]]))
 		fmt.Printf("function name = |%v|\n", functionName)
 
-		// this
+		// if functionName != "ExtractMemberFunction" {
+		// 	continue
+		// }
+
+		// this scope
 		var thisDeclaration *GoVariableDefinition
 		if functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchThisIndex*2] != -1 &&
 			functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchThisIndex*2+1] != -1 &&
@@ -61,40 +65,115 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 			fmt.Printf("function this type = |%v|\n", thisDeclaration.TypeDeclaration.MakeUp())
 		}
 
-		// params list
-		fmt.Printf("function params scope begin = |%v|\n", strings.TrimSpace(string(content[functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2]:functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2+1]])))
+		// params scope
+		paramsScopeBeginRuneIndex := functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2] // '(' index
+		paramsScopeBeginRune := rune(content[paramsScopeBeginRuneIndex])                                                                                   // '('
+		paramsScopeEndRune := utility.GetAnotherPunctuationMark(paramsScopeBeginRune)                                                                      // ')'
+		paramsScopeLength := utility.CalculatePunctuationMarksContentLength(
+			string(content[paramsScopeBeginRuneIndex+1:]),
+			paramsScopeBeginRune, paramsScopeEndRune, utility.InvalidScopePunctuationMarkMap,
+		)
+		paramsScopeEndRuneIndex := paramsScopeBeginRuneIndex + 1 + paramsScopeLength        // ')' index
+		paramsListContent := content[paramsScopeBeginRuneIndex+1 : paramsScopeEndRuneIndex] // between '(' and ')'
+		fmt.Printf("paramsListContent = |%v|\n", string(paramsListContent))
+		paramsList := ExtractorFunctionParamsList(paramsListContent)
 
-		ExtractorFunctionParamsList(content, functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2])
+		// returns scope
+		returnsScopeBeginRuneIndex := paramsScopeEndRuneIndex + 1 // after params scope end rune index
+		returnsScopeEndRuneIndex := returnsScopeBeginRuneIndex    // before body scope begin rune index
+		bodyScopeBeginRuneIndex := -1                             // '{' index
+		keywordStack := []string{Keyword_func}
+		word := make([]byte, 0, 16)
+		for rIndex := 0; rIndex != len(content[paramsScopeEndRuneIndex:]); rIndex++ {
+			contentIndex := paramsScopeEndRuneIndex + rIndex
+			r := rune(content[contentIndex])
+			switch {
+			case utility.IsCharacter(r):
+				word = append(word, byte(r))
+			default:
+				if len(word) > 0 {
+					if IsGolangScopeKeyword(string(word)) {
+						keywordStack = append(keywordStack, string(word))
+					}
+					word = make([]byte, 0, 16)
+				}
+				stackLength := len(keywordStack)
+				switch {
+				case utility.IsSpaceRune(r):
+				case r == '(':
+					scopeLength := utility.CalculatePunctuationMarksContentLength(
+						string(content[contentIndex+1:]),
+						'(', ')', utility.InvalidScopePunctuationMarkMap,
+					)
+					if stackLength == 1 && keywordStack[0] == Keyword_func {
+						returnsScopeBeginRuneIndex = contentIndex
+					} else {
+						if keywordStack[stackLength-1] == Keyword_func {
+							if stackLength-2 >= 0 {
+								keywordStack = keywordStack[0 : stackLength-1]
+							} else {
+								panic("stack length error")
+							}
+						}
+					}
+					// func (int) -> func (int)
+					//      |                  |
+					rIndex += (1 + scopeLength + 1)
+				case r == '[':
+					scopeLength := utility.CalculatePunctuationMarksContentLength(
+						string(content[contentIndex+1:]),
+						'[', ']', utility.InvalidScopePunctuationMarkMap,
+					)
+					// map[int]int -> map[int]int
+					//    |                   |
+					rIndex += (1 + scopeLength + 1)
+				case r == '{':
+					if stackLength == 1 && keywordStack[0] == Keyword_func {
+						if returnsScopeBeginRuneIndex == '(' {
+							returnsScopeEndRuneIndex = contentIndex - 1
+						} else {
+							returnsScopeEndRuneIndex = contentIndex
+						}
+						bodyScopeBeginRuneIndex = contentIndex
+						goto SEARCH_END
+					} else {
+						scopeLength := utility.CalculatePunctuationMarksContentLength(
+							string(content[contentIndex+1:]),
+							'{', '}', utility.InvalidScopePunctuationMarkMap,
+						)
+						if keywordStack[stackLength-1] == Keyword_func {
+							panic("syntax error")
+						}
+						// interface{} -> interface{}
+						//          |                |
+						// struct{ v interface{} } -> struct{ v interface{} }
+						//       |                                           |
+						rIndex += (1 + scopeLength + 1)
+						if stackLength-2 >= 0 {
+							keywordStack = keywordStack[0 : stackLength-1]
+						} else {
+							panic("stack length error")
+						}
+					}
+				}
+			}
+		}
+	SEARCH_END:
+		fmt.Printf("function returns scope = |%v|\n", string(content[returnsScopeBeginRuneIndex+1:returnsScopeEndRuneIndex]))
 
-		// // params
-		// // fmt.Printf("submatchSlice = %v\n", submatchSlice)
-		// // fmt.Printf("submatchSlice[%v] = %v\n", GoStructRegexpSubmatchNameIndex, submatchSlice[GoStructRegexpSubmatchNameIndex])
-		// // fmt.Printf("submatchSlice[%v] = %v\n", GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex, submatchSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex])
-		// submatchIndexSlice := GoFunctionDeclarationScopeBeginRegexp.FindStringSubmatchIndex(trimSpaceString)
-		// // fmt.Printf("submatchIndexSlice = %v\n", submatchIndexSlice)
-		// // fmt.Printf("submatchIndexSlice[%v] = %v, %v\n", GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2, submatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2], string(trimSpaceString[submatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2]]))
-		// paramsScopeBeginRune := rune(trimSpaceString[submatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2]])
-		// paramsScopeEndRune := utility.GetAnotherPunctuationMark(paramsScopeBeginRune)
-		// paramsScopeBeginIndex := submatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2+1]
-		// paramsScopeLength := utility.CalculatePunctuationMarksContentLength(
-		// 	trimSpaceString[submatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchParamsScopeBeginIndex*2+1]:],
-		// 	paramsScopeBeginRune,
-		// 	paramsScopeEndRune,
-		// 	utility.InvalidScopePunctuationMarkMap,
-		// )
-		// paramsScopeEndIndex := paramsScopeBeginIndex + paramsScopeLength + 1
-		// var paramsScopeContent string
-		// if paramsScopeLength > 0 {
-		// 	paramsScopeContent = trimSpaceString[paramsScopeBeginIndex:paramsScopeEndIndex]
-		// }
-		// fmt.Printf("paramsScopeContent = |%v|\n", paramsScopeContent)
+		// body scope
+		if bodyScopeBeginRuneIndex < 0 {
+			panic("body scope begin rune index is -1")
+		}
+		bodyLength := utility.CalculatePunctuationMarksContentLength(
+			string(content[bodyScopeBeginRuneIndex+1:]),
+			'{', '}', utility.InvalidScopePunctuationMarkMap,
+		)
 
-		// // returns
-		// var returnsScopeContent string
-		// if paramsScopeEndIndex+1 < len(trimSpaceString) && len(trimSpaceString[paramsScopeEndIndex+1:]) > 0 {
-		// 	returnsScopeContent = strings.TrimSpace(trimSpaceString[paramsScopeEndIndex+1:])
-		// }
-		// fmt.Printf("returnsScopeContent = |%v|\n", returnsScopeContent)
+		if bodyLength < 0 {
+			panic("function body length is -1")
+		}
+		fmt.Printf("function body scope = |%v|\n", string(content[bodyScopeBeginRuneIndex+1:bodyScopeBeginRuneIndex+1+bodyLength]))
 
 		fmt.Println()
 
@@ -103,18 +182,15 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 		functionDeclarationMap[functionName] = &GoFunctionDeclaration{
 			FunctionSignature: functionName,
 			This:              thisDeclaration,
+			ParamsList:        paramsList,
 		}
 	}
 
 	return functionDeclarationMap
 }
 
-func ExtractorFunctionParamsList(content []byte, scopeBeginIndex int) []*GoVariableDefinition {
-	paramsListContent := utility.GetScopeContentBetweenPunctuationMarks(content, scopeBeginIndex)
-	fmt.Printf("paramsListContent = |%v|\n", string(paramsListContent))
-
-	splitContent := utility.RecursiveSplitUnderSameDeepPunctuationMarksContent(string(paramsListContent), utility.GetLeftPunctuationMarkList(), ",")
-
+func ExtractorFunctionParamsList(content []byte) []*GoVariableDefinition {
+	splitContent := utility.RecursiveSplitUnderSameDeepPunctuationMarksContent(string(content), utility.GetLeftPunctuationMarkList(), ",")
 	var sameTypeParamSlice, paramsSlice []*GoVariableDefinition
 	for _, content := range splitContent.ContentList {
 		// fmt.Printf("param content = |%v|\n", strings.TrimSpace(content))
@@ -137,13 +213,36 @@ func ExtractorFunctionParamsList(content []byte, scopeBeginIndex int) []*GoVaria
 		paramsSlice = append(paramsSlice, paramDeclaration)
 	}
 
-	// for index, paramDeclaration := range paramsSlice {
-	// 	fmt.Printf("%v param: %v\n", index, paramDeclaration.VariableSignature)
-	// 	fmt.Printf("%v param type: %v\n", index, paramDeclaration.TypeDeclaration.MakeUp())
-	// }
+	{
+		for index, paramDeclaration := range paramsSlice {
+			fmt.Printf("%v param: %v\n", index, paramDeclaration.VariableSignature)
+			fmt.Printf("%v param type: %v\n", index, paramDeclaration.TypeDeclaration.MakeUp())
+		}
+	}
 	return paramsSlice
 }
 
-func ExtractorFunctionReturnList() []*GoVariableDefinition {
+func ExtractorFunctionReturnList(content []byte) []*GoVariableDefinition {
+
 	return nil
 }
+
+// func findFunctionBodyBeginIndex(content []byte, functionDeclarationBeginIndex int) {
+// 	word := make([]byte, 0, 16)
+// 	deep := 0
+// 	var previousKey string
+// 	for index := 0; index != len(content[functionDeclarationBeginIndex:]); index++ {
+// 		r := content[functionDeclarationBeginIndex+index]
+// 		if utility.IsSpaceRune(rune(r)) {
+// 			previousKey = string(word)
+// 			if string(word) == Keyword_func {
+// 				deep++
+// 			}
+// 		} else if ar := utility.GetAnotherPunctuationMark(rune(r)); ar != 0 {
+
+// 		} else {
+
+// 		}
+// 	}
+// 	return -1
+// }

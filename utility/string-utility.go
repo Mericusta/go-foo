@@ -37,6 +37,14 @@ func GetLeftPunctuationMarkList() []rune {
 	return leftPunctuationMarkList
 }
 
+func IsSpaceRune(r rune) bool {
+	return r == ' ' || r == '\n' || r == '\t'
+}
+
+func IsCharacter(r rune) bool {
+	return ('0' <= r && r <= '9') || ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || r == '_'
+}
+
 // CalculatePunctuationMarksContentLength 计算成对符号的内容长度，去除结束符号
 // @contentAfterLeftPunctuationMark       待计算的字符串，不包括起始符号
 // @leftPunctuationMark                   符号左边界字符

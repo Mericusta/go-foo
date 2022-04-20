@@ -549,10 +549,10 @@ type IPrayComponent interface {
 	GetPrayGroupCount(int32) int32
 }
 
-func ExtractFunction(a, b int, c []string, d *msg_def.SinglePray, e func(int, int) map[string]interface{}, f func() map[string]interface{}) ([]*msg_def.SinglePray, func() int) {
+func ExtractFunction(a, b int, c []string, d *msg_def.SinglePray, e func(int, int) map[string]interface{}, f func() map[string]interface{}) ([]*msg_def.SinglePray, func(struct{ v interface{} }) interface{}, []interface{}) {
 	return nil, nil
 }
 
-func (this *ThisStruct) ExtractMemberFunction(a, b int, c []string, d *msg_def.SinglePray) []*msg_def.SinglePray {
+func (this *ThisStruct) ExtractMemberFunction(a, b int, c []string, d *msg_def.SinglePray) func(struct{ v interface{} }) interface{} {
 	return nil
 }
