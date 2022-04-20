@@ -11,7 +11,7 @@ type GoFunctionDeclaration struct {
 	FunctionSignature string
 	This              *GoVariableDefinition
 	ParamsList        []*GoVariableDefinition
-	ReturnList        []*GoVariableDefinition
+	ReturnList        []*GoTypeDeclaration // not support named return
 	BodyIndexSlice    []int
 }
 
@@ -117,20 +117,23 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 						}
 					}
 					// func (int) -> func (int)
-					//      |                  |
-					rIndex += (1 + scopeLength + 1)
+					//      |                 |
+					rIndex += (1 + scopeLength)
 				case r == '[':
 					scopeLength := utility.CalculatePunctuationMarksContentLength(
 						string(content[contentIndex+1:]),
 						'[', ']', utility.InvalidScopePunctuationMarkMap,
 					)
 					// map[int]int -> map[int]int
-					//    |                   |
-					rIndex += (1 + scopeLength + 1)
+					//    |                  |
+					rIndex += (1 + scopeLength)
 				case r == '{':
 					if stackLength == 1 && keywordStack[0] == Keyword_func {
-						if returnsScopeBeginRuneIndex == '(' {
+						if content[returnsScopeBeginRuneIndex] == '(' {
 							returnsScopeEndRuneIndex = contentIndex - 1
+							for content[returnsScopeEndRuneIndex] != ')' {
+								returnsScopeEndRuneIndex--
+							}
 						} else {
 							returnsScopeEndRuneIndex = contentIndex
 						}
@@ -145,10 +148,10 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 							panic("syntax error")
 						}
 						// interface{} -> interface{}
-						//          |                |
+						//          |               |
 						// struct{ v interface{} } -> struct{ v interface{} }
-						//       |                                           |
-						rIndex += (1 + scopeLength + 1)
+						//       |                                          |
+						rIndex += (1 + scopeLength)
 						if stackLength-2 >= 0 {
 							keywordStack = keywordStack[0 : stackLength-1]
 						} else {
@@ -160,6 +163,7 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 		}
 	SEARCH_END:
 		fmt.Printf("function returns scope = |%v|\n", string(content[returnsScopeBeginRuneIndex+1:returnsScopeEndRuneIndex]))
+		returnList := ExtractorFunctionReturnList(content[returnsScopeBeginRuneIndex+1 : returnsScopeEndRuneIndex])
 
 		// body scope
 		if bodyScopeBeginRuneIndex < 0 {
@@ -169,20 +173,21 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 			string(content[bodyScopeBeginRuneIndex+1:]),
 			'{', '}', utility.InvalidScopePunctuationMarkMap,
 		)
-
 		if bodyLength < 0 {
 			panic("function body length is -1")
 		}
-		fmt.Printf("function body scope = |%v|\n", string(content[bodyScopeBeginRuneIndex+1:bodyScopeBeginRuneIndex+1+bodyLength]))
-
+		bodyScopeEndRuneIndex := bodyScopeBeginRuneIndex + 1 + bodyLength
+		fmt.Printf("function body scope = |%v|\n", string(content[bodyScopeBeginRuneIndex+1:bodyScopeEndRuneIndex]))
+		fmt.Printf("body begin rune %v\n", string(content[bodyScopeBeginRuneIndex]))
+		fmt.Printf("body end rune %v\n", string(content[bodyScopeEndRuneIndex]))
 		fmt.Println()
-
-		// utility.CalculatePunctuationMarksContentLength(string(content[]))
 
 		functionDeclarationMap[functionName] = &GoFunctionDeclaration{
 			FunctionSignature: functionName,
 			This:              thisDeclaration,
 			ParamsList:        paramsList,
+			ReturnList:        returnList,
+			BodyIndexSlice:    []int{bodyScopeBeginRuneIndex, bodyScopeEndRuneIndex},
 		}
 	}
 
@@ -222,27 +227,18 @@ func ExtractorFunctionParamsList(content []byte) []*GoVariableDefinition {
 	return paramsSlice
 }
 
-func ExtractorFunctionReturnList(content []byte) []*GoVariableDefinition {
-
-	return nil
+func ExtractorFunctionReturnList(content []byte) []*GoTypeDeclaration {
+	splitContent := utility.RecursiveSplitUnderSameDeepPunctuationMarksContent(string(content), utility.GetLeftPunctuationMarkList(), ",")
+	returnTypeDeclarationSlice := make([]*GoTypeDeclaration, 0)
+	for _, content := range splitContent.ContentList {
+		fmt.Printf("return content = |%v|\n", strings.TrimSpace(content))
+		if len(content) == 0 {
+			panic("return content is empty")
+		}
+		typeDeclaration := ExtractGoVariableTypeDeclaration(strings.TrimSpace(content))
+		returnTypeDeclarationSlice = append(returnTypeDeclarationSlice, typeDeclaration)
+		fmt.Printf("typeDeclaration = %v\n", typeDeclaration.MakeUp())
+		typeDeclaration.Traversal(0)
+	}
+	return returnTypeDeclarationSlice
 }
-
-// func findFunctionBodyBeginIndex(content []byte, functionDeclarationBeginIndex int) {
-// 	word := make([]byte, 0, 16)
-// 	deep := 0
-// 	var previousKey string
-// 	for index := 0; index != len(content[functionDeclarationBeginIndex:]); index++ {
-// 		r := content[functionDeclarationBeginIndex+index]
-// 		if utility.IsSpaceRune(rune(r)) {
-// 			previousKey = string(word)
-// 			if string(word) == Keyword_func {
-// 				deep++
-// 			}
-// 		} else if ar := utility.GetAnotherPunctuationMark(rune(r)); ar != 0 {
-
-// 		} else {
-
-// 		}
-// 	}
-// 	return -1
-// }
