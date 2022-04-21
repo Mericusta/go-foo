@@ -1,7 +1,6 @@
 package extractorfoo
 
 import (
-	"fmt"
 	"go-foo/utility"
 	"regexp"
 	"strings"
@@ -12,7 +11,7 @@ type GoFunctionDeclaration struct {
 	This              *GoVariableDefinition
 	ParamsList        []*GoVariableDefinition
 	ReturnList        []*GoTypeDeclaration // not support named return
-	BodyIndexSlice    []int
+	BodyContent       []byte
 }
 
 func (d *GoFunctionDeclaration) MakeUp() string {
@@ -39,11 +38,11 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 
 	functionDeclarationMap := make(map[string]*GoFunctionDeclaration)
 	for _, functionDeclarationScopeBeginSubmatchIndexSlice := range GoFunctionDeclarationScopeBeginRegexp.FindAllSubmatchIndex(content, -1) {
-		fmt.Printf("function declaration scope begin = |%v|\n", strings.TrimSpace(string(content[functionDeclarationScopeBeginSubmatchIndexSlice[0]:functionDeclarationScopeBeginSubmatchIndexSlice[1]])))
+		// fmt.Printf("function declaration scope begin = |%v|\n", strings.TrimSpace(string(content[functionDeclarationScopeBeginSubmatchIndexSlice[0]:functionDeclarationScopeBeginSubmatchIndexSlice[1]])))
 
 		// signature
 		functionName := strings.TrimSpace(string(content[functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchNameIndex*2]:functionDeclarationScopeBeginSubmatchIndexSlice[GoFunctionDeclarationScopeBeginRegexpSubmatchNameIndex*2+1]]))
-		fmt.Printf("function name = |%v|\n", functionName)
+		// fmt.Printf("function name = |%v|\n", functionName)
 
 		// if functionName != "ExtractMemberFunction" {
 		// 	continue
@@ -61,8 +60,8 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 				VariableSignature: thisSignature,
 				TypeDeclaration:   ExtractGoVariableTypeDeclaration(thisTypeContent),
 			}
-			fmt.Printf("function this = |%v|\n", thisDeclaration.VariableSignature)
-			fmt.Printf("function this type = |%v|\n", thisDeclaration.TypeDeclaration.MakeUp())
+			// fmt.Printf("function this = |%v|\n", thisDeclaration.VariableSignature)
+			// fmt.Printf("function this type = |%v|\n", thisDeclaration.TypeDeclaration.MakeUp())
 		}
 
 		// params scope
@@ -75,7 +74,7 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 		)
 		paramsScopeEndRuneIndex := paramsScopeBeginRuneIndex + 1 + paramsScopeLength        // ')' index
 		paramsListContent := content[paramsScopeBeginRuneIndex+1 : paramsScopeEndRuneIndex] // between '(' and ')'
-		fmt.Printf("paramsListContent = |%v|\n", string(paramsListContent))
+		// fmt.Printf("paramsListContent = |%v|\n", string(paramsListContent))
 		paramsList := ExtractorFunctionParamsList(paramsListContent)
 
 		// returns scope
@@ -162,7 +161,7 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 			}
 		}
 	SEARCH_END:
-		fmt.Printf("function returns scope = |%v|\n", string(content[returnsScopeBeginRuneIndex+1:returnsScopeEndRuneIndex]))
+		// fmt.Printf("function returns scope = |%v|\n", string(content[returnsScopeBeginRuneIndex+1:returnsScopeEndRuneIndex]))
 		returnList := ExtractorFunctionReturnList(content[returnsScopeBeginRuneIndex+1 : returnsScopeEndRuneIndex])
 
 		// body scope
@@ -177,17 +176,19 @@ func ExtractGoFileFunctionDeclaration(content []byte) map[string]*GoFunctionDecl
 			panic("function body length is -1")
 		}
 		bodyScopeEndRuneIndex := bodyScopeBeginRuneIndex + 1 + bodyLength
-		fmt.Printf("function body scope = |%v|\n", string(content[bodyScopeBeginRuneIndex+1:bodyScopeEndRuneIndex]))
-		fmt.Printf("body begin rune %v\n", string(content[bodyScopeBeginRuneIndex]))
-		fmt.Printf("body end rune %v\n", string(content[bodyScopeEndRuneIndex]))
-		fmt.Println()
+		// {
+		// 	fmt.Printf("function body scope = |%v|\n", string(content[bodyScopeBeginRuneIndex+1:bodyScopeEndRuneIndex]))
+		// 	fmt.Printf("body begin rune %v\n", string(content[bodyScopeBeginRuneIndex]))
+		// 	fmt.Printf("body end rune %v\n", string(content[bodyScopeEndRuneIndex]))
+		// 	fmt.Println()
+		// }
 
 		functionDeclarationMap[functionName] = &GoFunctionDeclaration{
 			FunctionSignature: functionName,
 			This:              thisDeclaration,
 			ParamsList:        paramsList,
 			ReturnList:        returnList,
-			BodyIndexSlice:    []int{bodyScopeBeginRuneIndex, bodyScopeEndRuneIndex},
+			BodyContent:       content[bodyScopeBeginRuneIndex+1 : bodyScopeEndRuneIndex],
 		}
 	}
 
@@ -218,26 +219,30 @@ func ExtractorFunctionParamsList(content []byte) []*GoVariableDefinition {
 		paramsSlice = append(paramsSlice, paramDeclaration)
 	}
 
-	{
-		for index, paramDeclaration := range paramsSlice {
-			fmt.Printf("%v param: %v\n", index, paramDeclaration.VariableSignature)
-			fmt.Printf("%v param type: %v\n", index, paramDeclaration.TypeDeclaration.MakeUp())
-		}
-	}
+	// {
+	// 	for index, paramDeclaration := range paramsSlice {
+	// 		fmt.Printf("%v param: %v\n", index, paramDeclaration.VariableSignature)
+	// 		fmt.Printf("%v param type: %v\n", index, paramDeclaration.TypeDeclaration.MakeUp())
+	// 	}
+	// }
 	return paramsSlice
 }
 
 func ExtractorFunctionReturnList(content []byte) []*GoTypeDeclaration {
+	contentWithoutSpace := strings.TrimSpace(string(content))
+	if len(contentWithoutSpace) == 0 {
+		return nil
+	}
 	splitContent := utility.RecursiveSplitUnderSameDeepPunctuationMarksContent(string(content), utility.GetLeftPunctuationMarkList(), ",")
 	returnTypeDeclarationSlice := make([]*GoTypeDeclaration, 0)
 	for _, content := range splitContent.ContentList {
-		fmt.Printf("return content = |%v|\n", strings.TrimSpace(content))
+		// fmt.Printf("return content = |%v|\n", strings.TrimSpace(content))
 		if len(content) == 0 {
 			panic("return content is empty")
 		}
 		typeDeclaration := ExtractGoVariableTypeDeclaration(strings.TrimSpace(content))
 		returnTypeDeclarationSlice = append(returnTypeDeclarationSlice, typeDeclaration)
-		fmt.Printf("typeDeclaration = %v\n", typeDeclaration.MakeUp())
+		// fmt.Printf("typeDeclaration = %v\n", typeDeclaration.MakeUp())
 		typeDeclaration.Traversal(0)
 	}
 	return returnTypeDeclarationSlice

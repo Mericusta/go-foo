@@ -1,6 +1,9 @@
 package utility
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 var (
 	punctuationMarkMap map[rune]rune = map[rune]rune{
@@ -276,4 +279,145 @@ func splitUnderSameDeepPunctuationMarksContent(punctuationContentNode *Punctuati
 	}
 
 	return splitContentNode
+}
+
+// FindNextValidPunctuationMark
+func FindNextValidPunctuationMark(content []byte, p rune) int {
+	// TODO:
+	isValid := true
+	for index := 0; index != len(content); index++ {
+		if isValid && rune(content[index]) == p {
+			return index
+		}
+		if _, has := InvalidScopePunctuationMarkMap[rune(content[index])]; has {
+			l := CalculatePunctuationMarksContentLength(string(content[index+1:]), rune(content[index]), GetAnotherPunctuationMark(rune(content[index])), InvalidScopePunctuationMarkMap)
+			index += l
+		}
+	}
+	return -1
+}
+
+// ConvertSnakeCase2CamelCase 将蛇形命名法转换为驼峰命名法：xxx_yyy_zzz -> [X|x]xxYyyZzz
+func ConvertSnakeCase2CamelCase(snakeCase string, capitalize bool) string {
+	camelStyleString := ""
+	for _, singleString := range strings.Split(snakeCase, "_") {
+		capitalizeSingleString := fmt.Sprintf("%v%v", strings.ToUpper(singleString[:1]), singleString[1:])
+		camelStyleString = fmt.Sprintf("%v%v", camelStyleString, capitalizeSingleString)
+	}
+	if !capitalize {
+		camelStyleString = fmt.Sprintf("%v%v", strings.ToLower(camelStyleString[:1]), camelStyleString[1:])
+	}
+	return camelStyleString
+}
+
+// ABC 开头 | 中间 DONE
+// ConvertSnakeCase2CamelCaseWithAbbreviation 将蛇形命名法转换为驼峰命名法：xxx_yyy_zzz -> [X|x]xxYyyZzz
+func ConvertSnakeCase2CamelCaseWithAbbreviation(snakeCase string, capitalize bool, abbreviationMap map[string]struct{}) string {
+	camelStyleString := ""
+	for _, singleString := range strings.Split(snakeCase, "_") {
+		if _, isPhrase := abbreviationMap[singleString]; isPhrase {
+			camelStyleString = fmt.Sprintf("%v%v", camelStyleString, singleString)
+		} else {
+			capitalizeSingleString := fmt.Sprintf("%v%v", strings.ToUpper(singleString[:1]), singleString[1:])
+			camelStyleString = fmt.Sprintf("%v%v", camelStyleString, capitalizeSingleString)
+		}
+	}
+	if !capitalize {
+		camelStyleString = fmt.Sprintf("%v%v", strings.ToLower(camelStyleString[:1]), camelStyleString[1:])
+	}
+	return camelStyleString
+}
+
+// ConvertCamelCase2SnakeCase 将驼峰命名法转换为蛇形命名法：XxxYyyZzz -> xxx_yyy_zzz
+func ConvertCamelCase2SnakeCase(camelCase string) string {
+	builder := strings.Builder{}
+	for index, r := range camelCase {
+		if 'a' <= r && r <= 'z' {
+			builder.WriteRune(r)
+			continue
+		}
+		if index != 0 {
+			builder.WriteRune('_')
+		}
+		builder.WriteRune(r + 32)
+	}
+	return builder.String()
+}
+
+// Abc 开头 | 中间 DONE
+// ABC 开头 | 中间 DONE
+// ConvertCamelCase2SnakeCaseWithAbbreviation 将驼峰命名法转换为蛇形命名法：XxxYyyZzz -> xxx_yyy_zzz
+func ConvertCamelCase2SnakeCaseWithAbbreviation(camelCase string, abbreviationMap map[string]struct{}) string {
+	allAbbreviationSubString := make(map[string]struct{})
+	for abbreviation := range abbreviationMap {
+		for index := 0; index != len(abbreviation); index++ {
+			allAbbreviationSubString[abbreviation[0:index]] = struct{}{}
+		}
+	}
+
+	builder := strings.Builder{}
+	abbreviationBuilder := strings.Builder{}
+	isFirstAbbreviation := true
+	for _, r := range camelCase {
+		if 'a' <= r && r <= 'z' {
+			abbreviationBuilder.WriteRune(r)
+		} else {
+			if abbreviationBuilder.Len() > 0 {
+				if _, isAbbreviation := abbreviationMap[abbreviationBuilder.String()]; isAbbreviation {
+					if isFirstAbbreviation {
+						isFirstAbbreviation = false
+					} else {
+						builder.WriteRune('_')
+					}
+					builder.WriteString(abbreviationBuilder.String())
+					abbreviationBuilder.Reset()
+				} else {
+					if _, maybeAbbreviation := allAbbreviationSubString[abbreviationBuilder.String()]; !maybeAbbreviation {
+						if isFirstAbbreviation {
+							isFirstAbbreviation = false
+						} else {
+							builder.WriteRune('_')
+						}
+						builder.WriteString(abbreviationBuilder.String())
+						abbreviationBuilder.Reset()
+					}
+				}
+			}
+			abbreviationBuilder.WriteRune(r + 32)
+		}
+	}
+	builder.WriteRune('_')
+	builder.WriteString(abbreviationBuilder.String())
+	return builder.String()
+}
+
+func SplitAny(groupSplitter, itemSplitter byte, content string) [][]string {
+	groupSlice := make([][]string, 0)
+	contentLength := len(content)
+	if contentLength > 0 {
+		groupSlice = append(groupSlice, make([]string, 0))
+	}
+
+	itemStartIndex := 0
+	groupIndex := 0
+	for index := 0; index != contentLength; index++ {
+		switch {
+		case index+1 == contentLength:
+			groupSlice[groupIndex] = append(groupSlice[groupIndex], content[itemStartIndex:contentLength])
+			itemStartIndex = index + 1
+			groupIndex++
+		case content[index] == groupSplitter:
+			groupSlice[groupIndex] = append(groupSlice[groupIndex], content[itemStartIndex:index])
+			itemStartIndex = index + 1
+			groupSlice = append(groupSlice, []string{})
+			groupIndex++
+		case content[index] == itemSplitter:
+			groupSlice[groupIndex] = append(groupSlice[groupIndex], content[itemStartIndex:index])
+			itemStartIndex = index + 1
+		default:
+			continue
+		}
+	}
+
+	return groupSlice
 }

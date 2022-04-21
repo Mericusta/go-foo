@@ -2,6 +2,8 @@ package extractorfoo
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"regexp"
 	"strings"
 )
@@ -182,4 +184,32 @@ func ExtractGoVariableTypeDeclaration(content string) *GoTypeDeclaration {
 		d.Content = submatchSlice[GoVariableTypeStructDeclarationRegexpSubmatchTypeIndex]
 	}
 	return d
+}
+
+var (
+	GO_TYPE_ALIAS_EXPRESSION            string = `type\s+(?P<ALIAS>\w+)\s*=\s*(?P<TYPE>\S+)`
+	GoTypeAliasRegexp                          = regexp.MustCompile(GO_TYPE_ALIAS_EXPRESSION)
+	GoTypeAliasRegexpSubmatchAliasIndex        = GoTypeAliasRegexp.SubexpIndex("ALIAS")
+	GoTypeAliasRegexpSubmatchTypeIndex         = GoTypeAliasRegexp.SubexpIndex("TYPE")
+)
+
+func ExtractorGoVariableTypeAlias(r io.Reader) map[string]*GoTypeDeclaration {
+	content, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+
+	typeAliasMap := make(map[string]*GoTypeDeclaration)
+	for _, matchStringSubmatchSlice := range GoTypeAliasRegexp.FindAllSubmatch(content, -1) {
+		// if string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchAliasIndex]) != "IBook" {
+		// 	continue
+		// }
+		typeAliasMap[string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchAliasIndex])] = ExtractGoVariableTypeDeclaration(string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchTypeIndex]))
+		// typeAliasMap[string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchAliasIndex])].Traversal(0)
+		// fmt.Printf("alias = %v\n", string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchAliasIndex]))
+		// fmt.Printf("type = %v\n", typeAliasMap[string(matchStringSubmatchSlice[GoTypeAliasRegexpSubmatchAliasIndex])].MakeUp())
+		// fmt.Println()
+	}
+
+	return typeAliasMap
 }
