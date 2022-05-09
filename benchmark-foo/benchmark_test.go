@@ -120,3 +120,48 @@ func TestPray(t *testing.T) {
 		})
 	}
 }
+
+func TestLambdaCapture(t *testing.T) {
+	type args struct {
+		testCase int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			name: "lambda capture",
+			args: args{
+				testCase: 1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LambdaCapture(tt.args.testCase)
+		})
+	}
+}
+
+func Benchmark_LambdaCapture(b *testing.B) {
+	type args struct {
+		testCase int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			name: "lambda capture",
+			args: args{
+				testCase: 1,
+			},
+		},
+	}
+	b.ResetTimer()
+	for _, tt := range tests {
+		LambdaCapture(tt.args.testCase)
+	}
+}

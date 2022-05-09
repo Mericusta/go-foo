@@ -1,5 +1,7 @@
 package benchmarkfoo
 
+import "fmt"
+
 func returnMapFunction(count int) map[int]int {
 	m := make(map[int]int, count)
 	for index := 0; index != count; index++ {
@@ -193,4 +195,22 @@ func PrayOpt() []*bagItem {
 		}
 	}
 	return s
+}
+
+func LambdaCaptureFunction(f func(int) int) int {
+	if f != nil {
+		return f(10)
+	}
+	return -1
+}
+
+func LambdaCapture(testCase int) {
+	var r int = 0
+	v := LambdaCaptureFunction(func(i int) int {
+		for index := 0; index != i; index++ {
+			r = index
+		}
+		return 0
+	})
+	fmt.Printf("testCase = %v, v = %v, r = %v\n", testCase, v, r)
 }
