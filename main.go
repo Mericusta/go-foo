@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	extractorfoo "go-foo/extractor-foo"
+	arrayfoo "go-foo/array-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -46,6 +46,9 @@ func main() {
 		// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
 		// regexpfoo.AllRegexpTest()
 		// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
-		extractorfoo.ExtractGoFileFunctionScopeTest()
+		// extractorfoo.ExtractGoFileFunctionScopeTest()
+		// slicefoo.PassSliceAndChangeIt()
+		arrayfoo.ClearArrayFoo()
+		arrayfoo.ReturnArrayBeforeIndexFoo()
 	}, false)
 }
