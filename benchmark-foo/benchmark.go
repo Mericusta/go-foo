@@ -158,22 +158,39 @@ func GetRewardItemByPoolIDOpt() []*bagItem {
 	return rewardResult
 }
 
-func Pray() {
+func Pray() map[int32]int64 {
 	// prepare
 	prayTimes := 10
+	m := make(map[int32]int64)
 
-	// get rewrad
+	// get reward
 	for prayIndex := 0; prayIndex < prayTimes; prayIndex++ {
-		GetRewardItemByPoolID()
+		for k, v := range GetRewardItemByPoolID() {
+			m[k] += v
+		}
 	}
+	return m
 }
 
-func PrayOpt() {
+func PrayOpt() []*bagItem {
 	// prepare
 	prayTimes := 10
-
+	s := make([]*bagItem, 0, 10)
 	// get rewrad
 	for prayIndex := 0; prayIndex < prayTimes; prayIndex++ {
-		GetRewardItemByPoolID()
+		for _, item := range GetRewardItemByPoolIDOpt() {
+			has := false
+			for index := 0; index < len(s); index++ {
+				if s[index].ItemID == item.ItemID {
+					s[index].ItemCount += item.ItemCount
+					has = true
+					break
+				}
+			}
+			if !has {
+				s = append(s, item)
+			}
+		}
 	}
+	return s
 }

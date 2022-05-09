@@ -1,6 +1,7 @@
 package benchmarkfoo
 
 import (
+	"fmt"
 	"math"
 	"testing"
 )
@@ -84,8 +85,10 @@ func Benchmark_Pray(b *testing.B) {
 	}
 	b.ResetTimer()
 	for index := 0; index != len(tests); index++ {
-		Pray()
+		m := Pray()
+		fmt.Printf("%v\n", m)
 	}
+	b.StopTimer()
 }
 
 func Benchmark_PrayOpt(b *testing.B) {
@@ -99,8 +102,10 @@ func Benchmark_PrayOpt(b *testing.B) {
 	}
 	b.ResetTimer()
 	for index := 0; index != len(tests); index++ {
-		PrayOpt()
+		s := PrayOpt()
+		fmt.Printf("%v\n", s)
 	}
+	b.StopTimer()
 }
 
 func TestPray(t *testing.T) {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	arrayfoo "go-foo/array-foo"
+	benchmarkfoo "go-foo/benchmark-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -48,7 +48,8 @@ func main() {
 		// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
 		// extractorfoo.ExtractGoFileFunctionScopeTest()
 		// slicefoo.PassSliceAndChangeIt()
-		arrayfoo.ClearArrayFoo()
-		arrayfoo.ReturnArrayBeforeIndexFoo()
+		// arrayfoo.ClearArrayFoo()
+		// arrayfoo.ReturnArrayBeforeIndexFoo()
+		benchmarkfoo.Pray()
 	}, false)
 }
