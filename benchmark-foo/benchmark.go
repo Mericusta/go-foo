@@ -67,3 +67,113 @@ func arrayFunction(count int) {
 	s := returnArrayFunction(count)
 	passArrayFunction(s)
 }
+
+// ----------------------------------------------------------------
+
+func makeRewards() map[int32]int64 {
+	return map[int32]int64{
+		1000: 1,
+		1001: 1,
+	}
+}
+
+type bagItem struct {
+	ItemID    int32
+	ItemCount int64
+	IsNew     bool
+}
+
+func makeRewardsOpt() []*bagItem {
+	return []*bagItem{
+		{
+			ItemID:    1000,
+			ItemCount: 1,
+			IsNew:     false,
+		},
+		{
+			ItemID:    1001,
+			ItemCount: 1,
+			IsNew:     false,
+		},
+	}
+}
+
+func makeRewardGroupDataWithTag() map[int32]int64 {
+	rewardResult := make(map[int32]int64)
+	resMap := makeRewards()
+	rewardResult = mergeRewardResult(rewardResult, resMap)
+	return rewardResult
+}
+
+func makeRewardGroupDataWithTagOpt() []*bagItem {
+	rewardResult := make([]*bagItem, 0, 4)
+	resMap := makeRewardsOpt()
+	rewardResult = mergeRewardResultOpt(rewardResult, resMap)
+	return rewardResult
+}
+
+func doRewardJackPotType5() map[int32]int64 {
+	return makeRewardGroupDataWithTag()
+}
+
+func doRewardJackPotType5Opt() []*bagItem {
+	return makeRewardGroupDataWithTagOpt()
+}
+
+func mergeRewardResult(origin, new map[int32]int64) map[int32]int64 {
+	for t, r := range new {
+		origin[t] += r
+	}
+	return origin
+}
+
+func mergeRewardResultOpt(origin, new []*bagItem) []*bagItem {
+	for i := 0; i != len(new); i++ {
+		has := false
+		for j := 0; j != len(origin); j++ {
+			if origin[j].ItemID == new[i].ItemID {
+				origin[j].ItemCount += new[i].ItemCount
+				has = true
+				break
+			}
+		}
+		if !has {
+			origin = append(origin, new[i])
+		}
+	}
+	return origin
+}
+
+func GetRewardItemByPoolID() map[int32]int64 {
+	rewardResult := make(map[int32]int64)
+	resMap := doRewardJackPotType5()
+	rewardResult = mergeRewardResult(rewardResult, resMap)
+	return rewardResult
+}
+
+func GetRewardItemByPoolIDOpt() []*bagItem {
+	rewardResult := make([]*bagItem, 0, 4)
+	resMap := doRewardJackPotType5Opt()
+	rewardResult = mergeRewardResultOpt(rewardResult, resMap)
+	return rewardResult
+}
+
+func Pray() {
+	// prepare
+	prayTimes := 10
+
+	// get rewrad
+	for prayIndex := 0; prayIndex < prayTimes; prayIndex++ {
+		GetRewardItemByPoolID()
+	}
+}
+
+func PrayOpt() {
+	// prepare
+	prayTimes := 10
+
+	// get rewrad
+	for prayIndex := 0; prayIndex < prayTimes; prayIndex++ {
+		GetRewardItemByPoolID()
+	}
+}

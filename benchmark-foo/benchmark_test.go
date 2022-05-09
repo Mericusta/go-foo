@@ -70,3 +70,48 @@ func Benchmark_arrayFunction(b *testing.B) {
 		arrayFunction(tt.args.count)
 	}
 }
+
+// ----------------------------------------------------------------
+
+func Benchmark_Pray(b *testing.B) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"benchmark",
+		},
+	}
+	b.ResetTimer()
+	for index := 0; index != len(tests); index++ {
+		Pray()
+	}
+}
+
+func Benchmark_PrayOpt(b *testing.B) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"benchmark_opt",
+		},
+	}
+	b.ResetTimer()
+	for index := 0; index != len(tests); index++ {
+		PrayOpt()
+	}
+}
+
+func TestPray(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Pray()
+		})
+	}
+}
