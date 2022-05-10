@@ -128,6 +128,7 @@ func TestLambdaCapture(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
+		want int
 	}{
 		// TODO: Add test cases.
 		{
@@ -135,22 +136,26 @@ func TestLambdaCapture(t *testing.T) {
 			args: args{
 				testCase: 1,
 			},
+			want: 0,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			LambdaCapture(tt.args.testCase)
+			if got := LambdaCapture(tt.args.testCase); got != tt.want {
+				t.Errorf("LambdaCapture() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
 
-func Benchmark_LambdaCapture(b *testing.B) {
+func BenchmarkLambdaCapture(b *testing.B) {
 	type args struct {
 		testCase int
 	}
 	tests := []struct {
 		name string
 		args args
+		want int
 	}{
 		// TODO: Add test cases.
 		{
@@ -158,10 +163,12 @@ func Benchmark_LambdaCapture(b *testing.B) {
 			args: args{
 				testCase: 1,
 			},
+			want: 0,
 		},
 	}
 	b.ResetTimer()
 	for _, tt := range tests {
-		LambdaCapture(tt.args.testCase)
+		v := LambdaCapture(tt.args.testCase)
+		fmt.Printf("v = %v\n", v)
 	}
 }

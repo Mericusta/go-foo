@@ -204,7 +204,7 @@ func LambdaCaptureFunction(f func(int) int) int {
 	return -1
 }
 
-func LambdaCapture(testCase int) {
+func LambdaCapture(testCase int) int {
 	var r int = 0
 	v := LambdaCaptureFunction(func(i int) int {
 		for index := 0; index != i; index++ {
@@ -213,4 +213,5 @@ func LambdaCapture(testCase int) {
 		return 0
 	})
 	fmt.Printf("testCase = %v, v = %v, r = %v\n", testCase, v, r)
+	return v
 }
