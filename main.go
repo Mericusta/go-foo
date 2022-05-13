@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	benchmarkfoo "go-foo/benchmark-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -50,6 +49,15 @@ func main() {
 		// slicefoo.PassSliceAndChangeIt()
 		// arrayfoo.ClearArrayFoo()
 		// arrayfoo.ReturnArrayBeforeIndexFoo()
-		benchmarkfoo.Pray()
+		// benchmarkfoo.Pray()
+
+		c := make(chan int)
+		go func() {
+			c <- 1
+		}()
+		go func() {
+			time.Sleep(time.Second)
+			<-c
+		}()
 	}, false)
 }

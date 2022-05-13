@@ -1,6 +1,8 @@
 package benchmarkfoo
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func returnMapFunction(count int) map[int]int {
 	m := make(map[int]int, count)
@@ -197,6 +199,8 @@ func PrayOpt() []*bagItem {
 	return s
 }
 
+// ----------------------------------------------------------------
+
 func LambdaCaptureFunction(f func(int) int) int {
 	if f != nil {
 		return f(10)
@@ -214,4 +218,44 @@ func LambdaCapture(testCase int) int {
 	})
 	fmt.Printf("testCase = %v, v = %v, r = %v\n", testCase, v, r)
 	return v
+}
+
+// ----------------------------------------------------------------
+
+// in 8, 16 elements, slice operation is more effective than map operation
+
+func ElementsInSlice(count int) []int {
+	s := make([]int, 0, count)
+	for index := 0; index < count; index++ {
+		s = append(s, index)
+	}
+
+	// remove odd number
+	for index := 0; index < len(s); index++ {
+		if s[index]%2 == 1 {
+			if index == 0 {
+				s = s[index+1:]
+			} else {
+				s = append(s[0:index], s[index+1:]...)
+			}
+		}
+	}
+
+	return s
+}
+
+func ElementsInMap(count int) map[int]struct{} {
+	m := make(map[int]struct{}, count)
+	for index := 0; index < count; index++ {
+		m[index] = struct{}{}
+	}
+
+	// remove odd number
+	for k := range m {
+		if k%2 == 1 {
+			delete(m, k)
+		}
+	}
+
+	return m
 }
