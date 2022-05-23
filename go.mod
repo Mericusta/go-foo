@@ -7,6 +7,8 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 )
 
+require golang.org/x/text v0.3.7 // indirect
+
 require (
 	github.com/pjebs/optimus-go v1.0.0
 	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect

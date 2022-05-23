@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	unicodefoo "go-foo/unicode-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -51,13 +52,6 @@ func main() {
 		// arrayfoo.ReturnArrayBeforeIndexFoo()
 		// benchmarkfoo.Pray()
 
-		c := make(chan int)
-		go func() {
-			c <- 1
-		}()
-		go func() {
-			time.Sleep(time.Second)
-			<-c
-		}()
+		unicodefoo.UnicodeLengthFoo()
 	}, false)
 }
