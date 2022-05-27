@@ -1,6 +1,7 @@
 package algorithmfoo
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
@@ -418,6 +419,140 @@ func TestAntiAddictionData_GetReleaseOnlineTime(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.GetReleaseOnlineTime(tt.args.ts, tt.args.antiAddictionNormalCfgMap, tt.args.antiAddictionSpecialCfgMap); got != tt.want {
 				t.Errorf("AntiAddictionData.GetReleaseOnlineTime() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBasicContext_CoincidenceCheck(t *testing.T) {
+	type args struct {
+		ctx RenderContext
+	}
+	tests := []struct {
+		name  string
+		c     BasicContext
+		args  args
+		want  RenderContext
+		want1 bool
+	}{
+		// TODO: Add test cases.
+		{
+			"coincidence inside: BasicContext c {0,0} s {10,10}, RenderContext c{0,0} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 5, Height: 5}},
+			true,
+		},
+		{
+			"coincidence top left half inside: BasicContext c {0,0} s {10,10}, RenderContext c{-1,-1} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -1, Y: -1}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 4, Height: 4}},
+			true,
+		},
+		{
+			"coincidence top right half inside: BasicContext c {0,0} s {10,10}, RenderContext c{6,-1} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: 6, Y: -1}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 6, Y: 0}, s: Size{Width: 4, Height: 4}},
+			true,
+		},
+		{
+			"coincidence bottom right half inside: BasicContext c {0,0} s {10,10}, RenderContext c{6,6} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: 6, Y: 6}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 6, Y: 6}, s: Size{Width: 4, Height: 4}},
+			true,
+		},
+		{
+			"coincidence bottom left half inside: BasicContext c {0,0} s {10,10}, RenderContext c{-1,6} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -1, Y: 6}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 6}, s: Size{Width: 4, Height: 4}},
+			true,
+		},
+		{
+			"coincidence top left outside: BasicContext c {0,0} s {10,10}, RenderContext c{-5,-5} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 0, Height: 0}},
+			false,
+		},
+		{
+			"coincidence bottom right outside: BasicContext c {0,0} s {10,10}, RenderContext c{10,10} s{5,5}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: 10, Y: 10}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 0, Height: 0}},
+			false,
+		},
+		{
+			"coincidence inside: BasicContext c {-5,-5} s {10,10}, RenderContext c{0,0} s{5,5}",
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 5, Height: 5}},
+			true,
+		},
+		{
+			"coincidence inside: BasicContext c {-5,-5} s {10,10}, RenderContext c{-2,-2} s{5,5}",
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -2, Y: -2}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: -2, Y: -2}, s: Size{Width: 5, Height: 5}},
+			true,
+		},
+		{
+			"coincidence top left halt outside: BasicContext c {-5,-5} s {10,10}, RenderContext c{-6,-6} s{5,5}",
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -6, Y: -6}, s: Size{Width: 5, Height: 5}},
+			},
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 4, Height: 4}},
+			true,
+		},
+		{
+			"coincidence equal: BasicContext c {-5,-5} s {10,10}, RenderContext c{-5,-5} s{10,10}",
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			},
+			BasicContext{c: Coordinate{X: -5, Y: -5}, s: Size{Width: 10, Height: 10}},
+			true,
+		},
+		{
+			"coincidence outer point: BasicContext c {0,0} s {10,10}, RenderContext c{-1,-1} s{1,1}",
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 10, Height: 10}},
+			args{
+				ctx: BasicContext{c: Coordinate{X: -1, Y: -1}, s: Size{Width: 1, Height: 1}},
+			},
+			BasicContext{c: Coordinate{X: 0, Y: 0}, s: Size{Width: 0, Height: 0}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := tt.c.CoincidenceCheck(tt.args.ctx)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BasicContext.CoincidenceCheck() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("BasicContext.CoincidenceCheck() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}
