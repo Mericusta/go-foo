@@ -2,6 +2,7 @@ package benchmarkfoo
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 func returnMapFunction(count int) map[int]int {
@@ -258,4 +259,57 @@ func ElementsInMap(count int) map[int]struct{} {
 	}
 
 	return m
+}
+
+// ----------------------------------------------------------------
+
+// pass builtin type rather than struct
+
+type toPassStruct struct {
+	v int
+}
+
+func passStructFunc(s toPassStruct) int {
+	return s.v + 10
+}
+
+func PassStructFuncTest() {
+	s := toPassStruct{v: 10}
+	ns := passStructFunc(s)
+	if ns == 20 {
+		return
+	} else {
+		panic(ns)
+	}
+}
+
+type toPassInterface interface {
+	V() int
+}
+
+func (s toPassStruct) V() int {
+	return s.v
+}
+
+func passInterfaceFunc(s toPassInterface) int {
+	return s.V() + 10
+}
+
+func PassInterfaceFuncTest() {
+	s := toPassStruct{v: 10}
+	ns := passInterfaceFunc(s)
+	if ns == 20 {
+		return
+	} else {
+		panic(ns)
+	}
+}
+
+// ----------------------------------------------------------------
+
+func FMTPrintfBenchmark() {
+	r := rand.Intn(10)
+	v := toPassStruct{v: r}
+	fmt.Printf("%v", v)
+	_ = v.V() + rand.Intn(100)
 }

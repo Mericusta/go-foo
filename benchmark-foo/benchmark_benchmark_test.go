@@ -1,24 +1,28 @@
 package benchmarkfoo
 
 import (
-	"reflect"
 	"testing"
 )
 
-func TestPray(t *testing.T) {
+func BenchmarkFMTPrintfBenchmark(b *testing.B) {
 	tests := []struct {
 		name string
 	}{
 		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Pray()
-		})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for index := 0; index != len(tests); index++ {
+			FMTPrintfBenchmark()
+		}
 	}
 }
 
-func TestLambdaCapture(t *testing.T) {
+func BenchmarkLambdaCapture(b *testing.B) {
 	type args struct {
 		testCase int
 	}
@@ -36,16 +40,16 @@ func TestLambdaCapture(t *testing.T) {
 			want: 0,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := LambdaCapture(tt.args.testCase); got != tt.want {
-				t.Errorf("LambdaCapture() = %v, want %v", got, tt.want)
-			}
-		})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			LambdaCapture(tt.args.testCase)
+		}
 	}
 }
 
-func TestElementsInSlice(t *testing.T) {
+func BenchmarkElementsInSlice(b *testing.B) {
 	getEvenSlice := func(c int) []int {
 		s := make([]int, 0, c/2)
 		for index := 0; index < c; index++ {
@@ -100,16 +104,16 @@ func TestElementsInSlice(t *testing.T) {
 			getEvenSlice(128),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := ElementsInSlice(tt.args.count); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ElementsInSlice() = %v, want %v", got, tt.want)
-			}
-		})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			ElementsInSlice(tt.args.count)
+		}
 	}
 }
 
-func TestElementsInMap(t *testing.T) {
+func BenchmarkElementsInMap(b *testing.B) {
 	getEvenMap := func(c int) map[int]struct{} {
 		m := make(map[int]struct{}, c/2)
 		for index := 0; index < c; index++ {
@@ -164,50 +168,11 @@ func TestElementsInMap(t *testing.T) {
 			getEvenMap(128),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := ElementsInMap(tt.args.count); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ElementsInMap() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestPassStructFuncTest(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			PassStructFuncTest()
-		})
-	}
-}
-
-func TestPassInterfaceFuncTest(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			PassInterfaceFuncTest()
-		})
-	}
-}
-
-func TestFMTPrintfBenchmark(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			FMTPrintfBenchmark()
-		})
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			ElementsInMap(tt.args.count)
+		}
 	}
 }
