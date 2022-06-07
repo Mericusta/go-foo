@@ -236,3 +236,17 @@ func GoroutineOutputOrder2() {
 	fmt.Println()
 	fmt.Printf("%v\n", s)
 }
+
+func GoChannelBlock() {
+	s := make(chan bool)
+	sendGo := func() {
+		s <- true
+	}
+
+	go sendGo()
+
+	select {
+	case <-s:
+		fmt.Printf("receive init \n")
+	}
+}

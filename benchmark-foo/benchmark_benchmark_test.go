@@ -4,20 +4,62 @@ import (
 	"testing"
 )
 
+func BenchmarkPassStructFuncTest(b *testing.B) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for index := 0; index != len(tests); index++ {
+			PassStructFuncTest()
+		}
+	}
+}
+
+func BenchmarkPassInterfaceFuncTest(b *testing.B) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for index := 0; index != len(tests); index++ {
+			PassInterfaceFuncTest()
+		}
+	}
+}
+
 func BenchmarkFMTPrintfBenchmark(b *testing.B) {
 	tests := []struct {
 		name string
 	}{
 		// TODO: Add test cases.
-		{
-			"test case 1",
-		},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for index := 0; index != len(tests); index++ {
 			FMTPrintfBenchmark()
+		}
+	}
+}
+
+func BenchmarkPray(b *testing.B) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for index := 0; index != len(tests); index++ {
+			Pray()
 		}
 	}
 }

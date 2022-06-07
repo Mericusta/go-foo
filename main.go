@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	unicodefoo "go-foo/unicode-foo"
+	goroutinefoo "go-foo/goroutine-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -37,21 +37,24 @@ func Bencher(count int, f func(int), concurrently bool) {
 }
 
 func main() {
-	Bencher(1, func(index int) {
-		// algorithmfoo.CalculateYearsOldTest()
-		// jsonfoo.JsonFoo()
-		// functionfoo.ReturnExampleStructTest()
-		// mysqlfoo.BatchInsertPrayRecordData()
-		// algorithmfoo.OptimusTest()
-		// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
-		// regexpfoo.AllRegexpTest()
-		// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
-		// extractorfoo.ExtractGoFileFunctionScopeTest()
-		// slicefoo.PassSliceAndChangeIt()
-		// arrayfoo.ClearArrayFoo()
-		// arrayfoo.ReturnArrayBeforeIndexFoo()
-		// benchmarkfoo.Pray()
+	// Bencher(1, func(index int) {
+	// 	// algorithmfoo.CalculateYearsOldTest()
+	// 	// jsonfoo.JsonFoo()
+	// 	// functionfoo.ReturnExampleStructTest()
+	// 	// mysqlfoo.BatchInsertPrayRecordData()
+	// 	// algorithmfoo.OptimusTest()
+	// 	// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
+	// 	// regexpfoo.AllRegexpTest()
+	// 	// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
+	// 	// extractorfoo.ExtractGoFileFunctionScopeTest()
+	// 	// slicefoo.PassSliceAndChangeIt()
+	// 	// arrayfoo.ClearArrayFoo()
+	// 	// arrayfoo.ReturnArrayBeforeIndexFoo()
+	// 	// benchmarkfoo.Pray()
 
-		unicodefoo.UnicodeLengthFoo()
-	}, false)
+	// 	// unicodefoo.UnicodeLengthFoo()
+	// }, false)
+
+	// channelfoo.GoChannelBlock()
+	goroutinefoo.OpenSoMuchGoRoutine()
 }
