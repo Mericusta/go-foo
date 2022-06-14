@@ -12,3 +12,12 @@ func RandSlice(seed int64, otherInfo string) {
 		fmt.Printf("rand: %v\n", rand.Intn(100))
 	}
 }
+
+func GetRandSlice(seed int64) []int {
+	rand.Seed(seed)
+	s := make([]int, 0, 4)
+	for index := 0; index != 4; index++ {
+		s = append(s, rand.Intn(2))
+	}
+	return s
+}

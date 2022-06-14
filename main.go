@@ -3,14 +3,9 @@ package main
 import (
 	"fmt"
 	randfoo "go-foo/rand-foo"
-	"math/rand"
 	"sync"
 	"time"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func Bencher(count int, f func(int), concurrently bool) {
 	var wg sync.WaitGroup
