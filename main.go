@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	goroutinefoo "go-foo/goroutine-foo"
+	randfoo "go-foo/rand-foo"
 	"math/rand"
 	"sync"
 	"time"
@@ -56,5 +56,7 @@ func main() {
 	// }, false)
 
 	// channelfoo.GoChannelBlock()
-	goroutinefoo.OpenSoMuchGoRoutine()
+	// goroutinefoo.OpenSoMuchGoRoutine()
+	// mapfoo.MapCapacityFoo()
+	randfoo.RandSlice(1024, "1025")
 }
