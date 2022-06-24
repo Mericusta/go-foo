@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	randfoo "go-foo/rand-foo"
+	designfoo "go-foo/design-foo"
 	"sync"
 	"time"
 )
@@ -53,5 +53,7 @@ func main() {
 	// channelfoo.GoChannelBlock()
 	// goroutinefoo.OpenSoMuchGoRoutine()
 	// mapfoo.MapCapacityFoo()
-	randfoo.RandSlice(1024, "1025")
+	// randfoo.RandSlice(1024, "1025")
+
+	designfoo.ObserverPattern()
 }
