@@ -14,6 +14,7 @@ const (
 	VALUE1 int = iota + 1
 	VALUE2
 	VALUE3
+	VALUE4
 )
 
 type topicData struct {
@@ -22,35 +23,64 @@ type topicData struct {
 }
 
 var runningTopicStack []topicData
-var pendingTopicStack []topicData
-var topicStackSlice []topicData
-
-var stackDeep int = 0
-var maxStackDeep int = 1
+var pendingTopicList []topicData
+var maxStackDeep int = 3
 
 func Report(topic int, value int) {
 	td := topicData{topic: topic, value: value}
-	fmt.Printf("topic %v, value %v\n", td.topic, td.value)
+	fmt.Printf("report topic %v, value %v\n", td.topic, td.value)
 
-	if stackDeep < maxStackDeep {
-		stackDeep++
-		switch td.topic {
+	topicInStack := false
+	for _, t := range runningTopicStack {
+		if t.topic == td.topic {
+			topicInStack = true
+			fmt.Printf("topic %v already in stack\n", td.topic)
+			break
+		}
+	}
+
+STACK:
+	if len(runningTopicStack) < maxStackDeep && !topicInStack {
+		runningTopicStack = append(runningTopicStack, td)
+		t := runningTopicStack[len(runningTopicStack)-1]
+		switch t.topic {
 		case VALUE1:
-			if Value1Condition(td.value) {
+			if Value1Condition(t.value) {
 				Value1Callback()
 			}
 		case VALUE2:
-			if Value2Condition(td.value) {
+			if Value2Condition(t.value) {
 				Value2Callback()
 			}
 		case VALUE3:
-			if Value3Condition(td.value) {
-				Value3Callback()
+			if Value3Condition(t.value) {
+				Value3TrueCallback()
+			} else {
+				Value3FalseCallback()
+			}
+		case VALUE4:
+			if Value4Condition(t.value) {
+				Value4Callback()
 			}
 		}
-		stackDeep--
+		if len(runningTopicStack) > 1 {
+			runningTopicStack = runningTopicStack[0 : len(runningTopicStack)-1]
+		} else {
+			runningTopicStack = nil
+		}
 	} else {
-		topicStackSlice = append(topicStackSlice, td)
+		pendingTopicList = append(pendingTopicList, td)
+		fmt.Printf("truncate topic %v, value %v\n", td.topic, td.value)
+	}
+
+	if len(runningTopicStack) == 0 && len(pendingTopicList) > 0 {
+		td = pendingTopicList[0]
+		if len(pendingTopicList) > 1 {
+			pendingTopicList = pendingTopicList[1:]
+		} else {
+			pendingTopicList = nil
+		}
+		goto STACK
 	}
 }
 
@@ -80,6 +110,14 @@ func IncreaseValue3() {
 	Report(VALUE3, value3)
 }
 
+var value4 int
+
+func IncreaseValue4() {
+	value4++
+
+	Report(VALUE4, value4)
+}
+
 // ----------------------------------------------------------------
 
 func Value1Condition(value1 int) bool {
@@ -98,16 +136,33 @@ func Value2Condition(value2 int) bool {
 
 func Value2Callback() {
 	fmt.Printf("Value 2 Callback Start\n")
+	IncreaseValue2()
 	IncreaseValue3()
 	fmt.Printf("Value 2 Callback Done\n")
 }
 
 func Value3Condition(value3 int) bool {
-	return value3 <= 10
+	return value3 <= 5
 }
 
-func Value3Callback() {
-	fmt.Printf("Value 3 Callback Start\n")
+func Value3TrueCallback() {
+	fmt.Printf("Value 3 True Callback Start\n")
 	IncreaseValue1()
-	fmt.Printf("Value 3 Callback Done\n")
+	fmt.Printf("Value 3 True Callback Done\n")
+}
+
+func Value3FalseCallback() {
+	fmt.Printf("Value 3 False Callback Start\n")
+	IncreaseValue4()
+	fmt.Printf("Value 3 False Callback Done\n")
+}
+
+func Value4Condition(value4 int) bool {
+	return value4 <= 10
+}
+
+func Value4Callback() {
+	fmt.Printf("Value 4 Callback Start\n")
+	IncreaseValue1()
+	fmt.Printf("Value 4 Callback Done\n")
 }
