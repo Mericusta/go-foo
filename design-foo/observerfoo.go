@@ -60,7 +60,9 @@ STACK:
 			}
 		case VALUE4:
 			if Value4Condition(t.value) {
-				Value4Callback()
+				Value4TrueCallback()
+			} else {
+				Value4FalseCallback()
 			}
 		}
 		if len(runningTopicStack) > 1 {
@@ -95,7 +97,6 @@ var value1 int = 0
 
 func IncreaseValue1() {
 	value1++
-
 	Report(VALUE1, value1)
 }
 
@@ -103,7 +104,6 @@ var value2 int = 0
 
 func IncreaseValue2() {
 	value2++
-
 	Report(VALUE2, value2)
 }
 
@@ -111,7 +111,6 @@ var value3 int
 
 func IncreaseValue3() {
 	value3++
-
 	Report(VALUE3, value3)
 }
 
@@ -119,7 +118,6 @@ var value4 int
 
 func IncreaseValue4() {
 	value4++
-
 	Report(VALUE4, value4)
 }
 
@@ -163,11 +161,18 @@ func Value3FalseCallback() {
 }
 
 func Value4Condition(value4 int) bool {
-	return value4 <= 10
+	return value4 <= 2
 }
 
-func Value4Callback() {
-	fmt.Printf("Value 4 Callback Start\n")
+func Value4TrueCallback() {
+	fmt.Printf("Value 4 True Callback Start\n")
 	IncreaseValue1()
-	fmt.Printf("Value 4 Callback Done\n")
+	fmt.Printf("Value 4 True Callback Done\n")
+}
+
+func Value4FalseCallback() {
+	fmt.Printf("Value 4 False Callback Start\n")
+	IncreaseValue1()
+	IncreaseValue2()
+	fmt.Printf("Value 4 False Callback Done\n")
 }
