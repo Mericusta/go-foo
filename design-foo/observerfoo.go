@@ -71,6 +71,11 @@ STACK:
 	} else {
 		pendingTopicList = append(pendingTopicList, td)
 		fmt.Printf("truncate topic %v, value %v\n", td.topic, td.value)
+		fmt.Printf("pending topic: ")
+		for _, t := range pendingTopicList {
+			fmt.Printf("%v ", t.topic)
+		}
+		fmt.Println()
 	}
 
 	if len(runningTopicStack) == 0 && len(pendingTopicList) > 0 {
