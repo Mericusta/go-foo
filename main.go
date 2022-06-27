@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	designfoo "go-foo/design-foo"
+	mapfoo "go-foo/map-foo"
 	"sync"
 	"time"
 )
@@ -55,5 +55,6 @@ func main() {
 	// mapfoo.MapCapacityFoo()
 	// randfoo.RandSlice(1024, "1025")
 
-	designfoo.ObserverPattern()
+	// designfoo.ObserverPattern()
+	mapfoo.StructMapKeyFoo()
 }
