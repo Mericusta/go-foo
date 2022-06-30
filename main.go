@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	mapfoo "go-foo/map-foo"
+	iofoo "go-foo/io-foo"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,10 +17,10 @@ func Bencher(count int, f func(int), concurrently bool) {
 	t1 := time.Now()
 	for index := 0; index != count; index++ {
 		if concurrently {
-			go func() {
-				f(index)
+			go func(i int) {
+				f(i)
 				wg.Done()
-			}()
+			}(index)
 		} else {
 			f(index)
 		}
@@ -32,29 +33,19 @@ func Bencher(count int, f func(int), concurrently bool) {
 }
 
 func main() {
-	// Bencher(1, func(index int) {
-	// 	// algorithmfoo.CalculateYearsOldTest()
-	// 	// jsonfoo.JsonFoo()
-	// 	// functionfoo.ReturnExampleStructTest()
-	// 	// mysqlfoo.BatchInsertPrayRecordData()
-	// 	// algorithmfoo.OptimusTest()
-	// 	// fmt.Printf("uint64MAX := ^uint64(0) = %v\n", ^uint64(0)) // 18446744073709551615
-	// 	// regexpfoo.AllRegexpTest()
-	// 	// extractorfoo.ExtractGoFileInterfaceDeclarationTest()
-	// 	// extractorfoo.ExtractGoFileFunctionScopeTest()
-	// 	// slicefoo.PassSliceAndChangeIt()
-	// 	// arrayfoo.ClearArrayFoo()
-	// 	// arrayfoo.ReturnArrayBeforeIndexFoo()
-	// 	// benchmarkfoo.Pray()
+	outputFile, err := os.OpenFile("./resources/iofoo_WriteFileFoo.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_TRUNC, 0755)
+	if err != nil {
+		fmt.Printf("Open output file %v occurs error: %v\n", "./resources/iofoo_WriteFileFoo.log", err)
+		return
+	}
+	defer func() {
+		outputFile.Close()
+	}()
 
-	// 	// unicodefoo.UnicodeLengthFoo()
-	// }, false)
-
-	// channelfoo.GoChannelBlock()
-	// goroutinefoo.OpenSoMuchGoRoutine()
-	// mapfoo.MapCapacityFoo()
-	// randfoo.RandSlice(1024, "1025")
-
-	// designfoo.ObserverPattern()
-	mapfoo.StructMapKeyFoo()
+	Bencher(3000, func(i int) {
+		t1 := time.Now()
+		iofoo.WriteFileFoo(i, outputFile)
+		t2 := time.Now()
+		fmt.Printf("writer %v/3000 Write File Foo using %v\n", i, t2.Sub(t1).Milliseconds())
+	}, true)
 }
