@@ -48,5 +48,5 @@ func main() {
 	// 	fmt.Printf("writer %v/3000 Write File Foo using %v\n", i, t2.Sub(t1).Milliseconds())
 	// }, true)
 
-	mapfoo.MapCapacityFoo(8)
+	mapfoo.StructMapKeyFoo()
 }

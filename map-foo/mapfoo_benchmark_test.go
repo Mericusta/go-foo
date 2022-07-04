@@ -6,7 +6,8 @@ import (
 
 func BenchmarkMapCapacityFoo(b *testing.B) {
 	type args struct {
-		c int
+		count    int
+		capacity int
 	}
 	tests := []struct {
 		name string
@@ -14,15 +15,15 @@ func BenchmarkMapCapacityFoo(b *testing.B) {
 	}{
 		// TODO: Add test cases.
 		{
-			"test case 1: c 4",
-			args{c: 16},
+			"test case",
+			args{count: 16, capacity: 8},
 		},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tt := range tests {
-			MapCapacityFoo(tt.args.c)
+			MapCapacityFoo(tt.args.count, tt.args.capacity)
 		}
 	}
 }

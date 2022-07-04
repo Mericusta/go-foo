@@ -4,7 +4,8 @@ import "testing"
 
 func TestMapCapacityFoo(t *testing.T) {
 	type args struct {
-		c int
+		count    int
+		capacity int
 	}
 	tests := []struct {
 		name string
@@ -12,13 +13,13 @@ func TestMapCapacityFoo(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			"test case 1: c 4",
-			args{c: 7},
+			"test case",
+			args{count: 8, capacity: 8},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			MapCapacityFoo(tt.args.c)
+			MapCapacityFoo(tt.args.count, tt.args.capacity)
 		})
 	}
 }
