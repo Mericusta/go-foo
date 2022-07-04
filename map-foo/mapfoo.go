@@ -2,17 +2,19 @@ package mapfoo
 
 import "fmt"
 
-func upperCapacityMapFunc(m map[int]int, count int) {
-	for index := 0; index != count*2; index++ {
+func upperCapacityMapFunc(count int) map[int]int {
+	m := make(map[int]int, 8)
+	for index := 0; index != count; index++ {
 		m[index] = index
 	}
+	return m
 }
 
-func MapCapacityFoo() {
-	m := make(map[int]int)
-	fmt.Printf("m = %v, len = %v, &m = %p\n", m, len(m), &m)
-	upperCapacityMapFunc(m, 8)
-	fmt.Printf("m = %v, len = %v, &m = %p\n", m, len(m), &m)
+func MapCapacityFoo(c int) {
+	// fmt.Printf("m = %v, len = %v, &m = %p\n", m, len(m), &m)
+	m := upperCapacityMapFunc(c)
+	fmt.Sprintf("%v", len(m))
+	// fmt.Printf("m = %v, len = %v, &m = %p\n", m, len(m), &m)
 }
 
 type mapKey struct {
