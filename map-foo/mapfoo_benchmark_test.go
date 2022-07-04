@@ -16,7 +16,7 @@ func BenchmarkMapCapacityFoo(b *testing.B) {
 		// TODO: Add test cases.
 		{
 			"test case",
-			args{count: 16, capacity: 8},
+			args{count: 23, capacity: 38},
 		},
 	}
 

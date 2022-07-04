@@ -3,7 +3,7 @@ package mapfoo
 import "fmt"
 
 // 不同的 count 和 capacity 组合在 benchmark 下的性能是不同的
-// 只讨论 count <= capacity 的情况
+// 只讨论 count <= capacity 的情况，见 ./BenchmarkMapCapacityFoo.sh true 10000
 func MapCapacityFoo(count, capacity int) {
 	m := make(map[int]int, capacity)
 	for index := 0; index != count; index++ {
