@@ -1,5 +1,7 @@
 package interfacefoo
 
+import "fmt"
+
 type I interface {
 	IFunc()
 }
@@ -48,4 +50,52 @@ func PassStruct() {
 	// sp must be pointer because struct SP implement interface I function IFunc by *SP
 	sp := &SP{}
 	PassInterface(sp)
+}
+
+func GetIButReturnNil() I {
+	return nil
+}
+
+func GetI() I {
+	return &S{}
+}
+
+func GetSButReturnNil() *S {
+	return nil
+}
+
+func GetS() *S {
+	return &S{}
+}
+
+func EmptyInterface() {
+	var i I
+	fmt.Println(i == nil) // true
+
+	i = GetIButReturnNil()
+	fmt.Println(i == nil) // true
+
+	i = GetSButReturnNil()
+	fmt.Println(i == nil) // false
+
+	i = GetI()
+	fmt.Println(i == nil) // false
+
+	i = GetS()
+	fmt.Println(i == nil) // false
+
+	var s *S
+	fmt.Println(s == nil) // true
+
+	s = GetSButReturnNil()
+	fmt.Println(s == nil) // true
+
+	s = GetS()
+	fmt.Println(s == nil) // false
+
+	nowI := GetIButReturnNil()
+	fmt.Println(nowI == nil) // true
+
+	nowS := GetSButReturnNil()
+	fmt.Println(nowS == nil) // true
 }
