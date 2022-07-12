@@ -1,23 +1,12 @@
 package algorithmfoo
 
 import (
-	"fmt"
 	"math"
 	"strings"
 	"time"
 
 	optimus "github.com/pjebs/optimus-go"
 )
-
-func ConvertCamelCase2SnakeCaseWithPhraseTest() {
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("ElfAwakeExample", map[string]struct{}{"elf": {}}))
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("AwakeElfExample", map[string]struct{}{"elf": {}}))
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("AwakeExampleElf", map[string]struct{}{"elf": {}}))
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("ELFAwakeExample", map[string]struct{}{"elf": {}}))
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("AwakeELFExample", map[string]struct{}{"elf": {}}))
-	fmt.Printf("%v\n", ConvertCamelCase2SnakeCaseWithPhrase("AwakeExampleELF", map[string]struct{}{"elf": {}}))
-
-}
 
 // Abc 开头 | 中间 DONE
 // ABC 开头 | 中间
@@ -74,20 +63,6 @@ func CalculateYearsOld(birthTimstamp int64) int {
 		return nowTime.Year() - birthTime.Year() - 1
 	}
 	return nowTime.Year() - birthTime.Year()
-}
-
-func CalculateYearsOldTest() {
-	// 1995.6.5 15:00
-	birthTimestamp := 802335600
-	fmt.Printf("now from 1995.6.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
-
-	// 1995.3.5 15:00
-	birthTimestamp = 794386800
-	fmt.Printf("now from 1995.3.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
-
-	// 1995.2.5 15:00
-	birthTimestamp = 791967600
-	fmt.Printf("now from 1995.2.5 15:00, %v\n", CalculateYearsOld(int64(birthTimestamp)))
 }
 
 type AntiAddictionData struct {
@@ -222,35 +197,13 @@ const RandNum = 214748365
 var optimusPrime optimus.Optimus
 
 func EncodeID(ID int64) int64 {
+	optimusPrime = optimus.NewCalculated(PrimeNum, RandNum)
 	return int64(optimusPrime.Encode(uint64(ID)))
 }
 
 func DecodeID(identifier int64) int64 {
-	return int64(optimusPrime.Decode(uint64(identifier)))
-}
-
-func OptimusTest() {
-	// m := make(map[uint64]uint64)
-
 	optimusPrime = optimus.NewCalculated(PrimeNum, RandNum)
-
-	uint64MAX := ^uint64(0)
-	uint32MAX := ^uint32(0)
-
-	fmt.Printf("encode uint64MAX-1 %v to %v\n", uint64MAX-1, optimusPrime.Encode(uint64MAX-1))
-	fmt.Printf("encode uint32MAX-1 %v to %v\n", uint32MAX-1, optimusPrime.Encode(uint64(uint32MAX-1)))
-
-	// for index := uint64MAX; uint64(index) >= 0; index-- {
-	// 	v1 := optimusPrime.Encode(uint64(index))
-	// 	if _, has := m[v1]; has {
-	// 		panic(fmt.Sprintf("Note: ID = %v Repeated !!!\n", v1))
-	// 	}
-	// 	m[v1] = uint64(index)
-	// 	v2 := optimusPrime.Decode(v1)
-	// 	if m[v1] != uint64(index) {
-	// 		panic(fmt.Sprintf("Note: ID = %v:%v Decode Error !!!\n", v1, v2))
-	// 	}
-	// }
+	return int64(optimusPrime.Decode(uint64(identifier)))
 }
 
 // Coordinate right-handed coordinate system

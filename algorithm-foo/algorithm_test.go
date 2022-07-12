@@ -557,3 +557,169 @@ func TestBasicContext_CoincidenceCheck(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertCamelCase2SnakeCaseWithPhrase(t *testing.T) {
+	type args struct {
+		camelCase string
+		phraseMap map[string]struct{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case ElfAwakeExample",
+			args{
+				camelCase: "ElfAwakeExample",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"elf_awake_example",
+		},
+		{
+			"test case AwakeElfExample",
+			args{
+				camelCase: "AwakeElfExample",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"awake_elf_example",
+		},
+		{
+			"test case AwakeExampleElf",
+			args{
+				camelCase: "AwakeExampleElf",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"awake_example_elf",
+		},
+		{
+			"test case ELFAwakeExample",
+			args{
+				camelCase: "ELFAwakeExample",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"elf_awake_example",
+		},
+		{
+			"test case AwakeELFExample",
+			args{
+				camelCase: "AwakeELFExample",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"awake_elf_example",
+		},
+		{
+			"test case AwakeExampleELF",
+			args{
+				camelCase: "AwakeExampleELF",
+				phraseMap: map[string]struct{}{
+					"elf": {},
+				},
+			},
+			"awake_example_elf",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertCamelCase2SnakeCaseWithPhrase(tt.args.camelCase, tt.args.phraseMap); got != tt.want {
+				t.Errorf("ConvertCamelCase2SnakeCaseWithPhrase() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCalculateYearsOld(t *testing.T) {
+	type args struct {
+		birthTimstamp int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 802335600, 1995.6.5 15:00",
+			args{birthTimstamp: 802335600},
+			27,
+		},
+		{
+			"test case 794386800, 1995.3.5 15:00",
+			args{birthTimstamp: 794386800},
+			27,
+		},
+		{
+			"test case 791967600, 1995.2.5 15:00",
+			args{birthTimstamp: 791967600},
+			27,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CalculateYearsOld(tt.args.birthTimstamp); got != tt.want {
+				t.Errorf("CalculateYearsOld() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEncodeID(t *testing.T) {
+	type args struct {
+		ID int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int64
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1024",
+			args{ID: 1024},
+			740307149,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := EncodeID(tt.args.ID); got != tt.want {
+				t.Errorf("EncodeID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDecodeID(t *testing.T) {
+	type args struct {
+		identifier int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int64
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 740307149",
+			args{identifier: 740307149},
+			1024,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DecodeID(tt.args.identifier); got != tt.want {
+				t.Errorf("DecodeID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
