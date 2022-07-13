@@ -137,7 +137,7 @@ func ListenerBlockedChannel() {
 	close(mainGoroutineExitChan)
 }
 
-func GoroutineExitThenCloseChannel_SimpleCase() {
+func GoroutineExitThenCloseChannelSimpleCase() {
 	c := make(chan int)
 	close(c)
 

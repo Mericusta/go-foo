@@ -1,34 +1,28 @@
-package mapfoo
+package functionfoo
 
 import (
 	"testing"
 )
 
-func BenchmarkMapCapacityFoo(b *testing.B) {
-	type args struct {
-		count    int
-		capacity int
-	}
+func BenchmarkExampleStruct_ReturnExampleStruct(b *testing.B) {
 	tests := []struct {
-		name string
-		args args
+		name  string
+		e     *ExampleStruct
+		want  ExampleStruct
+		want1 *ExampleStruct
 	}{
 		// TODO: Add test cases.
-		{
-			"test case",
-			args{count: 8, capacity: 8},
-		},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tt := range tests {
-			MapCapacityFoo(tt.args.count, tt.args.capacity)
+			tt.e.ReturnExampleStruct()
 		}
 	}
 }
 
-func BenchmarkStructMapKeyFoo(b *testing.B) {
+func BenchmarkReturnExampleStructTest(b *testing.B) {
 	tests := []struct {
 		name string
 	}{
@@ -38,7 +32,7 @@ func BenchmarkStructMapKeyFoo(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for index := 0; index != len(tests); index++ {
-			StructMapKeyFoo()
+			ReturnExampleStructTest()
 		}
 	}
 }

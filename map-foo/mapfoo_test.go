@@ -1,6 +1,8 @@
 package mapfoo
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMapCapacityFoo(t *testing.T) {
 	type args struct {
@@ -20,6 +22,19 @@ func TestMapCapacityFoo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			MapCapacityFoo(tt.args.count, tt.args.capacity)
+		})
+	}
+}
+
+func TestStructMapKeyFoo(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			StructMapKeyFoo()
 		})
 	}
 }

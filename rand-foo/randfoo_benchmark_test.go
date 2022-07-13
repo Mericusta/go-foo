@@ -1,12 +1,11 @@
 package randfoo
 
 import (
-	"reflect"
 	"testing"
 	"time"
 )
 
-func TestGetRandSlice(t *testing.T) {
+func BenchmarkGetRandSlice(b *testing.B) {
 	type args struct {
 		seed int64
 	}
@@ -22,17 +21,17 @@ func TestGetRandSlice(t *testing.T) {
 			[]int{1, 0, 1, 0},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetRandSlice(tt.args.seed); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetRandSlice() = %v, want %v", got, tt.want)
-			}
-		})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			GetRandSlice(tt.args.seed)
+		}
 	}
 	t.Logf("[ seed = %v ]\n", tests[0].args.seed)
 }
 
-func TestRandSlice(t *testing.T) {
+func BenchmarkRandSlice(b *testing.B) {
 	type args struct {
 		seed      int64
 		otherInfo string
@@ -43,9 +42,11 @@ func TestRandSlice(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
 			RandSlice(tt.args.seed, tt.args.otherInfo)
-		})
+		}
 	}
 }
