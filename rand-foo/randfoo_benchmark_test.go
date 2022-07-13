@@ -28,7 +28,6 @@ func BenchmarkGetRandSlice(b *testing.B) {
 			GetRandSlice(tt.args.seed)
 		}
 	}
-	t.Logf("[ seed = %v ]\n", tests[0].args.seed)
 }
 
 func BenchmarkRandSlice(b *testing.B) {

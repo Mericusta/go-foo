@@ -44,3 +44,37 @@ func ModifyPrivateValue() {
 	// fmt.Printf("s.Val() %v\n", s.Val())
 	// fmt.Printf("s.GetPubV() %v\n", s.GetPubV())
 }
+
+func BytesToStringFool(b []byte) string {
+	return string(b)
+}
+
+func BytesToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// string must be ASCII code
+
+func StringToBytesFool(s string) []byte {
+	return []byte(s)
+}
+
+func StringToBytes(s string) []byte {
+	if len(s) < (1 << 5) {
+		return standardStringToBytes(s)
+	}
+	return unsafeStringToBytes(s)
+}
+
+func standardStringToBytes(s string) []byte {
+	return []byte(s)
+}
+
+func unsafeStringToBytes(s string) []byte {
+	return *(*[]byte)(unsafe.Pointer(
+		&struct {
+			string
+			Cap int
+		}{s, len(s)},
+	))
+}

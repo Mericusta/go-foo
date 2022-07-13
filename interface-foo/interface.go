@@ -52,6 +52,10 @@ func PassStruct() {
 	PassInterface(sp)
 }
 
+func GetEmptyInterface() interface{} {
+	return nil
+}
+
 func GetIButReturnNil() I {
 	return nil
 }

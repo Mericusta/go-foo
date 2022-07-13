@@ -2,6 +2,7 @@ package builtinfoo
 
 import (
 	"math"
+	"reflect"
 	"testing"
 )
 
@@ -98,6 +99,106 @@ func TestModifyPrivateValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ModifyPrivateValue()
+		})
+	}
+}
+
+func TestBytesToString(t *testing.T) {
+	type args struct {
+		b []byte
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case abcdefu",
+			args{b: []byte{97, 98, 99, 100, 101, 102, 117}},
+			"abcdefu",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := BytesToString(tt.args.b); got != tt.want {
+				t.Errorf("BytesToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStringToBytes(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []byte
+	}{
+		// TODO: Add test cases.
+		{
+			"test case abcdefu",
+			args{s: "abcdefu"},
+			[]byte{97, 98, 99, 100, 101, 102, 117},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StringToBytes(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("StringToBytes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBytesToStringFool(t *testing.T) {
+	type args struct {
+		b []byte
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case abcdefu",
+			args{b: []byte{97, 98, 99, 100, 101, 102, 117}},
+			"abcdefu",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := BytesToStringFool(tt.args.b); got != tt.want {
+				t.Errorf("BytesToStringFool() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStringToBytesFool(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []byte
+	}{
+		// TODO: Add test cases.
+		{
+			"test case abcdefu",
+			args{s: "abcdefu"},
+			[]byte{97, 98, 99, 100, 101, 102, 117},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StringToBytesFool(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("StringToBytesFool() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
