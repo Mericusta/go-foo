@@ -102,4 +102,8 @@ func EmptyInterface() {
 
 	nowS := GetSButReturnNil()
 	fmt.Println(nowS == nil) // true
+
+	var nilI I
+	var nilS *S
+	fmt.Println(nilI == nilS) // false
 }
