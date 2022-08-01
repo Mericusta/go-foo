@@ -10,3 +10,12 @@ func ZoomInAndOutInMultiplesOf2(n int, in bool) int {
 	}
 	return n << 1
 }
+
+func ZoomOutInMultiplesOf10(n int, origin bool) int {
+	if origin {
+		n = n * 10
+	} else {
+		n = (n << 1) + (n << 3)
+	}
+	return n
+}

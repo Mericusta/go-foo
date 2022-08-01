@@ -64,3 +64,34 @@ func TestZoomInAndOutInMultiplesOf2(t *testing.T) {
 		})
 	}
 }
+
+func TestZoomOutInMultiplesOf10(t *testing.T) {
+	type args struct {
+		n      int
+		origin bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{n: 1, origin: true},
+			10,
+		},
+		{
+			"test case 2",
+			args{n: 2, origin: true},
+			20,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ZoomOutInMultiplesOf10(tt.args.n, tt.args.origin); got != tt.want {
+				t.Errorf("ZoomOutInMultiplesOf10() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
