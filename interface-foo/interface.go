@@ -107,3 +107,13 @@ func EmptyInterface() {
 	var nilS *S
 	fmt.Println(nilI == nilS) // false
 }
+
+type InterfaceTypeAssertStruct struct{ i int }
+
+func InterfaceTypeAssert(i interface{}) (int, bool) {
+	is, ok := i.(*InterfaceTypeAssertStruct)
+	if !ok {
+		return 0, ok
+	}
+	return is.i, ok
+}
