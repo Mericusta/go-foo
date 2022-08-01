@@ -2,15 +2,16 @@ package astfoo
 
 import (
 	"go/build"
+	"os"
 	"reflect"
 	"testing"
 )
 
 func TestImportFoo(t *testing.T) {
 	type args struct {
-		path   string
-		gopath string
-		mode   build.ImportMode
+		importPkgPath   string
+		projectRootPath string
+		mode            build.ImportMode
 	}
 	tests := []struct {
 		name  string
@@ -25,9 +26,8 @@ func TestImportFoo(t *testing.T) {
 		{
 			"test case 1",
 			args{
-				path:   "go/build",
-				gopath: "D:\\Projects\\go-foo",
-				mode:   0,
+				importPkgPath: "go/build",
+				mode:          0,
 			},
 			"C:\\Program Files\\Go\\src\\go\\build",
 			"build",
@@ -35,10 +35,23 @@ func TestImportFoo(t *testing.T) {
 			"C:\\Program Files\\Go",
 			[]string{"build.go", "doc.go", "gc.go", "read.go", "syslist.go", "zcgo.go"},
 		},
+		{
+			"test case 2",
+			args{
+				importPkgPath:   "go-foo/array-foo",
+				projectRootPath: "S:\\Projects\\go-foo",
+				mode:            0,
+			},
+			"s:\\Projects\\go\\go-foo\\src\\array-foo",
+			"arrayfoo",
+			"go-foo/array-foo",
+			"s:\\Projects\\go\\go-foo\\src",
+			[]string{"array.go"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, got2, got3, got4 := ImportFoo(tt.args.path, tt.args.gopath, tt.args.mode)
+			got, got1, got2, got3, got4 := ImportFoo(tt.args.importPkgPath, tt.args.projectRootPath, tt.args.mode)
 			if got != tt.want {
 				t.Errorf("ImportFoo() got = %v, want %v", got, tt.want)
 			}
@@ -76,7 +89,7 @@ func TestImportDirFoo(t *testing.T) {
 		{
 			"test case 1",
 			args{
-				path: "D:\\Projects\\go-foo\\src\\array-foo",
+				path: func() string { cwd, _ := os.Getwd(); return cwd }(),
 				mode: 0,
 			},
 			"D:\\Projects\\go-foo\\src\\array-foo",
