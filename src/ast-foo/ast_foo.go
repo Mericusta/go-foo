@@ -1,10 +1,14 @@
 package astfoo
 
 import (
+	"bytes"
+	"fmt"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"os"
 	"sort"
 
 	stpmap "github.com/Mericusta/go-stp/map"
@@ -64,4 +68,36 @@ func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, 
 	}
 
 	return dirPkgs, filepath
+}
+
+func FormatFoo(parseFilePath, outputFunction string) {
+	fileAST, err := parser.ParseFile(token.NewFileSet(), parseFilePath, nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+
+	outputFile, err := os.OpenFile(fmt.Sprintf("%v.bak", parseFilePath), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer outputFile.Close()
+
+	buffer := &bytes.Buffer{}
+	if fileAST.Scope != nil {
+		for name, object := range fileAST.Scope.Objects {
+			if object.Kind == ast.Fun && name == outputFunction {
+				decl := object.Decl.(*ast.FuncDecl)
+				if declLen := decl.End() - decl.Pos(); buffer.Cap() < int(declLen) {
+					buffer.Grow(int(declLen))
+				}
+				err = format.Node(buffer, token.NewFileSet(), decl)
+				if err != nil {
+					panic(err)
+				}
+				outputFile.Write(buffer.Bytes())
+				buffer.Reset()
+				break
+			}
+		}
+	}
 }

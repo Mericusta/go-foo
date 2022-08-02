@@ -1,7 +1,7 @@
 package main
 
-import arrayfoo "go-foo/array-foo"
+import astfoo "go-foo/ast-foo"
 
 func main() {
-	arrayfoo.ClearArrayFoo()
+	astfoo.FormatFoo("", "asd")
 }

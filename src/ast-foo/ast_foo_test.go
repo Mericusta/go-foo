@@ -118,3 +118,28 @@ func TestParseDirFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatFoo(t *testing.T) {
+	type args struct {
+		parseFilePath  string
+		outputFunction string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				parseFilePath:  "D:\\Projects\\go-foo\\src\\algorithm-foo\\algorithm.go",
+				outputFunction: "ConvertCamelCase2SnakeCaseWithPhrase",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			FormatFoo(tt.args.parseFilePath, tt.args.outputFunction)
+		})
+	}
+}
