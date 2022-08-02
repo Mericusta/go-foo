@@ -1,3 +1,5 @@
+github.com/Mericusta/go-stp v0.2.0 h1:IdYqNNn38aM0jPfoMnGGvC7kqN9c/8TcVZGF9cCEztc=
+github.com/Mericusta/go-stp v0.2.0/go.mod h1:eMZ5CzAcjOon8DrcVJhhvP4+CzonsjXdHj/ZcHqyf04=
 github.com/cespare/xxhash/v2 v2.1.2 h1:YRXhKfTDauu4ajMg1TPgFO5jnlC2HCbmLXMcTG5cbYE=
 github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=

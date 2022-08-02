@@ -2,7 +2,6 @@ package astfoo
 
 import (
 	"go/build"
-	"os"
 	"reflect"
 	"testing"
 )
@@ -35,17 +34,30 @@ func TestImportFoo(t *testing.T) {
 			"C:\\Program Files\\Go",
 			[]string{"build.go", "doc.go", "gc.go", "read.go", "syslist.go", "zcgo.go"},
 		},
+		// {
+		// 	"test case 2",
+		// 	args{
+		// 		importPkgPath:   "go-foo/array-foo",
+		// 		projectRootPath: "S:\\Projects\\go-foo",
+		// 		mode:            0,
+		// 	},
+		// 	"s:\\Projects\\go\\go-foo\\src\\array-foo",
+		// 	"arrayfoo",
+		// 	"go-foo/array-foo",
+		// 	"s:\\Projects\\go\\go-foo\\src",
+		// 	[]string{"array.go"},
+		// },
 		{
 			"test case 2",
 			args{
 				importPkgPath:   "go-foo/array-foo",
-				projectRootPath: "S:\\Projects\\go-foo",
+				projectRootPath: "D:\\Projects\\go-foo",
 				mode:            0,
 			},
-			"s:\\Projects\\go\\go-foo\\src\\array-foo",
+			"d:\\Projects\\go-foo\\src\\array-foo",
 			"arrayfoo",
 			"go-foo/array-foo",
-			"s:\\Projects\\go\\go-foo\\src",
+			"d:\\Projects\\go-foo\\src",
 			[]string{"array.go"},
 		},
 	}
@@ -66,56 +78,6 @@ func TestImportFoo(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got4, tt.want4) {
 				t.Errorf("ImportFoo() got4 = %v, want %v", got4, tt.want4)
-			}
-		})
-	}
-}
-
-func TestImportDirFoo(t *testing.T) {
-	type args struct {
-		path string
-		mode build.ImportMode
-	}
-	tests := []struct {
-		name  string
-		args  args
-		want  string
-		want1 string
-		want2 string
-		want3 string
-		want4 []string
-	}{
-		// TODO: Add test cases.
-		{
-			"test case 1",
-			args{
-				path: func() string { cwd, _ := os.Getwd(); return cwd }(),
-				mode: 0,
-			},
-			"D:\\Projects\\go-foo\\src\\array-foo",
-			"arrayfoo",
-			".",
-			"",
-			[]string{"array.go"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1, got2, got3, got4 := ImportDirFoo(tt.args.path, tt.args.mode)
-			if got != tt.want {
-				t.Errorf("ImportDirFoo() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("ImportDirFoo() got1 = %v, want %v", got1, tt.want1)
-			}
-			if got2 != tt.want2 {
-				t.Errorf("ImportDirFoo() got2 = %v, want %v", got2, tt.want2)
-			}
-			if got3 != tt.want3 {
-				t.Errorf("ImportDirFoo() got3 = %v, want %v", got3, tt.want3)
-			}
-			if !reflect.DeepEqual(got4, tt.want4) {
-				t.Errorf("ImportDirFoo() got4 = %v, want %v", got4, tt.want4)
 			}
 		})
 	}
