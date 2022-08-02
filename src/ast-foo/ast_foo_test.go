@@ -1,6 +1,7 @@
 package astfoo
 
 import (
+	"io/fs"
 	"reflect"
 	"testing"
 )
@@ -77,6 +78,42 @@ func TestParseFileFoo(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got5, tt.want5) {
 				t.Errorf("ParseFileFoo() got5 = %v, want %v", got5, tt.want5)
+			}
+		})
+	}
+}
+
+func TestParseDirFoo(t *testing.T) {
+	type args struct {
+		parseDirPath string
+		filter       func(fs.FileInfo) bool
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  []string
+		want1 []string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{parseDirPath: "d:\\Projects\\go-foo\\src\\struct-foo"},
+			[]string{"structfoo"},
+			[]string{
+				"d:\\Projects\\go-foo\\src\\struct-foo\\struct.go",
+				"d:\\Projects\\go-foo\\src\\struct-foo\\struct_benchmark_test.go",
+				"d:\\Projects\\go-foo\\src\\struct-foo\\struct_test.go",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := ParseDirFoo(tt.args.parseDirPath, tt.args.filter)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ParseDirFoo() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("ParseDirFoo() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}

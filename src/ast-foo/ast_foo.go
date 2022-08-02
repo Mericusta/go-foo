@@ -4,14 +4,15 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"sort"
 
 	stpmap "github.com/Mericusta/go-stp/map"
 )
 
 // ParseFileFoo
-// @filepath 待解析的文件地址
-// @return   文件的包名称，导入的包路径，定义的结构体名称，定义函数/方法名称，全局常量名称，全局变量名称
+// @parseFilePath 待解析的文件路径
+// @return        文件的包名称，导入的包路径，定义的结构体名称，定义函数/方法名称，全局常量名称，全局变量名称
 func ParseFileFoo(parseFilePath string) (string, []string, []string, []string, []string, []string) {
 	fileAST, err := parser.ParseFile(token.NewFileSet(), parseFilePath, nil, parser.ParseComments)
 	if err != nil {
@@ -43,4 +44,24 @@ func ParseFileFoo(parseFilePath string) (string, []string, []string, []string, [
 	}
 
 	return fileAST.Name.Name, fileImportPkgPath, fileStructName, fileFuncName, fileConstantName, fileVariableName
+}
+
+// ParseDirFoo
+// @parseDirPath 带解析的目录路径
+// @filter       文件筛选器
+// @return       目录的包名称，包路径
+func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, []string) {
+	pkgs, err := parser.ParseDir(token.NewFileSet(), parseDirPath, filter, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+
+	var dirPkgs, filepath []string
+	for _, pkg := range pkgs {
+		dirPkgs = append(dirPkgs, pkg.Name)
+		filepath = stpmap.Key(pkg.Files) // 里面是 *ast.File，同 parser.ParseFile
+		sort.Strings(filepath)
+	}
+
+	return dirPkgs, filepath
 }
