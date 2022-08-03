@@ -71,7 +71,9 @@ func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, 
 }
 
 func FormatFoo(parseFilePath, outputFunction string) {
-	fileAST, err := parser.ParseFile(token.NewFileSet(), parseFilePath, nil, parser.ParseComments)
+	fileSet := token.NewFileSet()
+
+	fileAST, err := parser.ParseFile(fileSet, parseFilePath, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +92,7 @@ func FormatFoo(parseFilePath, outputFunction string) {
 				if declLen := decl.End() - decl.Pos(); buffer.Cap() < int(declLen) {
 					buffer.Grow(int(declLen))
 				}
-				err = format.Node(buffer, token.NewFileSet(), decl)
+				err = format.Node(buffer, fileSet, decl)
 				if err != nil {
 					panic(err)
 				}
