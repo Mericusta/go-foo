@@ -51,7 +51,7 @@ func ParseFileFoo(parseFilePath string) (string, []string, []string, []string, [
 }
 
 // ParseDirFoo
-// @parseDirPath 带解析的目录路径
+// @parseDirPath 待解析的目录路径
 // @filter       文件筛选器
 // @return       目录的包名称，包路径
 func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, []string) {
@@ -70,6 +70,9 @@ func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, 
 	return dirPkgs, filepath
 }
 
+// FormatFoo
+// @parseFilePath  待解析的文件路径
+// @outputFunction 待输出的函数名称
 func FormatFoo(parseFilePath, outputFunction string) {
 	fileSet := token.NewFileSet()
 
