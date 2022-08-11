@@ -723,3 +723,114 @@ func TestDecodeID(t *testing.T) {
 		})
 	}
 }
+
+func Test_removeDuplication_map(t *testing.T) {
+	type args struct {
+		arr []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				arr: []string{
+					"test_case_1",
+					"test", "case", "1",
+					"case_1", "test",
+					"test_1", "case",
+					"test_case", "1",
+				},
+			},
+			[]string{
+				"test_case_1",
+				"test", "case", "1",
+				"case_1", "test_1", "test_case",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := removeDuplication_map(tt.args.arr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("removeDuplication_map() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_removeDuplication_sort(t *testing.T) {
+	type args struct {
+		arr []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				arr: []string{
+					"test_case_1",
+					"test", "case", "1",
+					"case_1", "test",
+					"test_1", "case",
+					"test_case", "1",
+				},
+			},
+			[]string{
+				"test_case_1",
+				"test", "case", "1",
+				"case_1", "test_1", "test_case",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := removeDuplication_sort(tt.args.arr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("removeDuplication_sort() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_simple_removeDuplication_map(t *testing.T) {
+	type args struct {
+		arr []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				arr: []string{
+					"test_case_1",
+					"test", "case", "1",
+					"case_1", "test",
+					"test_1", "case",
+					"test_case", "1",
+				},
+			},
+			[]string{
+				"test_case_1",
+				"test", "case", "1",
+				"case_1", "test_1", "test_case",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := simple_removeDuplication_map(tt.args.arr); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("simple_removeDuplication_map() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
