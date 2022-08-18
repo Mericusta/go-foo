@@ -291,3 +291,38 @@ func MutexLockerPerformanceOnHttpRequest(gCount int) {
 	}
 	gp.Wait()
 }
+
+// PerformanceOnLoadCacheFromRedis
+
+// 82987129 MutexLocker
+// 74011133
+// 955930750 SpinLocker
+// 962044650
+
+// PerformanceOnHttpRequest
+
+// 2800218000 MutexLocker
+// 2764006800
+// 3798665000 http server sleep 10 ms before response
+// 12527694800 http server sleep 100 ms before response
+// 2813123800 SpinLocker
+// 2773097500
+// 3904198800 http server sleep 10 ms before response
+// 12429413300 http server sleep 100 ms before response
+
+// // ---
+
+// PerformanceOnLocalOperation
+
+// 34072 MutexLocker
+// 35663 SpinLocker
+
+// PerformanceOnChannelReceiver
+
+// 1395442600 MutexLocker
+// 1012998400 SpinLocker
+
+// PerformanceOnBlockingGoroutine
+
+// 1570832700 MutexLocker
+// 1116442600 SpinLocker
