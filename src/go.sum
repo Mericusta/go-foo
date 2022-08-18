@@ -52,6 +52,8 @@ github.com/pjebs/optimus-go v1.0.0/go.mod h1:rdfF1L7F3dtTa7W6uS+Mc5f+1qLIFASNERz
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
+github.com/tidwall/spinlock v0.1.0 h1:McCloMBXOyGiQWG1D5kHOzSA50u1UV/g3P2SAiuvnPA=
+github.com/tidwall/spinlock v0.1.0/go.mod h1:tbnEyV8RKQ/S4PpqY6bxHz1TWomMPQ+YkJLcP2DByiA=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

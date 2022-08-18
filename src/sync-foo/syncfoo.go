@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/tidwall/spinlock"
 )
 
 func WaitGroupCallFunctionWillCaptureWhenWait() {
@@ -60,6 +61,7 @@ func operationLocalValue() {
 
 var spinLocker SpinLocker
 var mutex sync.Mutex
+var tidwallSpinLocker spinlock.Locker
 
 // SpinLockerPerformanceOnLocalOperation 自旋锁在本地操作时的性能表现
 func SpinLockerPerformanceOnLocalOperation(gCount int) int {
@@ -86,6 +88,21 @@ func MutexLockerPerformanceOnLocalOperation(gCount int) int {
 			mutex.Lock()
 			operationLocalValue()
 			mutex.Unlock()
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+	return localValue
+}
+
+func TidwallSpinLockerPerformanceOnLocalOperation(gCount int) int {
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != gCount; index++ {
+		go func() {
+			tidwallSpinLocker.Lock()
+			operationLocalValue()
+			tidwallSpinLocker.Unlock()
 			gp.Done()
 		}()
 	}
@@ -143,6 +160,21 @@ func SpinLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
 	return cache.value
 }
 
+func TidwallSpinLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != gCount; index++ {
+		go func() {
+			tidwallSpinLocker.Lock()
+			loadCacheFromRedis()
+			tidwallSpinLocker.Unlock()
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+	return cache.value
+}
+
 // MutexLockerPerformanceOnLoadCacheFromRedis 互斥锁在从 redis 读取缓存时的性能表现
 func MutexLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
 	gp := sync.WaitGroup{}
@@ -172,6 +204,20 @@ func SpinLockerPerformanceOnBlockingGoroutine(gCount int, d time.Duration) {
 			spinLocker.Lock()
 			blockingGoroutine(d)
 			spinLocker.Unlock()
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+}
+
+func TidwallSpinLockerPerformanceOnBlockingGoroutine(gCount int, d time.Duration) {
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != 100; index++ {
+		go func() {
+			tidwallSpinLocker.Lock()
+			blockingGoroutine(d)
+			tidwallSpinLocker.Unlock()
 			gp.Done()
 		}()
 	}
@@ -227,6 +273,21 @@ func SpinLockerPerformanceOnChannelReceiver(gCount int, tickerDuration time.Dura
 	gp.Wait()
 }
 
+func TidwallSpinLockerPerformanceOnChannelReceiver(gCount int, tickerDuration time.Duration, tickerMax int) {
+	go channelSender(tickerDuration, tickerMax)
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != 100; index++ {
+		go func() {
+			tidwallSpinLocker.Lock()
+			channelReceiver()
+			tidwallSpinLocker.Unlock()
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+}
+
 func MutexLockerPerformanceOnChannelReceiver(gCount int, tickerDuration time.Duration, tickerMax int) {
 	go channelSender(tickerDuration, tickerMax)
 	gp := sync.WaitGroup{}
@@ -271,6 +332,21 @@ func SpinLockerPerformanceOnHttpRequest(gCount int) {
 			spinLocker.Lock()
 			httpClient()
 			spinLocker.Unlock()
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+}
+
+func TidwallSpinLockerPerformanceOnHttpRequest(gCount int) {
+	go httpServer()
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != 100; index++ {
+		go func() {
+			tidwallSpinLocker.Lock()
+			httpClient()
+			tidwallSpinLocker.Unlock()
 			gp.Done()
 		}()
 	}

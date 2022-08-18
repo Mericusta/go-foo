@@ -10,9 +10,6 @@ func TestWaitGroupCallFunctionWillCaptureWhenWait(t *testing.T) {
 		name string
 	}{
 		// TODO: Add test cases.
-		{
-			"test case 1",
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -263,6 +260,129 @@ func TestMutexLockerPerformanceOnHttpRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			MutexLockerPerformanceOnHttpRequest(tt.args.gCount)
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnLocalOperation(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TidwallSpinLockerPerformanceOnLocalOperation(tt.args.gCount); got != tt.want {
+				t.Errorf("TidwallSpinLockerPerformanceOnLocalOperation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			redisCacheValue,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TidwallSpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount); got != tt.want {
+				t.Errorf("TidwallSpinLockerPerformanceOnLoadCacheFromRedis() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnBlockingGoroutine(t *testing.T) {
+	type args struct {
+		gCount int
+		d      time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				gCount: 100,
+				d:      time.Millisecond * 10,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			TidwallSpinLockerPerformanceOnBlockingGoroutine(tt.args.gCount, tt.args.d)
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnChannelReceiver(t *testing.T) {
+	type args struct {
+		gCount         int
+		tickerDuration time.Duration
+		tickerMax      int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				gCount:         100,
+				tickerDuration: time.Millisecond * 10,
+				tickerMax:      1000,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			TidwallSpinLockerPerformanceOnChannelReceiver(tt.args.gCount, tt.args.tickerDuration, tt.args.tickerMax)
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnHttpRequest(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			TidwallSpinLockerPerformanceOnHttpRequest(tt.args.gCount)
 		})
 	}
 }

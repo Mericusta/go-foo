@@ -263,6 +263,135 @@ func BenchmarkSpinLockerPerformanceOnLocalOperation(b *testing.B) {
 	}
 }
 
+func BenchmarkTidwallSpinLockerPerformanceOnBlockingGoroutine(b *testing.B) {
+	type args struct {
+		gCount int
+		d      time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				gCount: 100,
+				d:      time.Millisecond * 10,
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			TidwallSpinLockerPerformanceOnBlockingGoroutine(tt.args.gCount, tt.args.d)
+		}
+	}
+}
+
+func BenchmarkTidwallSpinLockerPerformanceOnChannelReceiver(b *testing.B) {
+	type args struct {
+		gCount         int
+		tickerDuration time.Duration
+		tickerMax      int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				gCount:         100,
+				tickerDuration: time.Millisecond * 10,
+				tickerMax:      1000,
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			TidwallSpinLockerPerformanceOnChannelReceiver(tt.args.gCount, tt.args.tickerDuration, tt.args.tickerMax)
+		}
+	}
+}
+
+func BenchmarkTidwallSpinLockerPerformanceOnHttpRequest(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			TidwallSpinLockerPerformanceOnHttpRequest(tt.args.gCount)
+		}
+	}
+}
+
+func BenchmarkTidwallSpinLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			redisCacheValue,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			TidwallSpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount)
+		}
+	}
+}
+
+func BenchmarkTidwallSpinLockerPerformanceOnLocalOperation(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			100,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			TidwallSpinLockerPerformanceOnLocalOperation(tt.args.gCount)
+		}
+	}
+}
+
 func BenchmarkWaitGroupCallFunctionWillCaptureWhenWait(b *testing.B) {
 	tests := []struct {
 		name string
