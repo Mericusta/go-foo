@@ -89,15 +89,17 @@ func BenchmarkMutexLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		gCount int
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name  string
+		args  args
+		want  string
+		want1 int32
 	}{
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{gCount: 100},
-			redisCacheValue,
+			args{gCount: 100000},
+			"Hello Spin Key",
+			100000,
 		},
 	}
 
@@ -130,6 +132,33 @@ func BenchmarkMutexLockerPerformanceOnLocalOperation(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, tt := range tests {
 			MutexLockerPerformanceOnLocalOperation(tt.args.gCount)
+		}
+	}
+}
+
+func BenchmarkSingleFlightPerformanceOnLoadCacheFromRedis(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100000},
+			"Hello Spin Key",
+			100000,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			SingleFlightPerformanceOnLoadCacheFromRedis(tt.args.gCount)
 		}
 	}
 }
@@ -218,15 +247,17 @@ func BenchmarkSpinLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		gCount int
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name  string
+		args  args
+		want  string
+		want1 int32
 	}{
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{gCount: 100},
-			redisCacheValue,
+			args{gCount: 100000},
+			"Hello Spin Key",
+			100000,
 		},
 	}
 
@@ -347,15 +378,17 @@ func BenchmarkTidwallSpinLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		gCount int
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name  string
+		args  args
+		want  string
+		want1 int32
 	}{
 		// TODO: Add test cases.
 		{
 			"test case 1",
 			args{gCount: 100},
-			redisCacheValue,
+			"Hello Spin Key",
+			100,
 		},
 	}
 
@@ -397,9 +430,6 @@ func BenchmarkWaitGroupCallFunctionWillCaptureWhenWait(b *testing.B) {
 		name string
 	}{
 		// TODO: Add test cases.
-		{
-			"test case 1",
-		},
 	}
 
 	b.ResetTimer()

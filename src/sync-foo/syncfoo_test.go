@@ -43,31 +43,6 @@ func TestSpinLockerPerformanceOnLocalOperation(t *testing.T) {
 	}
 }
 
-func TestSpinLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
-	type args struct {
-		gCount int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-		{
-			"test case 1",
-			args{gCount: 100},
-			redisCacheValue,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := SpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount); got != tt.want {
-				t.Errorf("SpinLockerPerformanceOnLoadCacheFromRedis() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestMutexLockerPerformanceOnLocalOperation(t *testing.T) {
 	type args struct {
 		gCount int
@@ -88,31 +63,6 @@ func TestMutexLockerPerformanceOnLocalOperation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := MutexLockerPerformanceOnLocalOperation(tt.args.gCount); got != tt.want {
 				t.Errorf("MutexLockerPerformanceOnLocalOperation() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMutexLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
-	type args struct {
-		gCount int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-		{
-			"test case 1",
-			args{gCount: 100},
-			redisCacheValue,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := MutexLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount); got != tt.want {
-				t.Errorf("MutexLockerPerformanceOnLoadCacheFromRedis() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -289,31 +239,6 @@ func TestTidwallSpinLockerPerformanceOnLocalOperation(t *testing.T) {
 	}
 }
 
-func TestTidwallSpinLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
-	type args struct {
-		gCount int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-		{
-			"test case 1",
-			args{gCount: 100},
-			redisCacheValue,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := TidwallSpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount); got != tt.want {
-				t.Errorf("TidwallSpinLockerPerformanceOnLoadCacheFromRedis() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestTidwallSpinLockerPerformanceOnBlockingGoroutine(t *testing.T) {
 	type args struct {
 		gCount int
@@ -383,6 +308,130 @@ func TestTidwallSpinLockerPerformanceOnHttpRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			TidwallSpinLockerPerformanceOnHttpRequest(tt.args.gCount)
+		})
+	}
+}
+
+func TestSpinLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			"Hello Spin Key",
+			100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := SpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount)
+			if got != tt.want {
+				t.Errorf("SpinLockerPerformanceOnLoadCacheFromRedis() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("SpinLockerPerformanceOnLoadCacheFromRedis() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestTidwallSpinLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			"Hello Spin Key",
+			100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := TidwallSpinLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount)
+			if got != tt.want {
+				t.Errorf("TidwallSpinLockerPerformanceOnLoadCacheFromRedis() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("TidwallSpinLockerPerformanceOnLoadCacheFromRedis() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestMutexLockerPerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			"Hello Spin Key",
+			100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := MutexLockerPerformanceOnLoadCacheFromRedis(tt.args.gCount)
+			if got != tt.want {
+				t.Errorf("MutexLockerPerformanceOnLoadCacheFromRedis() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("MutexLockerPerformanceOnLoadCacheFromRedis() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestSingleFlightPerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 2},
+			"Hello Spin Key",
+			2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := SingleFlightPerformanceOnLoadCacheFromRedis(tt.args.gCount)
+			if got != tt.want {
+				t.Errorf("SingleFlightPerformanceOnLoadCacheFromRedis() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("SingleFlightPerformanceOnLoadCacheFromRedis() got1 = %v, want %v", got1, tt.want1)
+			}
 		})
 	}
 }

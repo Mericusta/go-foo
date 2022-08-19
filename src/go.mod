@@ -13,4 +13,7 @@ require (
 
 require github.com/pjebs/optimus-go v1.0.0
 
-require github.com/tidwall/spinlock v0.1.0 // indirect
+require (
+	github.com/tidwall/spinlock v0.1.0 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+)

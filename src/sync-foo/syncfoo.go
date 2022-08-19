@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/tidwall/spinlock"
+	"golang.org/x/sync/singleflight"
 )
 
 func WaitGroupCallFunctionWillCaptureWhenWait() {
@@ -41,16 +42,21 @@ func WaitGroupCallFunctionWillCaptureWhenWait() {
 	w.Wait()
 }
 
-type SpinLocker uint32
+type SpinLocker struct {
+	_    sync.Mutex
+	lock uintptr
+}
 
 func (sl *SpinLocker) Lock() {
-	for !atomic.CompareAndSwapUint32((*uint32)(sl), 0, 1) {
+loop:
+	for !atomic.CompareAndSwapUintptr(&sl.lock, 0, 1) {
 		runtime.Gosched()
+		goto loop
 	}
 }
 
 func (sl *SpinLocker) Unlock() {
-	atomic.StoreUint32((*uint32)(sl), 0)
+	atomic.StoreUintptr(&sl.lock, 0)
 }
 
 var localValue int
@@ -111,7 +117,8 @@ func TidwallSpinLockerPerformanceOnLocalOperation(gCount int) int {
 }
 
 var cache struct {
-	value string
+	value       string
+	holderCount int32
 }
 
 var redisCacheKey string = "go_foo_test_cache"
@@ -145,50 +152,83 @@ func loadCacheFromRedis() {
 }
 
 // SpinLockerPerformanceOnLoadCacheFromRedis 自旋锁在从 redis 读取缓存时的性能表现
-func SpinLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
+func SpinLockerPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
+	cache = struct {
+		value       string
+		holderCount int32
+	}{}
 	gp := sync.WaitGroup{}
 	gp.Add(gCount)
 	for index := 0; index != gCount; index++ {
 		go func() {
 			spinLocker.Lock()
+			if len(cache.value) != 0 {
+				spinLocker.Unlock()
+				goto USE_CACHE
+			}
 			loadCacheFromRedis()
 			spinLocker.Unlock()
+		USE_CACHE:
+			atomic.AddInt32(&cache.holderCount, 1)
 			gp.Done()
 		}()
 	}
 	gp.Wait()
-	return cache.value
+	return cache.value, cache.holderCount
 }
 
-func TidwallSpinLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
+func TidwallSpinLockerPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
+	cache = struct {
+		value       string
+		holderCount int32
+	}{}
 	gp := sync.WaitGroup{}
 	gp.Add(gCount)
 	for index := 0; index != gCount; index++ {
 		go func() {
 			tidwallSpinLocker.Lock()
+			if len(cache.value) != 0 {
+				tidwallSpinLocker.Unlock()
+				goto USE_CACHE
+			}
 			loadCacheFromRedis()
 			tidwallSpinLocker.Unlock()
+		USE_CACHE:
+			atomic.AddInt32(&cache.holderCount, 1)
 			gp.Done()
 		}()
 	}
 	gp.Wait()
-	return cache.value
+	return cache.value, cache.holderCount
 }
 
 // MutexLockerPerformanceOnLoadCacheFromRedis 互斥锁在从 redis 读取缓存时的性能表现
-func MutexLockerPerformanceOnLoadCacheFromRedis(gCount int) string {
+func MutexLockerPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
+	cache = struct {
+		value       string
+		holderCount int32
+	}{}
 	gp := sync.WaitGroup{}
 	gp.Add(gCount)
 	for index := 0; index != gCount; index++ {
 		go func() {
+			if len(cache.value) != 0 {
+				goto USE_CACHE
+			}
 			mutex.Lock()
+			if len(cache.value) != 0 {
+				mutex.Unlock()
+				goto USE_CACHE
+			}
 			loadCacheFromRedis()
 			mutex.Unlock()
+		USE_CACHE:
+			atomic.AddInt32(&cache.holderCount, 1)
 			gp.Done()
 		}()
 	}
 	gp.Wait()
-	return cache.value
+	return cache.value, cache.holderCount
 }
 
 func blockingGoroutine(d time.Duration) {
@@ -368,12 +408,52 @@ func MutexLockerPerformanceOnHttpRequest(gCount int) {
 	gp.Wait()
 }
 
+func getValueFromRedisByKey(k string) string {
+	v, err := redisClient.Get(redisCtx, k).Result()
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+var gsf singleflight.Group
+
+func SingleFlightPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
+	cache = struct {
+		value       string
+		holderCount int32
+	}{}
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != gCount; index++ {
+		go func() {
+			_, err, _ := gsf.Do(redisCacheKey, func() (interface{}, error) {
+				cache.value = getValueFromRedisByKey(redisCacheKey)
+				return cache.value, nil
+			})
+			if err != nil {
+				panic(err)
+			}
+			atomic.AddInt32(&cache.holderCount, 1)
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+	return cache.value, cache.holderCount
+}
+
 // PerformanceOnLoadCacheFromRedis
 
-// 82987129 MutexLocker
-// 74011133
-// 955930750 SpinLocker
-// 962044650
+// 1075014 SingleFlight
+// 20387928 65535 g
+// 30443000 10w g
+// 1042071 MutexLocker
+// 16209227 65535 g
+// 23575100 10w g
+// 3689323 SpinLocker
+// 17550989 65535 g
+// 26109480 10w g
+// 3005724 tidwall spinlocker
 
 // PerformanceOnHttpRequest
 
