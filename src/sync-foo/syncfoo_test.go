@@ -435,3 +435,28 @@ func TestSingleFlightPerformanceOnLoadCacheFromRedis(t *testing.T) {
 		})
 	}
 }
+
+func TestRedisV8CachePerformanceOnLoadCacheFromRedis(t *testing.T) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RedisV8CachePerformanceOnLoadCacheFromRedis(tt.args.gCount); got != tt.want {
+				t.Errorf("RedisV8CachePerformanceOnLoadCacheFromRedis() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

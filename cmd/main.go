@@ -1,6 +1,6 @@
 package main
 
-import astfoo "go-foo/ast-foo"
+import astfoo "go-foo/src/ast-foo"
 
 func main() {
 	astfoo.FormatFoo("", "asd")

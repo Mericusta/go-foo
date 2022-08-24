@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	redisCache "github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/tidwall/spinlock"
 	"golang.org/x/sync/singleflight"
@@ -231,6 +232,31 @@ func MutexLockerPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
 	return cache.value, cache.holderCount
 }
 
+func RedisV8CachePerformanceOnLoadCacheFromRedis(gCount int) int32 {
+	cacheHandler := redisCache.New(&redisCache.Options{
+		Redis:      redisClient,
+		LocalCache: redisCache.NewTinyLFU(1000, time.Hour),
+	})
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != gCount; index++ {
+		go func() {
+			var v string
+			err := cacheHandler.Get(redisCtx, redisCacheKey, &v)
+			if err != nil {
+				panic(err)
+			}
+			if v != redisCacheValue {
+				panic("result wrong")
+			}
+			atomic.AddInt32(&cache.holderCount, 1)
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+	return cache.holderCount
+}
+
 func blockingGoroutine(d time.Duration) {
 	time.Sleep(d)
 }
@@ -444,12 +470,15 @@ func SingleFlightPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
 
 // PerformanceOnLoadCacheFromRedis
 
-// 1075014 SingleFlight
-// 20387928 65535 g
-// 30443000 10w g
+// 8065249 go-redis/cache/v8
+// 612990944 65535 g
+// 681182450 10w g
 // 1042071 MutexLocker
 // 16209227 65535 g
 // 23575100 10w g
+// 1075014 SingleFlight
+// 20387928 65535 g
+// 30443000 10w g
 // 3689323 SpinLocker
 // 17550989 65535 g
 // 26109480 10w g

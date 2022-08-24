@@ -97,9 +97,9 @@ func BenchmarkMutexLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{gCount: 100000},
+			args{gCount: 100},
 			"Hello Spin Key",
-			100000,
+			100,
 		},
 	}
 
@@ -136,6 +136,31 @@ func BenchmarkMutexLockerPerformanceOnLocalOperation(b *testing.B) {
 	}
 }
 
+func BenchmarkRedisV8CachePerformanceOnLoadCacheFromRedis(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			100,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			RedisV8CachePerformanceOnLoadCacheFromRedis(tt.args.gCount)
+		}
+	}
+}
+
 func BenchmarkSingleFlightPerformanceOnLoadCacheFromRedis(b *testing.B) {
 	type args struct {
 		gCount int
@@ -149,9 +174,9 @@ func BenchmarkSingleFlightPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{gCount: 100000},
+			args{gCount: 2},
 			"Hello Spin Key",
-			100000,
+			2,
 		},
 	}
 
@@ -255,9 +280,9 @@ func BenchmarkSpinLockerPerformanceOnLoadCacheFromRedis(b *testing.B) {
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{gCount: 100000},
+			args{gCount: 100},
 			"Hello Spin Key",
-			100000,
+			100,
 		},
 	}
 
