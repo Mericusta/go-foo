@@ -257,6 +257,38 @@ func RedisV8CachePerformanceOnLoadCacheFromRedis(gCount int) int32 {
 	return cache.holderCount
 }
 
+func RedisV8CacheOncePerformanceOnLoadCacheFromRedis(gCount int) int32 {
+	cacheHandler := redisCache.New(&redisCache.Options{
+		Redis:      redisClient,
+		LocalCache: redisCache.NewTinyLFU(1000, time.Hour),
+	})
+	gp := sync.WaitGroup{}
+	gp.Add(gCount)
+	for index := 0; index != gCount; index++ {
+		go func() {
+			var v string
+			err := cacheHandler.Once(&redisCache.Item{
+				Ctx:   redisCtx,
+				Key:   redisCacheKey,
+				Value: &v,
+				Do: func(i *redisCache.Item) (interface{}, error) {
+					return i.Value, nil
+				},
+			})
+			if err != nil {
+				panic(err)
+			}
+			if v != redisCacheValue {
+				panic("result wrong")
+			}
+			atomic.AddInt32(&cache.holderCount, 1)
+			gp.Done()
+		}()
+	}
+	gp.Wait()
+	return cache.holderCount
+}
+
 func blockingGoroutine(d time.Duration) {
 	time.Sleep(d)
 }
@@ -470,19 +502,29 @@ func SingleFlightPerformanceOnLoadCacheFromRedis(gCount int) (string, int32) {
 
 // PerformanceOnLoadCacheFromRedis
 
-// 8065249 go-redis/cache/v8
-// 612990944 65535 g
-// 681182450 10w g
-// 1042071 MutexLocker
-// 16209227 65535 g
-// 23575100 10w g
-// 1075014 SingleFlight
-// 20387928 65535 g
-// 30443000 10w g
-// 3689323 SpinLocker
-// 17550989 65535 g
-// 26109480 10w g
-// 3005724 tidwall spinlocker
+// 100 g
+// - MutexLocker
+// 3.853s 35118op	     33606 ns/op	    1618 B/op	     101 allocs/op
+// - go-redis/cache/v8 Once
+// 2.828s 966op	   1283387 ns/op	  205865 B/op	     439 allocs/op
+// - SpinLocker
+// 4.404s 350op	   4841889 ns/op	    1861 B/op	     107 allocs/op
+
+// 65535 g
+// - MutexLocker
+// 4.696s 72op	  17069562 ns/op	 1054311 B/op	   65564 allocs/op
+// - go-redis/cache/v8 Once
+// 3.588s 46op	  26429683 ns/op	 9519285 B/op	  264817 allocs/op
+// - SpinLocker
+// 3.669s 73op	  18067181 ns/op	 1168958 B/op	   65810 allocs/op
+
+// 10w g
+// - MutexLocker
+// 3.417s 42op	  25607279 ns/op	 1604059 B/op	  100029 allocs/op
+// - go-redis/cache/v8 Once
+// 3.533s 32op	  35686584 ns/op	14245437 B/op	  402675 allocs/op
+// - SpinLocker
+// 3.543s 45op	  25656558 ns/op	 1701715 B/op	  100233 allocs/op
 
 // PerformanceOnHttpRequest
 

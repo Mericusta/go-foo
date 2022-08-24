@@ -136,6 +136,31 @@ func BenchmarkMutexLockerPerformanceOnLocalOperation(b *testing.B) {
 	}
 }
 
+func BenchmarkRedisV8CacheOncePerformanceOnLoadCacheFromRedis(b *testing.B) {
+	type args struct {
+		gCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int32
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{gCount: 100},
+			100,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			RedisV8CacheOncePerformanceOnLoadCacheFromRedis(tt.args.gCount)
+		}
+	}
+}
+
 func BenchmarkRedisV8CachePerformanceOnLoadCacheFromRedis(b *testing.B) {
 	type args struct {
 		gCount int
