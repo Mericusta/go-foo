@@ -1,7 +1,7 @@
 package builtinfoo
 
 import (
-	substruct "go-foo/struct-foo/sub-struct"
+	substruct "go-foo/src/struct-foo/sub-struct"
 	"unsafe"
 )
 
