@@ -3,6 +3,7 @@ package goroutinefoo
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -25,4 +26,20 @@ func OpenSoMuchGoRoutine() {
 	<-t.C
 	c1 <- true
 	wg.Wait()
+}
+
+// before go1.14 it will stack
+// [Go 语言原本 - 6.8 协作与抢占](https://golang.design/under-the-hood/zh-cn/part2runtime/ch06sched/preemption/)
+func AllMIsWorking() {
+	var x int
+	threads := runtime.GOMAXPROCS(0)
+	for i := 0; i < threads; i++ {
+		go func() {
+			for {
+				x++
+			}
+		}()
+	}
+	time.Sleep(time.Second)
+	panic(x)
 }
