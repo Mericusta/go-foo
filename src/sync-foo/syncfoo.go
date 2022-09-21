@@ -117,6 +117,37 @@ func TidwallSpinLockerPerformanceOnLocalOperation(gCount int) int {
 	return localValue
 }
 
+func SequentialGroupOnLocalOperation(gCount, groupCount int) int {
+	gp := sync.WaitGroup{}
+	gp.Add(groupCount)
+	groupLocker := sync.Mutex{}
+	eachGroup := gCount / groupCount
+	modRelease := gCount % groupCount
+	for groupIndex := 0; groupIndex < groupCount; groupIndex++ {
+		if groupIndex == groupCount-1 && modRelease != 0 {
+			go func() {
+				groupLocker.Lock()
+				for gIndex := 0; gIndex < gCount%groupCount; gIndex++ {
+					operationLocalValue()
+				}
+				groupLocker.Unlock()
+				gp.Done()
+			}()
+		} else {
+			go func(gi int) {
+				groupLocker.Lock()
+				for gIndex := 0; gIndex < eachGroup; gIndex++ {
+					operationLocalValue()
+				}
+				groupLocker.Unlock()
+				gp.Done()
+			}(groupIndex)
+		}
+	}
+	gp.Wait()
+	return localValue
+}
+
 var cache struct {
 	value       string
 	holderCount int32

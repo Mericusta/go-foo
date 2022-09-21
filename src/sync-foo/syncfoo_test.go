@@ -485,3 +485,32 @@ func TestRedisV8CacheOncePerformanceOnLoadCacheFromRedis(t *testing.T) {
 		})
 	}
 }
+
+func TestSequentialGroupOnLocalOperation(t *testing.T) {
+	type args struct {
+		gCount     int
+		groupCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"100000 1",
+			args{
+				gCount:     100000,
+				groupCount: 100000,
+			},
+			100000,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SequentialGroupOnLocalOperation(tt.args.gCount, tt.args.groupCount); got != tt.want {
+				t.Errorf("SequentialGroupOnLocalOperation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

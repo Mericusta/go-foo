@@ -186,6 +186,107 @@ func BenchmarkRedisV8CachePerformanceOnLoadCacheFromRedis(b *testing.B) {
 	}
 }
 
+func BenchmarkSequentialGroupOnLocalOperation(b *testing.B) {
+	type args struct {
+		gCount     int
+		groupCount int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		// {
+		// 	"10w 1, 8578	    137918 ns/op	      80 B/op	       4 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 1,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"10w 10, 7275	    190213 ns/op	     600 B/op	      22 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 10,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"10w 100, 5308	    224366 ns/op	    5657 B/op	     202 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 100,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"10w 1000, 2942	    399963 ns/op	   56180 B/op	    2003 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 1000,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"10w 10000, 385	   3167677 ns/op	  560581 B/op	   20004 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 10000,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"10w 100000, 39	  29077362 ns/op	 5607544 B/op	  200035 allocs/op",
+		// 	args{
+		// 		gCount:     100000,
+		// 		groupCount: 100000,
+		// 	},
+		// 	100000,
+		// },
+		// {
+		// 	"100w 1, 829	   1427389 ns/op	      80 B/op	       4 allocs/op",
+		// 	args{
+		// 		gCount:     1000000,
+		// 		groupCount: 1,
+		// 	},
+		// 	1000000,
+		// },
+		// {
+		// 	"100w 10, 718	   1414013 ns/op	     625 B/op	      22 allocs/op",
+		// 	args{
+		// 		gCount:     1000000,
+		// 		groupCount: 10,
+		// 	},
+		// 	1000000,
+		// },
+		// {
+		// 	"100w 100, 771	   1548260 ns/op	    5680 B/op	     202 allocs/op",
+		// 	args{
+		// 		gCount:     1000000,
+		// 		groupCount: 100,
+		// 	},
+		// 	1000000,
+		// },
+		// {
+		// 	"100w 1000, 600	   2022531 ns/op	   56689 B/op	    2008 allocs/op",
+		// 	args{
+		// 		gCount:     1000000,
+		// 		groupCount: 1000,
+		// 	},
+		// 	1000000,
+		// },
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tt := range tests {
+			SequentialGroupOnLocalOperation(tt.args.gCount, tt.args.groupCount)
+		}
+	}
+}
+
 func BenchmarkSingleFlightPerformanceOnLoadCacheFromRedis(b *testing.B) {
 	type args struct {
 		gCount int
