@@ -2,21 +2,26 @@ package main
 
 import (
 	"fmt"
-	"runtime"
-	"time"
 )
 
 func main() {
-	var x int
-	threads := runtime.GOMAXPROCS(0)
-	fmt.Printf("threads = %v\n", threads)
-	for i := 0; i < threads; i++ {
-		go func() {
-			for {
-				x++
-			}
-		}()
+	var fs [4]func()
+	{
 	}
-	time.Sleep(time.Second)
-	panic(x)
+
+	var v *int
+
+	for i := 0; i < 4; i++ {
+		fs[i] = func() {
+			fmt.Println("打印v = ", i)
+			i *= 10
+		}
+		v = &i
+		fmt.Printf("i addr %v\n", &i)
+	}
+
+	for _, f := range fs {
+		f()
+	}
+	fmt.Printf("v addr = %v, v value = %v\n", v, *v)
 }
