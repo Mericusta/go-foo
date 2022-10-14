@@ -250,3 +250,36 @@ func GoChannelBlock() {
 		fmt.Printf("receive init \n")
 	}
 }
+func GoSelectSendChannel() {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	c := make(chan int)
+	go func() {
+		for index := 0; index != 3; index++ {
+			fmt.Printf("send %v and block\n", index)
+			select {
+			case c <- index:
+				fmt.Printf("send %v done\n", index)
+			}
+		}
+		wg.Done()
+	}()
+
+	time.Sleep(time.Second)
+
+	go func() {
+		for index := 0; index != 3; index++ {
+			time.Sleep(time.Second)
+			select {
+			case v, ok := <-c:
+				fmt.Printf("recv %v done\n", v)
+				if !ok {
+					break
+				}
+			}
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
