@@ -2,6 +2,7 @@ package iofoo
 
 import (
 	"bufio"
+	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -21,4 +22,11 @@ func WriteFileFoo(writerIndex int, outputFile io.Writer) {
 	}
 	flushCount++
 	buffer.Flush()
+}
+
+func tlvSocketPacketFoo(len int, value uint32) []byte {
+	packetTagArray := make([]byte, len)
+	binary.BigEndian.PutUint32(packetTagArray, value)
+	fmt.Printf("packetTagArray = %v\n", packetTagArray)
+	return packetTagArray
 }
