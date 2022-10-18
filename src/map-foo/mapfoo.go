@@ -35,3 +35,19 @@ func StructMapKeyFoo() {
 	v, has = structKeyMap[mapKey{k1: 2, k2: 2, ptr: ptrSlice[7]}] // pointer is same, pointer to value is different
 	fmt.Printf("v, has = %v, %v, %v, %v\n", v, has, ptrSlice[7], *ptrSlice[7])
 }
+
+func GetFromMapAsTypeEmptyValueFoo() {
+	m1 := make(map[int]int)
+	m1[1] = 10
+	v1, has := m1[2] // not exist key, return type int empty value 0
+	if v1 != 0 && has {
+		panic(fmt.Sprintf("%v %v", v1, has))
+	}
+
+	m2 := make(map[int][]int)
+	m2[1] = []int{10, 20, 30}
+	v2, has := m2[2] // not exist key, return type int empty value nil
+	if v2 != nil && has {
+		panic(fmt.Sprintf("%v %v", v2, has))
+	}
+}
