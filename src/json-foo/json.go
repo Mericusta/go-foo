@@ -2,6 +2,7 @@ package jsonfoo
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type JsonData struct {
@@ -20,6 +21,8 @@ func JsonFoo() {
 	if err != nil {
 		panic(err)
 	}
+
+	json.Marshal(s)
 
 	// token := "json-foo"
 	// channel := "json-foo"
@@ -72,4 +75,67 @@ func JsonFoo() {
 	// 	}
 	// }
 	// db.Close()
+}
+
+func InterfaceMarshalFoo() {
+	s := &JsonData{
+		CurrentLoginTimestamp: 1,
+		BirthTimestamp:        2,
+		LastLoginTimestamp:    3,
+		DailyOnlineSeconds:    4,
+		WeeklyOnlineSeconds:   5,
+	}
+	marshalStruct, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+
+	i := func() interface{} {
+		return &JsonData{
+			CurrentLoginTimestamp: 1,
+			BirthTimestamp:        2,
+			LastLoginTimestamp:    3,
+			DailyOnlineSeconds:    4,
+			WeeklyOnlineSeconds:   5,
+		}
+	}()
+	marshalInterface, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(marshalStruct) != len(marshalInterface) {
+		panic(fmt.Sprintf("len not equal %v %v", len(marshalStruct), len(marshalInterface)))
+	}
+
+	for index := 0; index != len(marshalStruct); index++ {
+		if marshalStruct[index] != marshalInterface[index] {
+			panic(fmt.Sprintf("index %v b not equal", index))
+		}
+	}
+
+	unmarshalStruct := &JsonData{}
+	err = json.Unmarshal(marshalStruct, unmarshalStruct)
+	if err != nil {
+		panic(err)
+	}
+
+	unmarshalInterface := &JsonData{}
+	err = json.Unmarshal(marshalStruct, unmarshalInterface)
+	if err != nil {
+		panic(err)
+	}
+
+	switch {
+	case unmarshalStruct.CurrentLoginTimestamp != unmarshalInterface.CurrentLoginTimestamp:
+		panic(fmt.Sprintf("CurrentLoginTimestamp not equal %+v %+v", unmarshalStruct, unmarshalInterface))
+	case unmarshalStruct.BirthTimestamp != unmarshalInterface.BirthTimestamp:
+		panic(fmt.Sprintf("BirthTimestamp not equal %+v %+v", unmarshalStruct, unmarshalInterface))
+	case unmarshalStruct.LastLoginTimestamp != unmarshalInterface.LastLoginTimestamp:
+		panic(fmt.Sprintf("LastLoginTimestamp not equal %+v %+v", unmarshalStruct, unmarshalInterface))
+	case unmarshalStruct.DailyOnlineSeconds != unmarshalInterface.DailyOnlineSeconds:
+		panic(fmt.Sprintf("DailyOnlineSeconds not equal %+v %+v", unmarshalStruct, unmarshalInterface))
+	case unmarshalStruct.WeeklyOnlineSeconds != unmarshalInterface.WeeklyOnlineSeconds:
+		panic(fmt.Sprintf("WeeklyOnlineSeconds not equal %+v %+v", unmarshalStruct, unmarshalInterface))
+	}
 }
