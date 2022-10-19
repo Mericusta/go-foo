@@ -1,6 +1,12 @@
 package mapfoo
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+)
 
 // 不同的 count 和 capacity 组合在 benchmark 下的性能是不同的
 // 只讨论 count <= capacity 的情况，见 ./BenchmarkMapCapacityFoo.sh true 10000
@@ -50,4 +56,42 @@ func GetFromMapAsTypeEmptyValueFoo() {
 	if v2 != nil && has {
 		panic(fmt.Sprintf("%v %v", v2, has))
 	}
+}
+
+func ReadConcurrently(c, s int) {
+	m := make(map[int]int)
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(c)
+	for index := 0; index != c; index++ {
+		m[index] = index * 10
+	}
+	timer := time.NewTimer(time.Second * time.Duration(s))
+	for index := 0; index != c; index++ {
+		go func(ctx context.Context, i int) {
+			counter := 0
+			t := time.NewTicker(time.Microsecond * time.Duration(rand.Intn(c)+1))
+			for {
+				select {
+				case <-t.C:
+					v, has := m[i]
+					if !has {
+						panic(fmt.Sprintf("index %v access map but not find value", i))
+					}
+					if v != i*10 {
+						panic(fmt.Sprintf("index %v access map find value wrong %v", i, v))
+					}
+					counter++
+				case <-ctx.Done():
+					t.Stop()
+					fmt.Printf("time %v index %v counter %v\n", time.Now().UnixNano(), i, counter)
+					wg.Done()
+					return
+				}
+			}
+		}(ctx, index)
+	}
+	<-timer.C
+	cancel()
+	wg.Wait()
 }
