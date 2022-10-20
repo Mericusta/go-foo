@@ -58,6 +58,8 @@ func GetFromMapAsTypeEmptyValueFoo() {
 	}
 }
 
+// 并发读取 map 的数据（在完全禁止写入 map 的情况下）
+// 只要发生修改操作，都会 panic（增删改）
 func ReadConcurrently(c, s int) {
 	m := make(map[int]int)
 	ctx, cancel := context.WithCancel(context.Background())
