@@ -237,6 +237,7 @@ func GoroutineOutputOrder2() {
 	fmt.Printf("%v\n", s)
 }
 
+// channel 引发 goroutine 阻塞，但不会导致 M 阻塞，goroutine 只是被挂起
 func GoChannelBlock() {
 	s := make(chan bool)
 	sendGo := func() {
@@ -250,6 +251,8 @@ func GoChannelBlock() {
 		fmt.Printf("receive init \n")
 	}
 }
+
+// 使用 select case 语法处理发送的 channel
 func GoSelectSendChannel() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -282,4 +285,9 @@ func GoSelectSendChannel() {
 	}()
 
 	wg.Wait()
+}
+
+// https://github.com/kubernetes/kubernetes/blob/7509c4eb478a3ab94ff26be2b4068da53212d538/pkg/controller/nodelifecycle/scheduler/taint_manager.go#L244
+func PriorityChannel() {
+
 }
