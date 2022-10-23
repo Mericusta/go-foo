@@ -294,15 +294,15 @@ func PriorityChannel() {
 }
 
 // select case 中同时存在已关闭和未关闭的 channel
-func SelectClosedAndUnclosedChannel() {
+func SelectClosedAndUnclosedChannelFoo() {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 	const BUFFER_CHANNEL_LEN = 16
 
-	ctx1, canceler1 := context.WithCancel(context.Background())
-	recvChannel1 := make(chan int, BUFFER_CHANNEL_LEN)
+	// 主动 cancel 但是 recv channel 还有值
+	ctx, canceler := context.WithCancel(context.Background())
+	recvChannel := make(chan int, BUFFER_CHANNEL_LEN)
 
-	// situation 1: cancel but recv channel has release value
 	// goroutine 1: 发送 BUFFER_CHANNEL_LEN 数量的值到 channel 里面然后 cancel（应该关闭 channel 但为了营造则不关闭）
 	go func(sendChannel chan<- int, canceler context.CancelFunc) {
 		counter := 0
@@ -319,8 +319,9 @@ func SelectClosedAndUnclosedChannel() {
 		fmt.Printf("\t- send goroutine close send channel, len = %v\n", len(sendChannel))
 		// close(sendChannel)
 		wg.Done()
-	}(recvChannel1, canceler1)
+	}(recvChannel, canceler)
 
+	// goroutine 2:
 	go func(ctx context.Context, recvChannel chan int) {
 		// 等待 BUFFER_CHANNEL_LEN/2 秒之后开始处理 recv channel
 		time.Sleep(time.Second * BUFFER_CHANNEL_LEN / 2)
@@ -369,48 +370,7 @@ func SelectClosedAndUnclosedChannel() {
 				fmt.Printf("Note: receive value %v from channel\n", i)
 			}
 		}
-	}(ctx1, recvChannel1)
+	}(ctx, recvChannel)
 
 	wg.Wait()
-
-	// ctx2, canceler2 := context.WithCancel(context.Background())
-	// recvChannel2 := make(chan int, 16)
-	// go func(sendChannel chan<- int) {
-	// 	ticker := time.NewTicker(time.Second)
-	// 	for range ticker.C {
-	// 		sendChannel <- 1
-	// 	}
-	// 	fmt.Printf("send ticker 2 done\n")
-	// }(recvChannel2)
-
-	// go func(ctx context.Context, recvChannel <-chan int) {
-	// 	ticker := time.NewTicker(time.Second)
-	// LOOP:
-	// 	for {
-	// 		select {
-	// 		case <-ticker.C: // 主动发送
-	// 		priority:
-	// 			for {
-	// 				select {
-	// 				case <-ctx.Done(): // 主动结束
-	// 					ticker.Stop()
-	// 					fmt.Printf("Note: stop ticker\n")
-	// 					goto LOOP
-	// 				default:
-	// 					break priority
-	// 				}
-	// 			}
-	// 			// 发送逻辑
-	// 			fmt.Printf("Note: ticker send logic\n")
-	// 		case i, ok := <-recvChannel: // 被动接收
-	// 			if !ok { // 被动结束
-	// 				fmt.Printf("Note: receive channel closed\n")
-	// 				ticker.Stop()
-	// 				break LOOP
-	// 			}
-	// 			// 接收逻辑
-	// 			fmt.Printf("Note: receive value from channel %v\n", i)
-	// 		}
-	// 	}
-	// }(ctx2, recvChannel2)
 }

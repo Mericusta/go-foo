@@ -126,7 +126,7 @@ func TestGoSelectSendChannel(t *testing.T) {
 	}
 }
 
-func TestSelectClosedAndUnclosedChannel(t *testing.T) {
+func TestSelectClosedAndUnclosedChannelFoo(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -137,7 +137,7 @@ func TestSelectClosedAndUnclosedChannel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SelectClosedAndUnclosedChannel()
+			SelectClosedAndUnclosedChannelFoo()
 		})
 	}
 }
