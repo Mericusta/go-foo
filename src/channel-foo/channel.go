@@ -1,6 +1,7 @@
 package channelfoo
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -289,7 +290,95 @@ func GoSelectSendChannel() {
 
 // https://github.com/kubernetes/kubernetes/blob/7509c4eb478a3ab94ff26be2b4068da53212d538/pkg/controller/nodelifecycle/scheduler/taint_manager.go#L244
 func PriorityChannel() {
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+	ctx, canceler := context.WithCancel(context.Background())
+	eventChannel := make(chan int, 1024)
+	recvChannel := make(chan int, 1024)
+	// priority sort: context > recvChannel > eventChannel
+	// but recvChannel == eventChannel
+	go func(ctx context.Context, eventChannel, recvChannel chan int) {
+		c := 0
+	LOOP:
+		for {
+			select {
+			case v, ok := <-eventChannel: // 主动发送
+			priority:
+				for {
+					select {
+					case <-ctx.Done(): // 主动结束，本端主动通过 context cancel 结束，必须保证本端先关闭 event channel
+						fmt.Printf("Note: dispatcher receive context done\n")
+						break LOOP
+					default:
+						fmt.Printf("Note: break priority\n")
+						break priority
+					}
+				}
+				if !ok {
+					c++
+					fmt.Printf("Note: dispatcher send channel closed\n")
+					// break LOOP // 由于对端断开 tcp 套接字而结束
+					if c >= 10 {
+						break LOOP
+					}
+					goto LOOP // 由于本端主动 cancel 而结束
+				}
+				// 发送逻辑
+				fmt.Printf("Note: dispatcher handle eventChannel, receive value %v\n", v)
+			case v, ok := <-recvChannel: // 被动接收
+				if !ok { // 被动结束，对端断开 tcp 套接字
+					fmt.Printf("Note: dispatcher receive channel closed\n")
+					close(eventChannel)
+					goto LOOP
+				}
+				// 接收逻辑
+				fmt.Printf("Note: dispatcher handle recvChannel, receive value %v\n", v)
+			}
+		}
+		wg.Done()
+	}(ctx, eventChannel, recvChannel)
 
+	go func(ctx context.Context, eventChannel chan int) {
+		counter := 0
+		ticker := time.NewTicker(time.Second)
+	LOOP:
+		for {
+			select {
+			case <-ticker.C:
+				eventChannel <- 1
+				counter++
+				if counter == 5 {
+					fmt.Printf("event channel counter done\n")
+					break LOOP
+				}
+			case <-ctx.Done():
+				fmt.Printf("event channel ctx done\n")
+				break LOOP
+			}
+		}
+		fmt.Printf("event channel closed\n")
+		close(eventChannel)
+		wg.Done()
+	}(ctx, eventChannel)
+
+	go func(recvChannel chan int) {
+		counter := 0
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			recvChannel <- 2
+			counter++
+			if counter == 15 {
+				break
+			}
+		}
+		wg.Done()
+	}(recvChannel)
+
+	// situation 1: 主动关闭
+	timer := time.NewTimer(time.Second * 10)
+	<-timer.C
+	canceler() // 主动关闭必须先关闭 event channel
+	wg.Wait()
 }
 
 // 关闭一个 buffer 中还有数据的 channel 时
@@ -314,4 +403,179 @@ func closeBufferChannelFoo() {
 		}
 	}
 EXIT:
+}
+
+// select case 中同时存在已关闭和未关闭的 channel
+func SelectClosedAndUnclosedChannel() {
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+	const BUFFER_CHANNEL_LEN = 16
+
+	ctx1, canceler1 := context.WithCancel(context.Background())
+	recvChannel1 := make(chan int, BUFFER_CHANNEL_LEN)
+
+	// situation 1: cancel but recv channel has release value
+	// goroutine 1: 发送 BUFFER_CHANNEL_LEN 数量的值到 channel 里面然后 cancel（应该关闭 channel 但为了营造则不关闭）
+	go func(sendChannel chan<- int, canceler context.CancelFunc) {
+		counter := 0
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			counter++
+			if counter == BUFFER_CHANNEL_LEN {
+				break
+			}
+			sendChannel <- counter
+		}
+		fmt.Printf("\t- send ticker 1 done and cancel 1\n")
+		canceler()
+		fmt.Printf("\t- send goroutine close send channel, len = %v\n", len(sendChannel))
+		// close(sendChannel)
+		wg.Done()
+	}(recvChannel1, canceler1)
+
+	go func(ctx context.Context, recvChannel chan int) {
+		// 等待 BUFFER_CHANNEL_LEN/2 秒之后开始处理 recv channel
+		time.Sleep(time.Second * BUFFER_CHANNEL_LEN / 2)
+		// 保证首次 tick 有 50% 的概率执行 recv channel，否则 tick 内等待1s，下次又有 50% 概率
+		ticker := time.NewTicker(time.Second) // 1s 1 tick
+		time.Sleep(time.Second)               // 等待 1s 保证 ticker 就绪，select case 有 50% 概率
+	LOOP:
+		for {
+			fmt.Printf("LOOP begin, recv channel release len %v\n", len(recvChannel))
+			select {
+			case <-ticker.C: // 主动发送
+			priority:
+				for {
+					select {
+					case <-ctx.Done(): // 主动结束
+						// 营造此时 channel 中还有值的现象
+						fmt.Printf("ctx Done, recv channel len %v\n", len(recvChannel))
+						release := BUFFER_CHANNEL_LEN - len(recvChannel)
+						for index := 0; index != release; index++ {
+							fmt.Printf("ctx Done, mock recv channel value %v, len %v\n", (index+1)*10, len(recvChannel))
+							recvChannel <- (index + 1) * 10
+						}
+						fmt.Printf("Note: stop ticker, recv channel len %v\n", len(recvChannel))
+						ticker.Stop()
+						wg.Done()
+						fmt.Printf("close recv channel\n")
+						close(recvChannel) // 应该在 goroutine 1 中关闭，即谁发谁关闭，但这里为了营造环境所以在这里关闭
+						fmt.Printf("Note: goto LOOP\n")
+						goto LOOP
+					default:
+						fmt.Printf("break priority\n")
+						break priority
+					}
+				}
+				// 发送逻辑
+				fmt.Printf("Note: ticker handle send logic\n")
+				time.Sleep(time.Second) // 等待 1s 保证 ticker 就绪，下次又有 50% 概率
+			case i, ok := <-recvChannel: // 被动接收
+				if !ok { // 被动结束
+					fmt.Printf("Note: receive channel closed with len %v\n", len(recvChannel))
+					ticker.Stop()
+					wg.Done()
+					break LOOP
+				}
+				// 接收逻辑
+				fmt.Printf("Note: receive value %v from channel\n", i)
+			}
+		}
+	}(ctx1, recvChannel1)
+
+	wg.Wait()
+
+	// ctx2, canceler2 := context.WithCancel(context.Background())
+	// recvChannel2 := make(chan int, 16)
+	// go func(sendChannel chan<- int) {
+	// 	ticker := time.NewTicker(time.Second)
+	// 	for range ticker.C {
+	// 		sendChannel <- 1
+	// 	}
+	// 	fmt.Printf("send ticker 2 done\n")
+	// }(recvChannel2)
+
+	// go func(ctx context.Context, recvChannel <-chan int) {
+	// 	ticker := time.NewTicker(time.Second)
+	// LOOP:
+	// 	for {
+	// 		select {
+	// 		case <-ticker.C: // 主动发送
+	// 		priority:
+	// 			for {
+	// 				select {
+	// 				case <-ctx.Done(): // 主动结束
+	// 					ticker.Stop()
+	// 					fmt.Printf("Note: stop ticker\n")
+	// 					goto LOOP
+	// 				default:
+	// 					break priority
+	// 				}
+	// 			}
+	// 			// 发送逻辑
+	// 			fmt.Printf("Note: ticker send logic\n")
+	// 		case i, ok := <-recvChannel: // 被动接收
+	// 			if !ok { // 被动结束
+	// 				fmt.Printf("Note: receive channel closed\n")
+	// 				ticker.Stop()
+	// 				break LOOP
+	// 			}
+	// 			// 接收逻辑
+	// 			fmt.Printf("Note: receive value from channel %v\n", i)
+	// 		}
+	// 	}
+	// }(ctx2, recvChannel2)
+}
+
+// select case 中同时存在已关闭和未关闭的 channel
+func SelectClosedAndUnclosedChannel1() {
+	c1 := make(chan int, 16)
+	for index := 0; index != 16; index++ {
+		c1 <- index
+	}
+	c2 := make(chan int, 16)
+	for index := 0; index != 16; index++ {
+		c2 <- index
+	}
+
+	close(c1) // control close
+	// close(c2) // can't control close
+
+LOOP:
+	for {
+		select {
+		case v, c1ok := <-c1: // can control
+			fmt.Printf("receive c1: %v, %v\n", v, c1ok)
+			if !c1ok {
+				// 关闭了 c1 之后 select case 仍然可以进来
+				// 因为 case 无法检查是否已关闭
+				// 所以这里不能 goto LOOP 处理 c2，只能立刻处理
+				fmt.Printf("c1 closed\n")
+				fmt.Printf("close c2\n")
+				close(c2)           // 首先关闭 c2
+				for v := range c2 { // 处理 c2 剩余的内容
+					fmt.Printf("after c1 closed, c2: %v\n", v)
+				}
+				fmt.Printf("break LOOP\n")
+				break LOOP // 结束
+			}
+			fmt.Printf("handle c1: %v, %v\n", v, c1ok)
+		case v, c2ok := <-c2: // can't control
+			fmt.Printf("receive c2: %v, %v\n", v, c2ok)
+			if !c2ok {
+				// 关闭了 c2 之后 select case 仍然可以进来
+				// 因为 case 无法检查是否已关闭
+				// 所以这里不能 goto LOOP 处理 c1，只能立刻处理
+				fmt.Printf("c2 closed\n")
+				fmt.Printf("close c1\n")
+				close(c1)           // 首先关闭 c1
+				for v := range c1 { // 处理 c1 剩余的内容
+					fmt.Printf("after c2 closed, c1: %v\n", v)
+				}
+				fmt.Printf("break LOOP\n")
+				break LOOP // 结束
+			}
+			fmt.Printf("handle c2: %v, %v\n", v, c2ok)
+		}
+	}
 }
