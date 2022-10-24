@@ -291,3 +291,27 @@ func GoSelectSendChannel() {
 func PriorityChannel() {
 
 }
+
+// 关闭一个 buffer 中还有数据的 channel 时
+// channel 的接收协程的表现
+func closeBufferChannelFoo() {
+	count := 16
+	c := make(chan int, count)
+	for index := 0; index != count; index++ {
+		c <- index
+	}
+
+	close(c)
+
+	for {
+		select {
+		case v, ok := <-c:
+			fmt.Printf("receive v %v, ok %v\n", v, ok)
+			if !ok {
+				fmt.Printf("receive close\n")
+				goto EXIT
+			}
+		}
+	}
+EXIT:
+}
