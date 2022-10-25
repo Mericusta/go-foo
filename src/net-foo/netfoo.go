@@ -58,7 +58,11 @@ func CloseConnectorFoo(closedBy int) {
 			<-ctx.Done()
 			if closedBy == 1 {
 				fmt.Printf("server: connection closed by server\n")
-				connection.Close() // 本端关闭 connector
+				err := connection.Close() // 本端关闭 connector
+				fmt.Printf("server: connection close type 1, error: %v\n", err)
+			} else {
+				err := connection.Close() // 远端关闭 connector 之后本地也需要关闭 connector
+				fmt.Printf("server: connection close type not 1, error: %v\n", err)
 			}
 			fmt.Printf("server: listener closed\n")
 			listener.Close()
@@ -91,6 +95,19 @@ func CloseConnectorFoo(closedBy int) {
 		fmt.Printf("client: write n %v err = %v\n", n, err)
 		if opError, ok := err.(*net.OpError); ok && opError.Err == net.ErrClosed {
 			fmt.Printf("client: connection closed by local\n")
+		}
+
+		// 远端关闭 connector 之后，本地也需要关闭
+		// 本地关闭 connector 之后再次关闭会 use of closed network connection
+		err = c.Close()
+		if err != nil {
+			if opError, ok := err.(*net.OpError); ok && opError.Err == net.ErrClosed {
+				fmt.Printf("client: multi-close local connection\n")
+			} else {
+				fmt.Printf("client: close local connection occurs error: %v\n", err)
+			}
+		} else {
+			fmt.Printf("client: close local connection\n")
 		}
 		wg.Done()
 	}(ctx)
