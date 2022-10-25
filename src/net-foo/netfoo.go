@@ -87,7 +87,7 @@ func CloseConnectorFoo(closedBy int) {
 		time.Sleep(time.Second * 3)
 		n, err = c.Write(packet) // 远端关闭 connection 之后这边再次写入会失败？
 		// Windows: wsasend: An established connection was aborted by the software in your host machine.
-		// Linux:
+		// Linux: write: broken pipe
 		fmt.Printf("client: write n %v err = %v\n", n, err)
 		if opError, ok := err.(*net.OpError); ok && opError.Err == net.ErrClosed {
 			fmt.Printf("client: connection closed by local\n")
