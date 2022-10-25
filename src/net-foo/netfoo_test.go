@@ -15,10 +15,14 @@ func TestCloseConnectorFoo(t *testing.T) {
 			"test case 1, connection closed by server",
 			args{closedBy: 1},
 		},
-		{
-			"test case 2, connection closed by client",
-			args{closedBy: 2},
-		},
+		// {
+		// 	"test case 2, connection closed by client",
+		// 	args{closedBy: 2},
+		// },
+		// {
+		// 	"test case 2, connection closed by client",
+		// 	args{closedBy: 3},
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
