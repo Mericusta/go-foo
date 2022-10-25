@@ -537,8 +537,9 @@ func SelectClosedAndUnclosedChannel1() {
 	for index := 0; index != 16; index++ {
 		c2 <- index
 	}
+	// ctx, canceler := context.WithCancel(context.Background())
 
-	close(c1) // control close
+	// close(c1) // control close
 	// close(c2) // can't control close
 
 LOOP:
@@ -578,4 +579,54 @@ LOOP:
 			fmt.Printf("handle c2: %v, %v\n", v, c2ok)
 		}
 	}
+}
+
+// 多个 goroutine 同时监听相同的 channel
+// 写入 channel 的 goroutine 是高速操作
+// 读取 channel 的 goroutine 是低速操作
+func MultiGoroutineSelectCaseOneChannel(size, count int, handleDuration time.Duration) {
+	m := sync.Map{}
+	c := make(chan int, size)
+	ctx, canceler := context.WithCancel(context.Background())
+	for index := 0; index != count; index++ {
+		go func(ctx context.Context, i int, c <-chan int) {
+			for {
+				select {
+				case <-ctx.Done():
+					fmt.Printf("index %v done\n", i)
+					return
+				case k, ok := <-c:
+					v, has := m.LoadAndDelete(k)
+					if !has {
+						fmt.Printf("index %v, ok %v, not has k %v\n", i, ok, k)
+					} else {
+						fmt.Printf("index %v, ok %v k: %v, v %v, has %v\n", i, ok, k, v, has)
+					}
+					time.Sleep(handleDuration)
+				}
+			}
+		}(ctx, index, c)
+	}
+
+	go func(ctx context.Context, c chan<- int) {
+		ticker := time.NewTicker(handleDuration * time.Duration(size) / time.Duration(count))
+		counter := 0
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Printf("sender done\n")
+				return
+			case <-ticker.C:
+				v, has := m.LoadOrStore(counter, counter)
+				if has {
+					panic(fmt.Sprintf("m already has key %v value %v", counter, v))
+				}
+				c <- counter
+				counter++
+			}
+		}
+	}(ctx, c)
+
+	time.Sleep(time.Second * 2)
+	canceler()
 }
