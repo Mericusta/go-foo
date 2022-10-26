@@ -2,6 +2,7 @@ package channelfoo
 
 import (
 	"testing"
+	"time"
 )
 
 func TestGoroutineExitThenCloseChannel(t *testing.T) {
@@ -126,7 +127,7 @@ func TestGoSelectSendChannel(t *testing.T) {
 	}
 }
 
-func TestSelectClosedAndUnclosedChannelFoo(t *testing.T) {
+func TestPriorityChannel(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -137,7 +138,50 @@ func TestSelectClosedAndUnclosedChannelFoo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SelectClosedAndUnclosedChannelFoo()
+			PriorityChannel()
+		})
+	}
+}
+
+func TestSelectClosedAndUnclosedChannel1(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SelectClosedAndUnclosedChannel1()
+		})
+	}
+}
+
+func TestMultiGoroutineSelectCaseOneChannel(t *testing.T) {
+	type args struct {
+		size           int
+		count          int
+		handleDuration time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				size:           16,
+				count:          32,
+				handleDuration: time.Second,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MultiGoroutineSelectCaseOneChannel(tt.args.size, tt.args.count, tt.args.handleDuration)
 		})
 	}
 }
