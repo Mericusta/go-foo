@@ -11,14 +11,14 @@ func TestCloseConnectorFoo(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
-		{
-			"test case 1, connection closed by server",
-			args{closedBy: 1},
-		},
 		// {
-		// 	"test case 2, connection closed by client",
-		// 	args{closedBy: 2},
+		// 	"test case 1, connection closed by server",
+		// 	args{closedBy: 1},
 		// },
+		{
+			"test case 2, connection closed by client",
+			args{closedBy: 2},
+		},
 		// {
 		// 	"test case 2, connection closed by client",
 		// 	args{closedBy: 3},

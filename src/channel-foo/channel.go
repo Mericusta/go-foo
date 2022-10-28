@@ -590,3 +590,61 @@ func MultiGoroutineSelectCaseOneChannel(size, count int, handleDuration time.Dur
 	time.Sleep(time.Second * 2)
 	canceler()
 }
+
+type complexStruct struct {
+	v int
+	s string
+}
+
+// 发送复杂数据结构
+func SendComplexStructFoo() {
+	s := complexStruct{
+		v: 10,
+		s: "10",
+	}
+	sp := &complexStruct{
+		v: 11,
+		s: "11",
+	}
+
+	ctx, canceler := context.WithCancel(context.Background())
+	recvChan := make(chan interface{})
+	changeChan := make(chan bool)
+
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case v, ok := <-recvChan:
+				if !ok {
+					continue
+				}
+				switch v.(type) {
+				case complexStruct:
+					cs := v.(complexStruct)
+					cs.v++
+					cs.s = "ok"
+					fmt.Printf("recv struct change %v\n", cs)
+					changeChan <- true
+				case *complexStruct:
+					cs := v.(*complexStruct)
+					cs.v++
+					cs.s = "ok"
+					fmt.Printf("recv struct pointer change %+v\n", cs)
+					changeChan <- true
+				}
+			}
+		}
+	}(ctx)
+
+	recvChan <- s
+	<-changeChan
+	fmt.Printf("after change %v\n", s)
+
+	recvChan <- sp
+	<-changeChan
+	fmt.Printf("after change %+v\n", sp)
+
+	canceler()
+}
