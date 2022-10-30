@@ -36,8 +36,13 @@ func HandlerMiddlewareFoo(ia interfaceA, withUserContext, withOtherServerUserCon
 
 	basement := &basement{}
 	// TODO: 如何支持多种 middleware
-	basement.handlerMiddleware = &userImplementMiddleware{
-		f: funcInterfaceB,
+	basement.handlerMiddlewareMgr = []middleware{
+		&userImplementMiddleware{
+			f: funcInterfaceB,
+		},
+		&otherServerUserImplementMiddleware{
+			f: funcInterfaceC,
+		},
 	}
 
 	basement.handle(ia)
@@ -102,7 +107,7 @@ type interfaceC interface {
 
 // other server user context constructor
 func newInterfaceC(ia interfaceA) interfaceC {
-	if _, has := userMgr[ia]; has {
+	if _, has := otherServerUserMgr[ia]; has {
 		return &implementC{implementA: ia.A()}
 	}
 	return nil
@@ -143,7 +148,7 @@ type middleware interface {
 
 // dispatcher
 type basement struct {
-	handlerMiddleware middleware
+	handlerMiddlewareMgr []middleware
 }
 
 // middleware
@@ -152,8 +157,10 @@ type basement struct {
 // logic goroutine
 func (b *basement) handle(ia interfaceA) {
 	// 中间件包装
-	if !b.handlerMiddleware.Do(ia) { // TODO: 原始 handler 不需要中间件，如何跳过？
-		return
+	for _, handlerMiddleware := range b.handlerMiddlewareMgr {
+		if !handlerMiddleware.Do(ia) { // TODO: 原始 handler 不需要中间件，如何跳过？
+			return
+		}
 	}
 	// 原始 handler
 	funcInterfaceA(ia)
