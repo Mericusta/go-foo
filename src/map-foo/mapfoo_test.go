@@ -76,3 +76,25 @@ func TestReadConcurrently(t *testing.T) {
 		})
 	}
 }
+
+func TestReadComplexDataStructConcurrently(t *testing.T) {
+	type args struct {
+		c int
+		s int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 3000, s: 10},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ReadComplexDataStructConcurrently(tt.args.c, tt.args.s)
+		})
+	}
+}

@@ -97,3 +97,57 @@ func ReadConcurrently(c, s int) {
 	cancel()
 	wg.Wait()
 }
+
+type mStruct struct {
+	i int
+	s string
+}
+
+// 并发读取 map 的复杂结构体数据，并且修结构体的值（在完全禁止写入 map 的情况下）
+// 只要对 map 发生修改操作，都会 panic（增删改）
+func ReadComplexDataStructConcurrently(c, s int) {
+	m := make(map[int]*mStruct)
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(c)
+	for index := 0; index != c; index++ {
+		m[index] = &mStruct{
+			i: index * 10,
+			s: fmt.Sprintf("%v*10+0", index),
+		}
+	}
+	timer := time.NewTimer(time.Second * time.Duration(s))
+	for index := 0; index != c; index++ {
+		go func(ctx context.Context, i int) {
+			counter := 0
+			t := time.NewTicker(time.Microsecond * time.Duration(rand.Intn(c)+1))
+			for {
+				select {
+				case <-t.C:
+					v, has := m[i]
+					if !has {
+						panic(fmt.Sprintf("index %v access map but not find value", i))
+					}
+					if v.i != i*10+counter || v.s != fmt.Sprintf("%v*10+%v", i, counter) {
+						panic(fmt.Sprintf("index %v access map find value wrong %+v", i, v))
+					}
+					counter++
+					v.i = i*10 + counter
+					v.s = fmt.Sprintf("%v*10+%v", i, counter)
+				case <-ctx.Done():
+					t.Stop()
+					fmt.Printf("time %v index %v counter %v\n", time.Now().UnixNano(), i, counter)
+					wg.Done()
+					return
+				}
+			}
+		}(ctx, index)
+	}
+	<-timer.C
+	cancel()
+	wg.Wait()
+
+	for i := 0; i != c; i++ {
+		fmt.Printf("i %v, v %+v\n", i, m[i])
+	}
+}
