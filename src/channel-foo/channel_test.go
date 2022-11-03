@@ -201,3 +201,28 @@ func TestSendComplexStructFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestChangeChannelWhichIsSelectedFoo(t *testing.T) {
+	type args struct {
+		stack bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{stack: false},
+		},
+		{
+			"test case 2",
+			args{stack: true},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ChangeChannelWhichIsSelectedFoo(tt.args.stack)
+		})
+	}
+}

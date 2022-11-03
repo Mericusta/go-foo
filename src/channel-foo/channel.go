@@ -648,3 +648,37 @@ func SendComplexStructFoo() {
 
 	canceler()
 }
+
+// 修改被监听的 channel
+func ChangeChannelWhichIsSelectedFoo(stack bool) {
+	c := make(chan int, 16)
+	ctx, canceler := context.WithCancel(context.Background())
+
+	go func(ctx context.Context, c <-chan int) {
+		for {
+			select {
+			case v, ok := <-c:
+				fmt.Printf("from channel %v, %v\n", v, ok)
+			case <-ctx.Done():
+				fmt.Printf("cancel\n")
+				return
+			}
+		}
+	}(ctx, c)
+
+	for index := 0; index != 16; index++ {
+		c <- index
+	}
+
+	time.Sleep(time.Second)
+
+	if stack {
+		c = make(chan int)
+		for index := 0; index != 16; index++ {
+			c <- index // deadlock here
+		}
+		time.Sleep(time.Second)
+	}
+
+	canceler()
+}
