@@ -2,7 +2,6 @@ package builtinfoo
 
 import (
 	"math"
-	"strings"
 	"testing"
 )
 
@@ -84,41 +83,10 @@ func BenchmarkStringToBytes(b *testing.B) {
 		want []byte
 	}{
 		// TODO: Add test cases.
-		// {
-		// 	// BenchmarkStringToBytes-12    	233983488	         4.993 ns/op	       0 B/op	       0 allocs/op
-		// 	"test case a1,b2,c3,d4,e5,f6,g8",
-		// 	args{s: "a1,b2,c3,d4,e5,f6,g8"},
-		// 	[]byte("a1,b2,c3,d4,e5,f6,g8"),
-		// },
 		{
-			// BenchmarkStringToBytes-12    	708182278	         1.618 ns/op	       0 B/op	       0 allocs/op
-			"test case long string length greater than 1024",
-			args{s: func() string {
-				b := strings.Builder{}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('a' + index))
-				}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('A' + index))
-				}
-				for index := 0; index != 10; index++ {
-					b.WriteRune(rune('0' + index))
-				}
-				return strings.Repeat(b.String(), 20)
-			}()},
-			func() []byte {
-				b := strings.Builder{}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('a' + index))
-				}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('A' + index))
-				}
-				for index := 0; index != 10; index++ {
-					b.WriteRune(rune('0' + index))
-				}
-				return []byte(strings.Repeat(b.String(), 20))
-			}(),
+			"test case abcdefu",
+			args{s: "abcdefu"},
+			[]byte{97, 98, 99, 100, 101, 102, 117},
 		},
 	}
 
@@ -140,41 +108,10 @@ func BenchmarkStringToBytesFool(b *testing.B) {
 		want []byte
 	}{
 		// TODO: Add test cases.
-		// {
-		// 	// BenchmarkStringToBytesFool-12    	250087009	         5.033 ns/op	       0 B/op	       0 allocs/op
-		// 	"test case a1,b2,c3,d4,e5,f6,g8",
-		// 	args{s: "a1,b2,c3,d4,e5,f6,g8"},
-		// 	[]byte("a1,b2,c3,d4,e5,f6,g8"),
-		// },
 		{
-			// BenchmarkStringToBytesFool-12    	 5085036	       250.2 ns/op	    1280 B/op	       1 allocs/op
-			"test case long string length greater than 1024",
-			args{s: func() string {
-				b := strings.Builder{}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('a' + index))
-				}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('A' + index))
-				}
-				for index := 0; index != 10; index++ {
-					b.WriteRune(rune('0' + index))
-				}
-				return strings.Repeat(b.String(), 20)
-			}()},
-			func() []byte {
-				b := strings.Builder{}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('a' + index))
-				}
-				for index := 0; index != 26; index++ {
-					b.WriteRune(rune('A' + index))
-				}
-				for index := 0; index != 10; index++ {
-					b.WriteRune(rune('0' + index))
-				}
-				return []byte(strings.Repeat(b.String(), 20))
-			}(),
+			"test case abcdefu",
+			args{s: "abcdefu"},
+			[]byte{97, 98, 99, 100, 101, 102, 117},
 		},
 	}
 

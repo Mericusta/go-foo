@@ -37,3 +37,8 @@ func CopyByteSliceFromString(s string) []byte {
 	copy(byteSlice, s)
 	return byteSlice
 }
+
+func CopyMyself(b []int, from, to int) []int {
+	copy(b[0:], b[from:to])
+	return b
+}
