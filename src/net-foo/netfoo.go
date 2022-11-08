@@ -118,3 +118,90 @@ func CloseConnectorFoo(closedBy int) {
 	time.Sleep(time.Second * 3)
 	wg.Wait()
 }
+
+// 关闭后又 connect 时的表现
+func CloseAndReconnectFoo(reconnectCount int) {
+	ctx, canceler := context.WithCancel(context.Background())
+
+	// server
+	go func(ctx context.Context) {
+		linkMap := make(map[net.Conn]struct{})
+		listener, _ := net.Listen("tcp", "127.0.0.1:6666")
+		for {
+			connection, acceptError := listener.Accept()
+			if acceptError != nil {
+				if acceptError.(*net.OpError).Err == net.ErrClosed {
+					return
+				}
+				continue
+			}
+
+			fmt.Printf("link: new link [%v -> %v] is accepted\n", connection.RemoteAddr().String(), connection.LocalAddr().String())
+			linkMap[connection] = struct{}{}
+
+			go func(c net.Conn) {
+				fmt.Printf("link: handle read\n")
+				for {
+					packets := make([]byte, 4)
+					_, err := c.Read(packets)
+					fmt.Printf("link: err %v\n", err)
+					fmt.Printf("link: err == EOF %v\n", err == io.EOF)
+					fmt.Printf("link: err == ErrClosed %v\n", func() bool {
+						netError, ok := err.(*net.OpError)
+						return ok && netError.Err == net.ErrClosed
+					}())
+					if err != nil {
+						if err == io.EOF {
+							fmt.Printf("link: connection closed by remote\n")
+						} else if opError, ok := err.(*net.OpError); ok && opError.Err == net.ErrClosed {
+							fmt.Printf("link: connection closed by local\n")
+						} else {
+							fmt.Printf("link: connection read occurs error: %v\n", err)
+							continue
+						}
+						return
+					}
+					fmt.Printf("link: read packets %v\n", packets)
+				}
+			}(connection)
+		}
+	}(ctx)
+
+	time.Sleep(time.Second)
+
+	// client
+	go func(ctx context.Context) {
+		var c net.Conn
+		var err error
+		connectCount := 0
+
+	CONNECT:
+		c, err = net.Dial("tcp", "127.0.0.1:6666")
+		if err != nil {
+			panic(fmt.Sprintf("dial occurs error: %v", err))
+		}
+		packet := make([]byte, 4)
+		binary.BigEndian.PutUint32(packet, 1024)
+		_, err = c.Write(packet)
+		if err != nil {
+			panic(fmt.Sprintf("write occurs error: %v", err))
+		}
+
+		time.Sleep(time.Second)
+		fmt.Printf("client: connection closed by client\n")
+		c.Close()
+
+		if connectCount < reconnectCount {
+			fmt.Printf("client: reconnect")
+			connectCount++
+			goto CONNECT
+		}
+
+		<-ctx.Done()
+	}(ctx)
+
+	time.Sleep(time.Second * 10)
+	fmt.Printf("main: cancel\n")
+	canceler()
+	time.Sleep(time.Second * 10)
+}

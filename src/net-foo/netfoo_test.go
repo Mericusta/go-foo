@@ -1,6 +1,8 @@
 package netfoo
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCloseConnectorFoo(t *testing.T) {
 	type args struct {
@@ -27,6 +29,27 @@ func TestCloseConnectorFoo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			CloseConnectorFoo(tt.args.closedBy)
+		})
+	}
+}
+
+func TestCloseAndReconnectFoo(t *testing.T) {
+	type args struct {
+		reconnectCount int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{reconnectCount: 1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			CloseAndReconnectFoo(tt.args.reconnectCount)
 		})
 	}
 }
