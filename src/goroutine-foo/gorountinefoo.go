@@ -43,3 +43,104 @@ func AllMIsWorking() {
 	time.Sleep(time.Second)
 	panic(x)
 }
+
+// goroutine 在 panic 和 recover 的表现
+func GoroutinePanicAndRecoverFoo() {
+	// prepare signal control
+	wg := sync.WaitGroup{}
+
+	// condition 1: 同协程，栈顶函数里 panic 并 recover
+	// recover at: g1 f1
+	// panic at: g1 f1
+	// result: g1 end and recover
+	wg.Add(1)
+	go func(t string) {
+		fmt.Printf("this is %v\n", t)
+		defer func() {
+			if panicInfo := recover(); panicInfo != nil {
+				fmt.Printf("panic info: %v\n", panicInfo)
+			}
+			fmt.Printf("%v is end\n", t)
+			wg.Done()
+		}()
+		panic(fmt.Sprintf("panic at %v", t))
+	}("root goroutine")
+	wg.Wait()
+	fmt.Println()
+
+	// condition 2: 同协程，子函数里 panic 并 recover
+	// recover at: g1 sub-call f2
+	// panic at: g1 sub-call f2
+	// result: g1 not end, f2 end and recover
+	wg.Add(1)
+	go func(t string) {
+		fmt.Printf("this is %v\n", t)
+		func(t string) {
+			fmt.Printf("this is %v\n", t)
+			defer func() {
+				if panicInfo := recover(); panicInfo != nil {
+					fmt.Printf("panic info: %v\n", panicInfo)
+				}
+				fmt.Printf("%v is end\n", t)
+			}()
+			panic(fmt.Sprintf("panic at %v", t))
+		}(fmt.Sprintf("%v sub-call", t))
+		time.Sleep(time.Second * 2)
+		fmt.Printf("%v is end\n", t)
+		wg.Done()
+	}("root goroutine")
+	wg.Wait()
+	fmt.Println()
+
+	// condition 3: 同协程，子函数里面 panic，栈顶函数里面 recover
+	// recover at: g1 f1
+	// panic at: g1 sub-call f2
+	// result: g1 end, and after expreesion f2 can not execute
+	wg.Add(1)
+	go func(t string) {
+		fmt.Printf("this is %v\n", t)
+		defer func() {
+			if panicInfo := recover(); panicInfo != nil {
+				fmt.Printf("panic info: %v\n", panicInfo)
+			}
+			fmt.Printf("%v is end\n", t)
+			wg.Done()
+		}()
+		func(t string) {
+			fmt.Printf("this is %v\n", t)
+			panic(fmt.Sprintf("panic at %v", t))
+		}(fmt.Sprintf("%v sub-call", t))
+		time.Sleep(time.Second * 2)
+		fmt.Printf("%v is sleep after 2 seconds\n", t)
+	}("root goroutine")
+	wg.Wait()
+	fmt.Println()
+
+	// condition 4: 不同协程，子协程栈顶函数里面 panic，父协程栈顶函数里面 recover
+	// recover at: g1 f1
+	// panic at: sub-goroutine g2 f1
+	// result: sub-goroutine g2 end and because g2 callstack has not recover, it will crash the program
+	wg.Add(2)
+	go func(t string) {
+		fmt.Printf("this is %v\n", t)
+		defer func() {
+			if panicInfo := recover(); panicInfo != nil {
+				fmt.Printf("panic info: %v", panicInfo)
+			}
+			fmt.Printf("%v is end\n", t)
+			wg.Done()
+		}()
+		go func(t string) {
+			defer wg.Done()
+			fmt.Printf("this is %v\n", t)
+			// panic(fmt.Sprintf("panic at %v", t))
+			fmt.Printf("%v callstack has not recover, it will crash the program\n", t)
+		}("sub goroutine")
+		time.Sleep(time.Second * 2)
+		fmt.Printf("%v is sleep after 2 seconds\n", t)
+	}("root goroutine")
+	wg.Wait()
+	fmt.Println()
+
+	// time.Sleep(time.Second * 5)
+}
