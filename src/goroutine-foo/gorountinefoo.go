@@ -55,6 +55,7 @@ func GoroutinePanicAndRecoverFoo() {
 	// result: g1 end and recover
 	wg.Add(1)
 	go func(t string) {
+		fmt.Printf("condition 1\n")
 		fmt.Printf("this is %v\n", t)
 		defer func() {
 			if panicInfo := recover(); panicInfo != nil {
@@ -74,6 +75,7 @@ func GoroutinePanicAndRecoverFoo() {
 	// result: g1 not end, f2 end and recover
 	wg.Add(1)
 	go func(t string) {
+		fmt.Printf("condition 2\n")
 		fmt.Printf("this is %v\n", t)
 		func(t string) {
 			fmt.Printf("this is %v\n", t)
@@ -83,7 +85,10 @@ func GoroutinePanicAndRecoverFoo() {
 				}
 				fmt.Printf("%v is end\n", t)
 			}()
-			panic(fmt.Sprintf("panic at %v", t))
+
+			func() {
+				panic(fmt.Sprintf("panic at %v", t))
+			}()
 		}(fmt.Sprintf("%v sub-call", t))
 		time.Sleep(time.Second * 2)
 		fmt.Printf("%v is end\n", t)
@@ -98,6 +103,7 @@ func GoroutinePanicAndRecoverFoo() {
 	// result: g1 end, and after expreesion f2 can not execute
 	wg.Add(1)
 	go func(t string) {
+		fmt.Printf("condition 3\n")
 		fmt.Printf("this is %v\n", t)
 		defer func() {
 			if panicInfo := recover(); panicInfo != nil {
@@ -122,6 +128,7 @@ func GoroutinePanicAndRecoverFoo() {
 	// result: sub-goroutine g2 end and because g2 callstack has not recover, it will crash the program
 	wg.Add(2)
 	go func(t string) {
+		fmt.Printf("condition 4\n")
 		fmt.Printf("this is %v\n", t)
 		defer func() {
 			if panicInfo := recover(); panicInfo != nil {
