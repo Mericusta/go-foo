@@ -1,6 +1,8 @@
 package slicefoo
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_appendLowerCapacitySliceFunc(t *testing.T) {
 	type args struct {
@@ -62,6 +64,22 @@ func TestPassSliceAndChangeIt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			PassSliceAndChangeIt()
+		})
+	}
+}
+
+func TestResetSliceFoo(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ResetSliceFoo()
 		})
 	}
 }

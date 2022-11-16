@@ -77,3 +77,71 @@ func GoroutineCommunicateBySharedMemoryFoo() {
 // goroutine 通信性能对比：buffer channel 尝试结合共享内存
 func GoroutineCommunicateByBufferChannelAndSharedMemoryFoo() {
 }
+
+// sync.Pool 切片测试
+func SyncFoolWithSliceFoo() {
+	defaultCapacity := 16
+	p := &sync.Pool{
+		New: func() any {
+			return make([]byte, 0, defaultCapacity)
+		},
+	}
+
+	sInfo := func(s []byte) {
+		fmt.Printf("s %v, ptr %p, len %v, cap %v\n", s, s, len(s), cap(s))
+	}
+
+	anyS := p.Get()
+	s := anyS.([]byte)
+	sInfo(s)
+	s = s[0:0] // reset slice
+	sInfo(s)
+	for index, c := 0, defaultCapacity; index != c; index++ {
+		s = append(s, 1)
+	}
+	sInfo(s)
+	p.Put(s)
+	fmt.Println()
+
+	anyS = p.Get()
+	s = anyS.([]byte)
+	sInfo(s)
+	s = s[0:0]
+	sInfo(s)
+	for index, c := 0, defaultCapacity*2; index != c; index++ {
+		s = append(s, 2)
+	}
+	sInfo(s)
+	p.Put(s)
+	fmt.Println()
+
+	anyS = p.Get()
+	s = anyS.([]byte)
+	sInfo(s)
+	s = s[0:0]
+	sInfo(s)
+	for index, c := 0, defaultCapacity; index != c; index++ {
+		s = append(s, 3)
+	}
+	sInfo(s)
+	p.Put(s)
+	fmt.Println()
+
+	anyS = p.Get() // old one in pool
+	s1 := anyS.([]byte)
+	anyS = p.Get() // new
+	s2 := anyS.([]byte)
+	anyS = p.Get() // new
+	s3 := anyS.([]byte)
+
+	sInfo(s1)
+	sInfo(s2)
+	sInfo(s3)
+
+	p.Put(s1)
+	p.Put(s2)
+	p.Put(s3)
+
+	// go func(p *sync.Pool) {
+	// }(p)
+}

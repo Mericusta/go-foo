@@ -63,3 +63,32 @@ func PassSliceAndChangeIt() {
 	appendGreaterCapacitySliceFunc(s)
 	fmt.Printf("after append func: %p, %v, cap(s) = %v\n", &s, s, cap(s))
 }
+
+func ResetSliceFoo() {
+	s := make([]int, 0, 8)
+	for index := 0; index != 8; index++ {
+		s = append(s, index)
+	}
+	fmt.Printf("s %v, ptr %p, len %v, cap %v\n", s, s, len(s), cap(s))
+
+	// reset s
+	s = s[:0]
+	for index := 0; index != 16; index++ {
+		s = append(s, index) // grow cap will change ptr
+	}
+	fmt.Printf("s %v, ptr %p, len %v, cap %v\n", s, s, len(s), cap(s))
+
+	// reset s will not change ptr
+	s = s[:0]
+	for index := 0; index != 8; index++ {
+		s = append(s, index)
+	}
+	fmt.Printf("s %v, ptr %p, len %v, cap %v\n", s, s, len(s), cap(s))
+
+	// make s will change ptr
+	s = s[:0]
+	for index := 0; index != 8; index++ {
+		s = append(s, index)
+	}
+	fmt.Printf("s %v, ptr %p, len %v, cap %v\n", s, s, len(s), cap(s))
+}
