@@ -139,3 +139,36 @@ func InterfaceMarshalFoo() {
 		panic(fmt.Sprintf("WeeklyOnlineSeconds not equal %+v %+v", unmarshalStruct, unmarshalInterface))
 	}
 }
+
+type SingleChatData struct {
+	Index         int64  `protobuf:"varint,1,opt,name=Index,proto3" json:"Index,omitempty"`
+	FromPlayer    uint64 `protobuf:"varint,2,opt,name=FromPlayer,proto3" json:"FromPlayer,omitempty"`
+	ToPlayer      uint64 `protobuf:"varint,3,opt,name=ToPlayer,proto3" json:"ToPlayer,omitempty"`
+	Content       string `protobuf:"bytes,4,opt,name=Content,proto3" json:"Content,omitempty"`
+	SendTimestamp int64  `protobuf:"varint,5,opt,name=SendTimestamp,proto3" json:"SendTimestamp,omitempty"`
+	BlockSender   bool   `protobuf:"varint,6,opt,name=BlockSender,proto3" json:"BlockSender,omitempty"`
+}
+type FriendChatDataList struct {
+	ChatDataList []*SingleChatData `protobuf:"bytes,1,rep,name=ChatDataList,proto3" json:"ChatDataList,omitempty"`
+	UpdateAt     int64             `protobuf:"varint,2,opt,name=UpdateAt,proto3" json:"UpdateAt,omitempty"`
+}
+
+func SliceMarshalFoo() {
+	se := &SingleChatData{
+		Index:         1,
+		FromPlayer:    2,
+		ToPlayer:      3,
+		Content:       "1",
+		SendTimestamp: 4,
+	}
+	ss := &FriendChatDataList{}
+	ss.ChatDataList = append(ss.ChatDataList, se)
+	j, _ := json.Marshal(&ss.ChatDataList)
+	fmt.Printf("%v\n", string(j))
+
+	_ss := &FriendChatDataList{}
+	_ss.ChatDataList = make([]*SingleChatData, 0)
+	e := json.Unmarshal(j, &_ss.ChatDataList)
+	fmt.Printf("e %v\n", e)
+	fmt.Printf("_ss.ChatDataList %+v\n", _ss.ChatDataList)
+}
