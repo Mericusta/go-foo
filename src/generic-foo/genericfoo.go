@@ -45,3 +45,26 @@ func InitAll() {
 	Ap.Init()
 	Bp.Init()
 }
+
+func GetI[T IBase]() T {
+	var iT T
+	return iMap[iT].(T)
+}
+
+func GetWithMap() {
+	_ = GetI[IA]()
+	_ = GetI[IB]()
+}
+
+func GetIA() IA {
+	return Ap
+}
+
+func GetIB() IB {
+	return Bp
+}
+
+func Get() {
+	_ = GetIA()
+	_ = GetIB()
+}
