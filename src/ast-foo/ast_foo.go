@@ -8,6 +8,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"sort"
 
@@ -74,6 +75,13 @@ func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, 
 // @parseFilePath  待解析的文件路径
 // @outputFunction 待输出的函数名称
 func FormatFoo(parseFilePath, outputFunction string) {
+	parseFileContent, err := ioutil.ReadFile(parseFilePath)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("parseFileContent\n|%v|\n", string(parseFileContent))
+
 	fileSet := token.NewFileSet()
 
 	fileAST, err := parser.ParseFile(fileSet, parseFilePath, nil, parser.ParseComments)
@@ -91,10 +99,13 @@ func FormatFoo(parseFilePath, outputFunction string) {
 	if fileAST.Scope != nil {
 		for name, object := range fileAST.Scope.Objects {
 			if object.Kind == ast.Fun && name == outputFunction {
+				ast.Print(fileSet, object)
 				decl := object.Decl.(*ast.FuncDecl)
+				fmt.Printf("decl.End() = %v, decl.Pos() = %v, content = \n|%v|\n", decl.End(), decl.Pos(), string(parseFileContent)[decl.Pos():decl.End()])
 				if declLen := decl.End() - decl.Pos(); buffer.Cap() < int(declLen) {
 					buffer.Grow(int(declLen))
 				}
+				// decl.Doc.List[0].Text, decl.Doc.List[1].Text = decl.Doc.List[1].Text, decl.Doc.List[0].Text
 				err = format.Node(buffer, fileSet, decl)
 				if err != nil {
 					panic(err)
