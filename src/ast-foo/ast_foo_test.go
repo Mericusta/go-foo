@@ -129,15 +129,24 @@ func TestFormatFoo(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
+		// {
+		// 	"test case 1",
+		// 	args{
+		// 		parseFilePath:  "D:\\Projects\\go-foo\\src\\algorithm-foo\\algorithm.go",
+		// 		outputFunction: "ConvertCamelCase2SnakeCaseWithPhrase",
+		// 	},
+		// },
+		// {
+		// 	"test case 2",
+		// 	args{
+		// 		parseFilePath:  "D:\\Projects\\go-foo\\cmd\\main.go",
+		// 		outputFunction: "main",
+		// 	},
+		// },
 		{
-			// "test case 1",
-			// args{
-			// 	parseFilePath:  "D:\\Projects\\go-foo\\src\\algorithm-foo\\algorithm.go",
-			// 	outputFunction: "ConvertCamelCase2SnakeCaseWithPhrase",
-			// },
-			"test case 1",
+			"test case 3",
 			args{
-				parseFilePath:  "D:\\Projects\\go-foo\\cmd\\main.go",
+				parseFilePath:  "../../cmd/main.go",
 				outputFunction: "main",
 			},
 		},

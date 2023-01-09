@@ -84,7 +84,7 @@ func FormatFoo(parseFilePath, outputFunction string) {
 
 	fileSet := token.NewFileSet()
 
-	fileAST, err := parser.ParseFile(fileSet, parseFilePath, nil, parser.ParseComments)
+	fileAST, err := parser.ParseFile(fileSet, "", parseFileContent, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -95,25 +95,42 @@ func FormatFoo(parseFilePath, outputFunction string) {
 	}
 	defer outputFile.Close()
 
-	buffer := &bytes.Buffer{}
-	if fileAST.Scope != nil {
-		for name, object := range fileAST.Scope.Objects {
-			if object.Kind == ast.Fun && name == outputFunction {
-				ast.Print(fileSet, object)
-				decl := object.Decl.(*ast.FuncDecl)
-				fmt.Printf("decl.End() = %v, decl.Pos() = %v, content = \n|%v|\n", decl.End(), decl.Pos(), string(parseFileContent)[decl.Pos():decl.End()])
-				if declLen := decl.End() - decl.Pos(); buffer.Cap() < int(declLen) {
-					buffer.Grow(int(declLen))
-				}
-				// decl.Doc.List[0].Text, decl.Doc.List[1].Text = decl.Doc.List[1].Text, decl.Doc.List[0].Text
-				err = format.Node(buffer, fileSet, decl)
-				if err != nil {
-					panic(err)
-				}
-				outputFile.Write(buffer.Bytes())
-				buffer.Reset()
-				break
-			}
+	ast.Print(fileSet, fileAST)
+
+	var funcDecl *ast.FuncDecl
+	ast.Inspect(fileAST, func(n ast.Node) bool {
+		if n == fileAST {
+			return true
 		}
+		if n == nil || funcDecl != nil {
+			return false
+		}
+		decl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+		if decl.Recv == nil && decl.Name.String() == outputFunction {
+			funcDecl = decl
+			return false
+		}
+		return true
+	})
+	if funcDecl == nil {
+		panic("nil")
 	}
+
+	buffer := &bytes.Buffer{}
+	ast.Print(fileSet, funcDecl)
+	// Note pos 需要-1
+	fmt.Printf("decl.Pos() = %v, decl.End() = %v, content = \n|%v|\n", funcDecl.Pos(), funcDecl.End(), string(parseFileContent[funcDecl.Pos()-1:funcDecl.End()]))
+	if declLen := funcDecl.End() - funcDecl.Pos(); buffer.Cap() < int(declLen) {
+		buffer.Grow(int(declLen))
+	}
+	// funcDecl.Doc.List[0].Text, funcDecl.Doc.List[1].Text = funcDecl.Doc.List[1].Text, funcDecl.Doc.List[0].Text
+	err = format.Node(buffer, fileSet, funcDecl)
+	if err != nil {
+		panic(err)
+	}
+	outputFile.Write(buffer.Bytes())
+	buffer.Reset()
 }
