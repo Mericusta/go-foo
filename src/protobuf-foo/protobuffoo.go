@@ -78,16 +78,17 @@ func InterfaceMarshalFoo() {
 		panic(err)
 	}
 
-	unmarshalInterface := &cargo_def.DungeonBaseInfo{}
-	err = proto.Unmarshal(marshalStruct, unmarshalInterface)
+	// unmarshalInterface := &cargo_def.DungeonBaseInfo{}
+	var unmarshalInterface proto.Message
+	err = proto.Unmarshal(marshalInterface, unmarshalInterface)
 	if err != nil {
 		panic(err)
 	}
 
 	switch {
-	case unmarshalStruct.Result != unmarshalInterface.Result:
+	case unmarshalStruct.Result != unmarshalInterface.(*cargo_def.DungeonBaseInfo).Result:
 		panic(fmt.Sprintf("Result not equal %+v %+v", unmarshalStruct, unmarshalInterface))
-	case unmarshalStruct.LastTime != unmarshalInterface.LastTime:
+	case unmarshalStruct.LastTime != unmarshalInterface.(*cargo_def.DungeonBaseInfo).LastTime:
 		panic(fmt.Sprintf("LastTime not equal %+v %+v", unmarshalStruct, unmarshalInterface))
 	}
 }

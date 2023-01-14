@@ -134,3 +134,24 @@ func FormatFoo(parseFilePath, outputFunction string) {
 	outputFile.Write(buffer.Bytes())
 	buffer.Reset()
 }
+
+func MultiParseFoo() {
+	f1 := "../../cmd/main.go"
+	f2 := "../concurrency-foo/concurrency.go"
+
+	f1Content, _ := os.ReadFile(f1)
+	f2Content, _ := os.ReadFile(f2)
+
+	fileSet := token.NewFileSet()
+	file1AST, err := parser.ParseFile(fileSet, "", f1Content, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	ast.Print(fileSet, file1AST)
+
+	_, err = parser.ParseFile(fileSet, "", f2Content, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	ast.Print(fileSet, file1AST)
+}
