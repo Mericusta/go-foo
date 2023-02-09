@@ -143,3 +143,24 @@ func TestCopyMyself(t *testing.T) {
 		})
 	}
 }
+
+func TestForRangeFoo(t *testing.T) {
+	type args struct {
+		rangeFunc func() []int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForRangeFoo(tt.args.rangeFunc)
+		})
+	}
+}

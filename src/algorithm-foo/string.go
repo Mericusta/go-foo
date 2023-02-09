@@ -1,5 +1,9 @@
-// ABC 开头 | 中间
+package algorithmfoo
+
+import "strings"
+
 // Abc 开头 | 中间 DONE
+// ABC 开头 | 中间
 // ConvertCamelCase2SnakeCaseWithPhrase 将驼峰命名法转换为蛇形命名法：XxxYyyZzz -> xxx_yyy_zzz
 func ConvertCamelCase2SnakeCaseWithPhrase(camelCase string, phraseMap map[string]struct{}) string {
 	allPhraseSubString := make(map[string]struct{})
