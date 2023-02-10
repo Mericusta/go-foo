@@ -78,3 +78,53 @@ func TestForceGCPointerSliceInOSHeap(t *testing.T) {
 		})
 	}
 }
+
+func TestForceGCNoNeedReleaseString(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+		{
+			"test case 2",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCNoNeedReleaseString(tt.args.c)
+		})
+	}
+}
+
+func TestAvoidForceGCNoNeedReleaseString(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+		{
+			"test case 2",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			AvoidForceGCNoNeedReleaseString(tt.args.c)
+		})
+	}
+}

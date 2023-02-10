@@ -2,6 +2,7 @@ package gcfoo
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -64,14 +65,50 @@ func ForceGCPointerSliceInOSHeap(c int) {
 	runtime.KeepAlive(s)
 }
 
-func GCString(c int) {
-	var stringBytes []byte
-	var stringOffsets []int
+func ForceGCNoNeedReleaseString(c int) {
+	ss := make([]string, c) // no need release string slice
+
+	// 'string' type is 'reflect.StringHeader'
+	// 'reflect.StringHeader' has pointer member 'Data uintptr'
+	// GC will scan all pointer in ss
 
 	for i := 0; i < c; i++ {
 		s := strconv.Itoa(i)
-		// l = i/10
+		ss = append(ss, s)
+	}
+
+	for i := 0; i < 10; i++ {
+		t := time.Now()
+		runtime.GC()
+		fmt.Printf("the slice has %v number of string elements, No.%v GC using time %s\n", c, i, time.Since(t))
+	}
+	runtime.KeepAlive(ss)
+}
+
+func AvoidForceGCNoNeedReleaseString(c int) {
+	var stringBytes []byte
+	var stringOffsets []int
+
+	for i := 1; i <= c; i++ {
+		s := strconv.Itoa(i)
 		stringBytes = append(stringBytes, s...)
-		stringOffsets = append(stringOffsets, len(s))
+		stringOffsets = append(stringOffsets, int(math.Log(float64(i)))+1)
+	}
+
+	for i := 0; i < 10; i++ {
+		runtime.GC()
+		t := time.Now()
+		runtime.GC()
+		fmt.Printf("the slice has %v number of string elements, No.%v GC using time %s\n", c, i, time.Since(t))
+	}
+
+	// get data
+	sStart := 0
+	for i := 0; i < 10; i++ {
+		sEnd := stringOffsets[i]
+		bytes := stringBytes[sStart:sEnd]
+		s := *(*string)(unsafe.Pointer(&bytes))
+		fmt.Printf("bytes [%v:%v] is %v\n", sStart, sEnd, s)
+		sStart = sEnd
 	}
 }
