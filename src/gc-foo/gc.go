@@ -65,7 +65,7 @@ func ForceGCPointerSliceInOSHeap(c int) {
 	runtime.KeepAlive(s)
 }
 
-func ForceGCNoNeedReleaseString(c int) {
+func ForceGCNoNeedReleaseStringSlice(c int) {
 	ss := make([]string, c) // no need release string slice
 
 	// 'string' type is 'reflect.StringHeader'
@@ -85,7 +85,7 @@ func ForceGCNoNeedReleaseString(c int) {
 	runtime.KeepAlive(ss)
 }
 
-func AvoidForceGCNoNeedReleaseString(c int) {
+func AvoidForceGCNoNeedReleaseStringSlice(c int) {
 	var stringBytes []byte
 	var stringOffsets []int
 
@@ -111,4 +111,35 @@ func AvoidForceGCNoNeedReleaseString(c int) {
 		fmt.Printf("bytes [%v:%v] is %v\n", sStart, sEnd, s)
 		sStart = sEnd
 	}
+}
+
+func ForceGCNoNeedReleaseStringMap(c int) {
+	sm := make(map[string]int)
+
+	for i := 0; i < c; i++ {
+		s := strconv.Itoa(i)
+		sm[s] = i
+	}
+
+	for i := 0; i < 10; i++ {
+		t := time.Now()
+		runtime.GC()
+		fmt.Printf("the map has %v number of string-int key value pairs, No.%v GC using time %s\n", c, i, time.Since(t))
+	}
+	runtime.KeepAlive(sm)
+}
+
+func AvoidForceGCNoNeedReleaseStringMap(c int) {
+	sm := make(map[int]int)
+
+	for i := 0; i < c; i++ {
+		sm[i] = i
+	}
+
+	for i := 0; i < 10; i++ {
+		t := time.Now()
+		runtime.GC()
+		fmt.Printf("the map has %v number of string-int key value pairs, No.%v GC using time %s\n", c, i, time.Since(t))
+	}
+	runtime.KeepAlive(sm)
 }

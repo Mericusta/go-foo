@@ -79,7 +79,7 @@ func TestForceGCPointerSliceInOSHeap(t *testing.T) {
 	}
 }
 
-func TestForceGCNoNeedReleaseString(t *testing.T) {
+func TestForceGCNoNeedReleaseStringSlice(t *testing.T) {
 	type args struct {
 		c int
 	}
@@ -99,12 +99,12 @@ func TestForceGCNoNeedReleaseString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ForceGCNoNeedReleaseString(tt.args.c)
+			ForceGCNoNeedReleaseStringSlice(tt.args.c)
 		})
 	}
 }
 
-func TestAvoidForceGCNoNeedReleaseString(t *testing.T) {
+func TestAvoidForceGCNoNeedReleaseStringSlice(t *testing.T) {
 	type args struct {
 		c int
 	}
@@ -124,7 +124,57 @@ func TestAvoidForceGCNoNeedReleaseString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AvoidForceGCNoNeedReleaseString(tt.args.c)
+			AvoidForceGCNoNeedReleaseStringSlice(tt.args.c)
+		})
+	}
+}
+
+func TestForceGCNoNeedReleaseStringMap(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+		{
+			"test case 2",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCNoNeedReleaseStringMap(tt.args.c)
+		})
+	}
+}
+
+func TestAvoidForceGCNoNeedReleaseStringMap(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+		{
+			"test case 2",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			AvoidForceGCNoNeedReleaseStringMap(tt.args.c)
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"math"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -150,4 +151,154 @@ func GoroutinePanicAndRecoverFoo() {
 	fmt.Println()
 
 	// time.Sleep(time.Second * 5)
+}
+
+// RecoverAtHandler 在函数调用栈上 recover
+func RecoverAtHandler(gCount, hCount int, concurrently bool) (int32, int32) {
+	handleCounter := int32(0)
+	recoverCounter := int32(0)
+	var wg sync.WaitGroup
+	if concurrently {
+		wg = sync.WaitGroup{}
+		wg.Add(gCount)
+	}
+
+	h := func(i int) {
+		defer func() {
+			if e := recover(); e != nil {
+				atomic.AddInt32(&recoverCounter, 1)
+			}
+		}()
+
+		if i != 0 && i%7 == 0 {
+			panic(i)
+		} else {
+			atomic.AddInt32(&handleCounter, 1)
+		}
+	}
+
+	g := func() {
+		for i := 0; i != hCount; i++ {
+			h(i)
+		}
+
+		if concurrently {
+			wg.Done()
+		}
+	}
+
+	for i := 0; i != gCount; i++ {
+		if concurrently {
+			go g()
+		} else {
+			g()
+		}
+	}
+
+	if concurrently {
+		wg.Wait()
+	}
+
+	return handleCounter, recoverCounter
+}
+
+// RecoverAtGoroutine 在协程（函数调用栈顶）上 recover：结果错误
+func RecoverAtGoroutine(gCount, hCount int, concurrently bool) (int32, int32) {
+	handleCounter := int32(0)
+	recoverCounter := int32(0)
+	var wg sync.WaitGroup
+	if concurrently {
+		wg = sync.WaitGroup{}
+		wg.Add(gCount)
+	}
+
+	h := func(i int) {
+		if i != 0 && i%7 == 0 {
+			panic(i)
+		} else {
+			atomic.AddInt32(&handleCounter, 1)
+		}
+	}
+
+	g := func() {
+		defer func() {
+			if e := recover(); e != nil {
+				atomic.AddInt32(&recoverCounter, 1)
+			}
+		}()
+
+		for i := 0; i != hCount; i++ {
+			h(i) // panic 之后不会执行之后的 h
+		}
+
+		if concurrently {
+			wg.Done()
+		}
+	}
+
+	for i := 0; i != gCount; i++ {
+		if concurrently {
+			go g()
+		} else {
+			g()
+		}
+	}
+
+	if concurrently {
+		wg.Wait()
+	}
+
+	return handleCounter, recoverCounter
+}
+
+// RecoverAtGoroutineCorrectly 在协程（函数调用栈顶）上 recover：结果正确
+func RecoverAtGoroutineCorrectly(gCount, hCount int, concurrently bool) (int32, int32) {
+	handleCounter := int32(0)
+	recoverCounter := int32(0)
+	var wg sync.WaitGroup
+	if concurrently {
+		wg = sync.WaitGroup{}
+		wg.Add(gCount)
+	}
+
+	h := func(i int) {
+		if i != 0 && i%7 == 0 {
+			panic(i)
+		} else {
+			atomic.AddInt32(&handleCounter, 1)
+		}
+	}
+
+	var g func(ri int)
+
+	g = func(ri int) {
+		defer func() {
+			if e := recover(); e != nil {
+				atomic.AddInt32(&recoverCounter, 1)
+				go g(e.(int) + 1)
+			}
+		}()
+
+		for i := ri; i != hCount; i++ {
+			h(i)
+		}
+
+		if concurrently {
+			wg.Done() // if h panic, it will skip here
+		}
+	}
+
+	for i := 0; i != gCount; i++ {
+		if concurrently {
+			go g(0)
+		} else {
+			g(0)
+		}
+	}
+
+	if concurrently {
+		wg.Wait()
+	}
+
+	return handleCounter, recoverCounter
 }
