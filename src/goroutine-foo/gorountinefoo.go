@@ -154,8 +154,8 @@ func GoroutinePanicAndRecoverFoo() {
 }
 
 // RecoverAtHandler 在函数调用栈上 recover
-func RecoverAtHandler(gCount, hCount int, concurrently bool) (int32, int32) {
-	handleCounter := int32(0)
+func RecoverAtHandler(gCount, hCount, mod int, concurrently bool) (int64, int32) {
+	handleCounter := int64(0)
 	recoverCounter := int32(0)
 	var wg sync.WaitGroup
 	if concurrently {
@@ -165,15 +165,15 @@ func RecoverAtHandler(gCount, hCount int, concurrently bool) (int32, int32) {
 
 	h := func(i int) {
 		defer func() {
-			if e := recover(); e != nil {
+			if e := recover(); e != nil { // 空 panic 消耗
 				atomic.AddInt32(&recoverCounter, 1)
 			}
 		}()
 
-		if i != 0 && i%7 == 0 {
+		if i != 0 && i%mod == 0 {
 			panic(i)
 		} else {
-			atomic.AddInt32(&handleCounter, 1)
+			atomic.AddInt64(&handleCounter, 1)
 		}
 	}
 
@@ -202,9 +202,9 @@ func RecoverAtHandler(gCount, hCount int, concurrently bool) (int32, int32) {
 	return handleCounter, recoverCounter
 }
 
-// RecoverAtGoroutine 在协程（函数调用栈顶）上 recover：结果错误
-func RecoverAtGoroutine(gCount, hCount int, concurrently bool) (int32, int32) {
-	handleCounter := int32(0)
+// RecoverAtGoroutine 在协程（函数调用栈顶）上 recover
+func RecoverAtGoroutine(gCount, hCount, mod int, concurrently bool) (int64, int32) {
+	handleCounter := int64(0)
 	recoverCounter := int32(0)
 	var wg sync.WaitGroup
 	if concurrently {
@@ -213,59 +213,10 @@ func RecoverAtGoroutine(gCount, hCount int, concurrently bool) (int32, int32) {
 	}
 
 	h := func(i int) {
-		if i != 0 && i%7 == 0 {
+		if i != 0 && i%mod == 0 {
 			panic(i)
 		} else {
-			atomic.AddInt32(&handleCounter, 1)
-		}
-	}
-
-	g := func() {
-		defer func() {
-			if e := recover(); e != nil {
-				atomic.AddInt32(&recoverCounter, 1)
-			}
-		}()
-
-		for i := 0; i != hCount; i++ {
-			h(i) // panic 之后不会执行之后的 h
-		}
-
-		if concurrently {
-			wg.Done()
-		}
-	}
-
-	for i := 0; i != gCount; i++ {
-		if concurrently {
-			go g()
-		} else {
-			g()
-		}
-	}
-
-	if concurrently {
-		wg.Wait()
-	}
-
-	return handleCounter, recoverCounter
-}
-
-// RecoverAtGoroutineCorrectly 在协程（函数调用栈顶）上 recover：结果正确
-func RecoverAtGoroutineCorrectly(gCount, hCount int, concurrently bool) (int32, int32) {
-	handleCounter := int32(0)
-	recoverCounter := int32(0)
-	var wg sync.WaitGroup
-	if concurrently {
-		wg = sync.WaitGroup{}
-		wg.Add(gCount)
-	}
-
-	h := func(i int) {
-		if i != 0 && i%7 == 0 {
-			panic(i)
-		} else {
-			atomic.AddInt32(&handleCounter, 1)
+			atomic.AddInt64(&handleCounter, 1)
 		}
 	}
 
