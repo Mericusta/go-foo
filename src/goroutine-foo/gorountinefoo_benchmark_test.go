@@ -125,7 +125,7 @@ func BenchmarkRecoverAtGoroutine(b *testing.B) {
 		// 	}(),
 		// },
 		{
-			"test case 3, panic probability 0, 10401650000 ns/op",
+			"test case 3, panic probability 0, 38733424592 ns/op",
 			args{
 				gCount:       2048,
 				hCount:       1 << 18,
@@ -230,7 +230,7 @@ func BenchmarkRecoverAtHandler(b *testing.B) {
 		// 	}(),
 		// },
 		{
-			"test case 3, panic probability 0, 8898063600 ns/op",
+			"test case 3, panic probability 0, 41490503856 ns/op",
 			args{
 				gCount:       2048,
 				hCount:       1 << 18,
