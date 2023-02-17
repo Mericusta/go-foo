@@ -11,23 +11,27 @@ import (
 	"unsafe"
 )
 
-func ForceGCPointerSlice(c int) {
-	s := make([]*int, c)
-	for i := 0; i < 10; i++ {
+func forceGC(n, c int) {
+	totalDuration := time.Duration(0)
+	for i := 0; i != c; i++ {
 		t := time.Now()
 		runtime.GC()
-		fmt.Printf("the slice has %v number of *int elements, No.%v GC using time %s\n", c, i, time.Since(t))
+		d := time.Since(t)
+		totalDuration += d
+		fmt.Printf("number of int elements %v, No.%v GC using time %s\n", n, i, d)
 	}
+	fmt.Printf("number of int elements %v, average GC using time %s\n", n, totalDuration/10)
+}
+
+func ForceGCPointerSlice(c int) {
+	s := make([]*int, c)
+	forceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
 func ForceGCNonPointerSlice(c int) {
 	s := make([]int, c)
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the slice has %v number of int elements, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -57,11 +61,7 @@ func ForceGCPointerSliceInOSHeap(c int) {
 	sliceHeader := makeSliceFromOSHeap(c, unsafe.Sizeof(intPtr))
 	s := *(*[]*int)(unsafe.Pointer(&sliceHeader))
 
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the slice has %v number of int elements, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -77,11 +77,7 @@ func ForceGCNoNeedReleaseStringSlice(c int) {
 		ss = append(ss, s)
 	}
 
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the slice has %v number of string elements, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 	runtime.KeepAlive(ss)
 }
 
@@ -95,12 +91,7 @@ func AvoidForceGCNoNeedReleaseStringSlice(c int) {
 		stringOffsets = append(stringOffsets, int(math.Log(float64(i)))+1)
 	}
 
-	for i := 0; i < 10; i++ {
-		runtime.GC()
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the slice has %v number of string elements, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 
 	// get data
 	sStart := 0
@@ -121,11 +112,7 @@ func ForceGCNoNeedReleaseStringMap(c int) {
 		sm[s] = i
 	}
 
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the map has %v number of string-int key value pairs, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 	runtime.KeepAlive(sm)
 }
 
@@ -136,10 +123,60 @@ func AvoidForceGCNoNeedReleaseStringMap(c int) {
 		sm[i] = i
 	}
 
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		runtime.GC()
-		fmt.Printf("the map has %v number of string-int key value pairs, No.%v GC using time %s\n", c, i, time.Since(t))
-	}
+	forceGC(c, 10)
 	runtime.KeepAlive(sm)
+}
+
+type gcStruct struct {
+	i int
+	v int
+}
+
+func ForceGCStructPointerMap(c int) {
+	m := make(map[int]*gcStruct)
+	for i := 0; i < c; i++ {
+		m[i] = &gcStruct{
+			i: i,
+			v: i,
+		}
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(m)
+}
+
+func ForceGCStructPointerSlice(c int) {
+	s := make([]*gcStruct, 0, c)
+
+	for i := 0; i < c; i++ {
+		s = append(s, &gcStruct{
+			i: i,
+			v: i,
+		})
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(s)
+}
+
+func ForceGCByteSlice(c int) {
+	s := make([][]byte, 0, c)
+
+	for i := 0; i < c; i++ {
+		s = append(s, make([]byte, 0, 24))
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(s)
+}
+
+func ForceGCByteSliceMap(c int) {
+	m := make(map[int][]byte)
+
+	for i := 0; i < c; i++ {
+		m[i] = make([]byte, 0, 24)
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(m)
 }

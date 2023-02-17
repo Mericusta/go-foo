@@ -178,3 +178,87 @@ func TestAvoidForceGCNoNeedReleaseStringMap(t *testing.T) {
 		})
 	}
 }
+
+func TestForceGCStructPointerMap(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCStructPointerMap(tt.args.c)
+		})
+	}
+}
+
+func TestForceGCStructPointerSlice(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCStructPointerSlice(tt.args.c)
+		})
+	}
+}
+
+func TestForceGCByteSlice(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCByteSlice(tt.args.c)
+		})
+	}
+}
+
+func TestForceGCByteSliceMap(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCByteSliceMap(tt.args.c)
+		})
+	}
+}
