@@ -1,6 +1,7 @@
 package builtinfoo
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -71,9 +72,7 @@ func Test_convertType2(t *testing.T) {
 		{
 			"test case 1",
 			true,
-			[]byte{
-				1, 0, 0, 0, 0, 0, 0, 0,
-			},
+			nil,
 		},
 	}
 	for _, tt := range tests {
@@ -83,6 +82,8 @@ func Test_convertType2(t *testing.T) {
 				t.Errorf("convertType2() got = %v, want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
+				fmt.Printf("got1 = %+v, ptr = %p\n", got1, got1)
+				fmt.Printf("got1 = %+v\n", convertByteArrayToObject(got1))
 				t.Errorf("convertType2() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
@@ -167,6 +168,27 @@ func TestStructMemoryAlignCalculateProcess(t *testing.T) {
 			if got3 != tt.want3 {
 				t.Errorf("StructMemoryAlignCalculateProcess() got3 = %v, want %v", got3, tt.want3)
 			}
+		})
+	}
+}
+
+func Test_convertStruct2Example(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 20},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			convertStruct2Example(tt.args.c)
 		})
 	}
 }

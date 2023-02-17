@@ -262,3 +262,45 @@ func TestForceGCByteSliceMap(t *testing.T) {
 		})
 	}
 }
+
+func TestAvoidGCScanByUintptr(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 100000},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			AvoidGCScanByUintptr(tt.args.c)
+		})
+	}
+}
+
+func TestAvoidGCScanByByteSlice(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			AvoidGCScanByByteSlice(tt.args.c)
+		})
+	}
+}

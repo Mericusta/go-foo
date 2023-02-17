@@ -218,56 +218,122 @@ func ConvertAnyObjectToByteArray(o *es) []byte {
 // 缺点：必须明确类型才能计算出长度（可以用代码处理？）
 
 type convertStruct2 struct {
-	i   int   // 可变长度 -> 64 位机器上是8位，对齐长度为8，第1次对齐，占8位
-	i8  int8  // 长度1位，第2次对齐，占2位，第2次对齐内再次对齐
-	i32 int32 // 长度4位，第2次对齐，占4位，第2次对齐内再次对齐
-	i16 int16 // 长度2位，第2次对齐，占2位，第2次对齐内再次对齐
-	i64 int64 // 长度8位，第3次对齐，占8位
+	i int
+	// i8  int8
+	// i16 int16
+	// i32 int32
+	// i64 int64
 	// f32 float32
 	// f64 float64
-	// s   string          // 可变长度
-	// sub *convertStruct2 // 可变长度
+	s string
+	// sub *convertStruct2
+}
+
+var dataSlice [][]byte
+var structSlice []*convertStruct2
+
+func setDataSlice(o *convertStruct2) int {
+	// fmt.Printf("setDataSlice p ptr = %v\n", uintptr(unsafe.Pointer(o)))
+	// o.s = fmt.Sprintf("convert type %v example", len(dataSlice))
+	b := convertObjectToByteArray(o)
+	dataSlice = append(dataSlice, b)
+	// fmt.Printf("setDataSlice data[0] ptr %v\n", uintptr(unsafe.Pointer(&dataSlice[0])))
+	// structSlice = append(structSlice, o)
+	return len(dataSlice)
+}
+
+func getDataSlice(i int) *convertStruct2 {
+	if i > len(dataSlice) {
+		return nil
+	}
+	b := dataSlice[i]
+	if len(b) == 0 {
+		return nil
+	}
+	return convertByteArrayToObject(b)
+}
+
+func convertStruct2Example(c int) {
+	dataSlice = make([][]byte, 0, c)
+
+	var o *convertStruct2
+	for i := 0; i != c; i++ {
+		o = &convertStruct2{i: i, s: fmt.Sprintf("convert type %v example", i)}
+		setDataSlice(o)
+	}
+
+	// update
+	for i := 0; i != c; i++ {
+		o := getDataSlice(i)
+		co := &convertStruct2{i: i, s: fmt.Sprintf("convert type %v example", i)}
+		if !reflect.DeepEqual(o, co) {
+			panic(fmt.Sprintf("%+v != %+v", o, co))
+		}
+	}
 }
 
 func convertType2() (bool, []byte) {
 	o := &convertStruct2{
-		i:   1,
-		i8:  2,
-		i16: 3,
-		i32: 4,
+		// i:   1,
+		// i8:  2,
+		// i16: 3,
+		// i32: 4,
 		// i64: 5,
 		// f32: 3.1415,
 		// f64: 2.7183,
-		// s:   "convert type 2",
+		s: "convert type 2",
 		// sub: &convertStruct2{s: "convert type 2 sub"},
 	}
 	fmt.Printf("Sizeof = %v\n", unsafe.Sizeof(*o))
 	fmt.Printf("Alignof = %v\n", unsafe.Alignof(*o))
+	// fmt.Printf("ptr = %p\n", o) // _s.a 的类型是 uintptr 不执行该句会导致返回的 b 结果不一致？
+	// b := []byte{47, 195, 90, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0}
 	b := convertObjectToByteArray(o)
-	fmt.Printf("b len = %v\n", len(b))
-	fmt.Printf("b = %v\n", b)
-	// fmt.Printf("i = %v\n", b[0:8])
-	// fmt.Printf("i8 = %v\n", b[8:9])
-	// fmt.Printf("i16 = %v\n", b[9:11])
-	// fmt.Printf("i32 = %v\n", b[11:15])
-	// fmt.Printf("i64 = %v\n", b[15:23])
-	// fmt.Printf("f32 = %v\n", b[23:31])
-	// fmt.Printf("f64 = %v\n", b[31:39])
-	// fmt.Printf("s = %v\n", b[39:])
-	ro := convertByteArrayToObject(b)
-	return reflect.DeepEqual(o, ro), b
+	// fmt.Printf("b ptr = %p\n", b)
+	// fmt.Printf("o ptr = %p\n", o)
+
+	// fmt.Printf("b len = %v\n", len(b))
+	// fmt.Printf("b = %v, ptr = %p\n", b, b)
+
+	// b1 := make([]byte, len(b))
+	// copy(b1, b)
+	// fmt.Printf("b1 = %v, ptr = %p\n", b1, b1)
+
+	// o = nil
+	// runtime.GC()
+
+	// b2 := make([]byte, len(b))
+	// copy(b2, b)
+	// fmt.Printf("b2 = %v, ptr = %p\n", b2, b2)
+
+	// ro := convertByteArrayToObject(b)
+	// fmt.Printf("ro = %+v\n", ro)
+	// fmt.Printf("ro = %+v\n", convertByteArrayToObject(b))
+
+	return false, b
 }
 
 type _s struct {
-	p uintptr
+	// 使用 uintptr 并且外部不使用 fmt.Printf 会导致返回的 b 结果不一致
+	// 使用 unsafe.Pointer 则会使得返回的 b 结果一致
+	a uintptr
 	l int
 	c int
 }
 
 func convertObjectToByteArray(o *convertStruct2) []byte {
 	l := unsafe.Sizeof(*o) // 注意这里必须是具体类型
-	s := &_s{p: uintptr(unsafe.Pointer(o)), l: int(l), c: int(l)}
+	// 用 _s.a 指向了这个对象的内存空间，以避免这个对象被 GC
+	s := &_s{a: uintptr(unsafe.Pointer(o)), l: int(l), c: int(l)}
+	// 然后将 _s 这个结构转化成 []byte，可以转换的原因如下：
+	// 1 struct 中所有成员变量的内存是连续分布的
+	// 2 _s 结构跟 []type 的底层结构是一样的
 	b := *(*[]byte)(unsafe.Pointer(s))
+	// fmt.Println("after convertObjectToByteArray")
+	// fmt.Printf("s ptr = %p\n", s)                                          // 指向 s 本身
+	// fmt.Printf("s.a = %v\n", s.a)                                          // 指向 转换的对象
+	// fmt.Printf("b ptr = %p\n", b)                                          // 指向 b 的第一个元素
+	// fmt.Printf("s.a == &b[0] %v\n", s.a == uintptr(unsafe.Pointer(&b[0]))) // 等于 转换的对象
 	return b
 }
 

@@ -180,3 +180,83 @@ func ForceGCByteSliceMap(c int) {
 	forceGC(c, 10)
 	runtime.KeepAlive(m)
 }
+
+type gcStruct2 struct {
+	i1 int
+	i2 int
+	i3 int
+	i4 int
+	i5 int
+	i6 int
+}
+
+func AvoidGCScanByUintptr(c int) {
+	fmt.Printf("gcStruct2 size = %v\n", unsafe.Sizeof(gcStruct{}))
+
+	s := make([]uintptr, 0, c)
+
+	var sp *gcStruct2
+	for i := 0; i < c; i++ {
+		sp = &gcStruct2{
+			i1: i + 1, i2: i + 2, i3: i + 3,
+			i4: i + 4, i5: i + 5, i6: i + 6,
+		}
+		s = append(s, uintptr(unsafe.Pointer(sp)))
+	}
+
+	// uintptr lost object memory reference
+	// the object will be released by GC
+	forceGC(c, 10)
+	runtime.KeepAlive(s)
+	time.Sleep(1)
+
+	lost := 0
+	for i := 0; i < c; i++ {
+		sp := (*gcStruct2)(unsafe.Pointer(s[i]))
+		if sp.i1 != i+1 || sp.i2 != i+2 || sp.i3 != i+3 {
+			lost++
+			fmt.Printf("%v not equal, sp = %+v, s[i] = %v\n", i, sp, s[i])
+		}
+	}
+	fmt.Printf("1, lost count = %v\n", lost)
+}
+
+func AvoidGCScanByByteSlice(c int) {
+	size := unsafe.Sizeof(gcStruct{})
+	fmt.Printf("gcStruct2 size = %v\n", size)
+
+	s := make([][]byte, 0, c)
+
+	var sp *gcStruct2
+	type _s struct {
+		p uintptr
+		l int
+		c int
+	}
+	for i := 0; i < c; i++ {
+		sp = &gcStruct2{
+			i1: i + 1, i2: i + 2, i3: i + 3,
+			i4: i + 4, i5: i + 5, i6: i + 6,
+		}
+
+		_s := &_s{p: uintptr(unsafe.Pointer(sp)), l: int(size), c: int(size)}
+		s = append(s, *(*[]byte)(unsafe.Pointer(_s)))
+	}
+
+	// uintptr lost object memory reference
+	// but []byte catch object memory reference
+	// it will not release by GC
+	forceGC(c, 10)
+	runtime.KeepAlive(s)
+	time.Sleep(1)
+
+	lost := 0
+	for i := 0; i < c; i++ {
+		sp := *(**gcStruct2)(unsafe.Pointer(&s[i]))
+		if sp.i1 != i+1 || sp.i2 != i+2 || sp.i3 != i+3 {
+			lost++
+			fmt.Printf("%v not equal, sp = %+v, s[i] = %v\n", i, sp, s[i])
+		}
+	}
+	fmt.Printf("1, lost count = %v\n", lost)
+}
