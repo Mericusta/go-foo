@@ -2,7 +2,7 @@ package structfoo
 
 import (
 	"fmt"
-	substruct "go-foo/struct-foo/sub-struct"
+	substruct "go-foo/src/struct-foo/sub-struct"
 )
 
 func SwapStructValueOneLine() {

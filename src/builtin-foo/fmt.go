@@ -14,13 +14,13 @@ type fmtStruct struct {
 func FmtPtr() {
 	var i int = 1
 	var iPtr *int = &i
-	var str string = "1"
+	var str string = "abc"
 	var strPtr *string = &str
 	var m map[int]int = map[int]int{1: 1} // as same as make(map[int]int)
 	var mPtr *map[int]int = &m
 	var slice []int = []int{1} // as same as make([]int, 0, 2)
 	var slicePtr *[]int = &slice
-	var s fmtStruct = fmtStruct{i: 1, s: "1"}
+	var s fmtStruct = fmtStruct{i: 1, s: "abc"}
 	var sPtr *fmtStruct = &s
 
 	fmt.Println(i)
@@ -99,13 +99,16 @@ func FmtPtr() {
 
 	fmt.Printf("for slice type\n")
 	fmt.Printf("- the underlying type is slice, a struct named slice\n")
-	fmt.Printf("- make func defined in runtime/slice.go\n")
+	fmt.Printf("- make func defined in runtime/slice.go, as same as reflect.SliceHeader\n")
 	fmt.Printf("- %%v is struct content value\n")
 	fmt.Printf("- %%p is different from struct, befause fmt.Printf output its first element address\n")
 	fmt.Printf("for slice type's pointer\n")
 	fmt.Printf("- %%v is pointed value, same like output %%v struct\n")
 	fmt.Printf("- %%p is pointer value\n")
 	fmt.Println()
+
+	// var b byte = 97
+	// fmt.Println(&b)
 
 	fmt.Println(str)
 	fmt.Println(reflect.TypeOf(str))
@@ -115,16 +118,25 @@ func FmtPtr() {
 	fmt.Println(reflect.TypeOf(strPtr))
 	fmt.Printf("v %v\n", strPtr)
 	fmt.Printf("p %p\n", strPtr)
+	fmt.Printf("string -> []byte %v\n", []byte(str))
+	fmt.Printf("reflect.Header %v\n", (*reflect.StringHeader)(unsafe.Pointer(strPtr)))
+	stringContentPtr := (*reflect.StringHeader)(unsafe.Pointer(strPtr)).Data
+	for i := uintptr(0); int(i) < len([]byte(str)); i++ {
+		fmt.Printf("No.%v byte %v\n", i, *(*byte)(unsafe.Pointer(stringContentPtr + i)))
+	}
 	fmt.Println()
 
 	fmt.Printf("for string type\n")
 	fmt.Printf("- the underlying type is stringStruct, a struct named stringStruct\n")
-	fmt.Printf("- struct defined in runtime/string.go\n")
+	fmt.Printf("- struct defined in runtime/string.go, as same as reflect.StringHeader\n")
 	fmt.Printf("- struct has a pointer, pointing to []byte, an array, element type is byte\n")
 	fmt.Printf("- %%v is array's content value\n")
 	fmt.Printf("- can not output %%p because it is not a pointer\n")
 	fmt.Printf("for string type's pointer\n")
 	fmt.Printf("- %%v is equal to %%p\n")
 	fmt.Printf("- %%p is pointer value\n")
+	fmt.Printf("for reflect.StringHeader\n")
+	fmt.Printf("- reflect.StringHeader.Data is string content memory address\n")
+	fmt.Printf("- string content memory allocation is as same as array, so it can accessed by iteration content pointer\n")
 	fmt.Println()
 }

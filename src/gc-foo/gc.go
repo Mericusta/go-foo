@@ -244,7 +244,7 @@ func AvoidGCScanByUintptr(c int) {
 
 	lost := 0
 	for i := 0; i < c; i++ {
-		sp := (*gcStruct2)(unsafe.Pointer(s[i]))
+		sp := (*gcStruct2)(unsafe.Pointer(s[i])) // might occurs fatal error
 		if sp.i1 != i+1 || sp.i2 != i+2 || sp.i3 != i+3 {
 			lost++
 			fmt.Printf("%v not equal, sp = %+v, s[i] = %v\n", i, sp, s[i])
