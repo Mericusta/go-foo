@@ -292,3 +292,29 @@ func AvoidGCScanByByteSlice(c int) {
 	}
 	fmt.Printf("1, lost count = %v\n", lost)
 }
+
+func ForceGCFuncMap(c int) {
+	fMap := make(map[int]func(string, int) int)
+	for i := 0; i <= c; i++ {
+		fMap[i] = func(s string, i int) int {
+			return i
+		}
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(fMap)
+	time.Sleep(time.Second)
+}
+
+func ForceGCFuncSlice(c int) {
+	fMap := make([]func(string, int) int, 0, c)
+	for i := 0; i <= c; i++ {
+		fMap = append(fMap, func(s string, i int) int {
+			return i
+		})
+	}
+
+	forceGC(c, 10)
+	runtime.KeepAlive(fMap)
+	time.Sleep(time.Second)
+}

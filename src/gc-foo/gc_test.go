@@ -325,3 +325,45 @@ func TestGCScanCompare(t *testing.T) {
 		})
 	}
 }
+
+func TestGCForceGCFuncMap(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCFuncMap(tt.args.c)
+		})
+	}
+}
+
+func TestForceGCFuncSlice(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1024},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ForceGCFuncSlice(tt.args.c)
+		})
+	}
+}

@@ -2,7 +2,7 @@ package utilityfoo
 
 import (
 	"fmt"
-	"go-foo/utility"
+	"go-foo/pkg/utility"
 	"regexp"
 )
 
