@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"go-foo/pkg/utility"
 	"math"
 	"reflect"
 	"strings"
@@ -313,10 +314,8 @@ func convertType2() (bool, []byte) {
 	return false, b
 }
 
-type _s struct {
-	// 使用 uintptr 并且外部不使用 fmt.Printf 会导致返回的 b 结果不一致
-	// 使用 unsafe.Pointer 则会使得返回的 b 结果一致
-	a uintptr
+type _slice struct {
+	p uintptr // lost object memory reference
 	l int
 	c int
 }
@@ -324,10 +323,27 @@ type _s struct {
 func convertObjectToByteArray(o *convertStruct2) []byte {
 	l := unsafe.Sizeof(*o) // 注意这里必须是具体类型
 	// 用 _s.a 指向了这个对象的内存空间，以避免这个对象被 GC
-	s := &_s{a: uintptr(unsafe.Pointer(o)), l: int(l), c: int(l)}
+	s := &_slice{p: uintptr(unsafe.Pointer(o)), l: int(l), c: int(l)}
 	// 然后将 _s 这个结构转化成 []byte，可以转换的原因如下：
 	// 1 struct 中所有成员变量的内存是连续分布的
 	// 2 _s 结构跟 []type 的底层结构是一样的
+	b := *(*[]byte)(unsafe.Pointer(s))
+	// fmt.Println("after convertObjectToByteArray")
+	// fmt.Printf("s ptr = %p\n", s)                                          // 指向 s 本身
+	// fmt.Printf("s.a = %v\n", s.a)                                          // 指向 转换的对象
+	// fmt.Printf("b ptr = %p\n", b)                                          // 指向 b 的第一个元素
+	// fmt.Printf("s.a == &b[0] %v\n", s.a == uintptr(unsafe.Pointer(&b[0]))) // 等于 转换的对象
+	return b
+}
+
+func TConvertObjectToByteArray[T any](o *T) []byte {
+	l := unsafe.Sizeof(*o) // 注意这里必须是具体类型
+	s := &_slice{p: uintptr(unsafe.Pointer(o)), l: int(l), c: int(l)}
+	// 然后将 _s 这个结构转化成 []byte，可以转换的原因如下：
+	// 1 struct 中所有成员变量的内存是连续分布的
+	// 2 _s 结构跟 []type 的底层结构是相似的
+	// 不会被 GC 的原因如下：
+	// []byte 的底层结构 runtime.slice 中会将指针转换为 unsafe.Pointer
 	b := *(*[]byte)(unsafe.Pointer(s))
 	// fmt.Println("after convertObjectToByteArray")
 	// fmt.Printf("s ptr = %p\n", s)                                          // 指向 s 本身
@@ -341,7 +357,95 @@ func convertByteArrayToObject(b []byte) *convertStruct2 {
 	return *(**convertStruct2)(unsafe.Pointer(&b))
 }
 
+func TConvertByteArrayToObject[T any](b []byte) *T {
+	return *(**T)(unsafe.Pointer(&b))
+}
+
 // 方式3：
 // switch o.(type) 递归自行实现
 // 优点：
 // 缺点：
+
+// ----
+
+type _string struct {
+	p uintptr
+	l int
+}
+
+type stringStruct struct {
+	s1 string
+	s2 string
+	s3 string
+}
+
+func ConvertStringToStringStruct0(s string) *stringStruct {
+	sStruct := new(stringStruct)
+	sSlice := strings.Split(s, ",")
+	l := len(sSlice)
+	i := 0
+	if l > i {
+		sStruct.s1 = sSlice[i]
+		i++
+	}
+	if l > i {
+		sStruct.s2 = sSlice[i]
+		i++
+	}
+	if l > i {
+		sStruct.s3 = sSlice[i]
+		i++
+	}
+
+	utility.ForceGC(l, 10)
+
+	return sStruct
+}
+
+func ConvertStringToStringStruct1(s string) *stringStruct {
+	sSlice := strings.Split(s, ",")
+	offset := unsafe.Sizeof(s) // 16
+	len := len(sSlice)
+
+	sStruct := new(stringStruct)
+	ptr := uintptr(unsafe.Pointer(sStruct))
+	for index := uintptr(0); uintptr(len) > index; index++ {
+		*(*string)(unsafe.Pointer(ptr + offset*index)) = sSlice[index]
+	}
+
+	utility.ForceGC(len, 10)
+
+	return sStruct
+}
+
+func ConvertStringToStringStruct2(s string) *stringStruct {
+	sSlice := strings.Split(s, ",")
+	offset := unsafe.Sizeof(s) // 16
+	count := len(sSlice)
+
+	b := make([]byte, int(offset)*count)
+
+	sPtr := (*reflect.StringHeader)(unsafe.Pointer(&s)).Data
+	sLen := len(s)
+	subIndex, subLen := 0, 0
+	for i := 0; i < sLen; i++ {
+		r := s[i]
+		if r == ',' || i == sLen-1 {
+			if i == sLen-1 {
+				sPtr++
+				subLen++
+			}
+			sb := TConvertObjectToByteArray(&reflect.StringHeader{Data: sPtr - uintptr(subLen), Len: subLen})
+			copy(b[subIndex*int(offset):subIndex*int(offset)+int(offset)], sb)
+			subIndex++
+			subLen = 0
+		} else {
+			subLen++
+		}
+		sPtr++
+	}
+
+	utility.ForceGC(sLen, 10)
+
+	return *(**stringStruct)(unsafe.Pointer(&b))
+}

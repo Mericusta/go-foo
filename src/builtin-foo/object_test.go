@@ -192,3 +192,96 @@ func Test_convertStruct2Example(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertStringToStringStruct2(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *stringStruct
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test case 1",
+			args: args{
+				s: "I am a boy,You are a girl,We are human",
+			},
+			want: &stringStruct{
+				s1: "I am a boy",
+				s2: "You are a girl",
+				s3: "We are human",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertStringToStringStruct2(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertStringToStringStruct2() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertStringToStringStruct1(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *stringStruct
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test case 1",
+			args: args{
+				s: "I am a boy,You are a girl,We are human",
+			},
+			want: &stringStruct{
+				s1: "I am a boy",
+				s2: "You are a girl",
+				s3: "We are human",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertStringToStringStruct1(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertStringToStringStruct1() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertStringToStringStruct0(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *stringStruct
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test case 1",
+			args: args{
+				s: "I am a boy,You are a girl,We are human",
+			},
+			want: &stringStruct{
+				s1: "I am a boy",
+				s2: "You are a girl",
+				s3: "We are human",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertStringToStringStruct0(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertStringToStringStruct0() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

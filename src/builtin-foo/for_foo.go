@@ -66,3 +66,14 @@ func localValueReassignInFor(catch bool) {
 		fmt.Printf("i %v s %v\n", i, p)
 	}
 }
+
+func forCompareCall(c int) {
+	compareFunc := func() int {
+		fmt.Println(c)
+		return c
+	}
+
+	for i := 0; i < compareFunc(); i++ {
+		fmt.Printf("i = %v\n", i)
+	}
+}

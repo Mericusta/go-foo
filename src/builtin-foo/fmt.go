@@ -94,21 +94,18 @@ func FmtPtr() {
 	fmt.Println(reflect.TypeOf(slicePtr))
 	fmt.Printf("v %v\n", slicePtr)
 	fmt.Printf("p %p\n", slicePtr)
-	fmt.Printf("*slicePtr == &slice %v\n", reflect.DeepEqual(*slicePtr, slice))
+	fmt.Printf("reflect.SliceHeader.Data == &slice[0] %v\n", (*reflect.SliceHeader)(unsafe.Pointer(slicePtr)).Data == uintptr(unsafe.Pointer(&slice[0])))
 	fmt.Println()
 
 	fmt.Printf("for slice type\n")
-	fmt.Printf("- the underlying type is slice, a struct named slice\n")
-	fmt.Printf("- make func defined in runtime/slice.go, as same as reflect.SliceHeader\n")
+	fmt.Printf("- the underlying type is slice, a struct named slice defined in runtime/slice.go\n")
+	fmt.Printf("- struct looks like reflect.SliceHeader but using unsafe.Pointer to hold content memory address\n")
 	fmt.Printf("- %%v is struct content value\n")
 	fmt.Printf("- %%p is different from struct, befause fmt.Printf output its first element address\n")
 	fmt.Printf("for slice type's pointer\n")
 	fmt.Printf("- %%v is pointed value, same like output %%v struct\n")
 	fmt.Printf("- %%p is pointer value\n")
 	fmt.Println()
-
-	// var b byte = 97
-	// fmt.Println(&b)
 
 	fmt.Println(str)
 	fmt.Println(reflect.TypeOf(str))
@@ -127,8 +124,8 @@ func FmtPtr() {
 	fmt.Println()
 
 	fmt.Printf("for string type\n")
-	fmt.Printf("- the underlying type is stringStruct, a struct named stringStruct\n")
-	fmt.Printf("- struct defined in runtime/string.go, as same as reflect.StringHeader\n")
+	fmt.Printf("- the underlying type is stringStruct, a struct named stringStruct defined in runtime/string.go\n")
+	fmt.Printf("- struct looks like reflect.StringHeader but using unsafe.Pointer to hold content memory address\n")
 	fmt.Printf("- struct has a pointer, pointing to []byte, an array, element type is byte\n")
 	fmt.Printf("- %%v is array's content value\n")
 	fmt.Printf("- can not output %%p because it is not a pointer\n")
@@ -136,7 +133,7 @@ func FmtPtr() {
 	fmt.Printf("- %%v is equal to %%p\n")
 	fmt.Printf("- %%p is pointer value\n")
 	fmt.Printf("for reflect.StringHeader\n")
-	fmt.Printf("- reflect.StringHeader.Data is string content memory address\n")
+	fmt.Printf("- reflect.StringHeader.Data is string content memory address, but using unsafe.Pointer\n")
 	fmt.Printf("- string content memory allocation is as same as array, so it can accessed by iteration content pointer\n")
 	fmt.Println()
 }

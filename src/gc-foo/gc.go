@@ -2,6 +2,7 @@ package gcfoo
 
 import (
 	"fmt"
+	"go-foo/pkg/utility"
 	"math"
 	"reflect"
 	"runtime"
@@ -11,27 +12,15 @@ import (
 	"unsafe"
 )
 
-func forceGC(n, c int) {
-	totalDuration := time.Duration(0)
-	for i := 0; i != c; i++ {
-		t := time.Now()
-		runtime.GC()
-		d := time.Since(t)
-		totalDuration += d
-		fmt.Printf("number of int elements %v, No.%v GC using time %s\n", n, i, d)
-	}
-	fmt.Printf("number of int elements %v, average GC using time %s\n", n, totalDuration/10)
-}
-
 func ForceGCPointerSlice(c int) {
 	s := make([]*int, c)
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
 func ForceGCNonPointerSlice(c int) {
 	s := make([]int, c)
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -61,7 +50,7 @@ func ForceGCPointerSliceInOSHeap(c int) {
 	sliceHeader := makeSliceFromOSHeap(c, unsafe.Sizeof(intPtr))
 	s := *(*[]*int)(unsafe.Pointer(&sliceHeader))
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -77,7 +66,7 @@ func ForceGCNoNeedReleaseStringSlice(c int) {
 		ss = append(ss, s)
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(ss)
 }
 
@@ -91,7 +80,7 @@ func AvoidForceGCNoNeedReleaseStringSlice(c int) {
 		stringOffsets = append(stringOffsets, int(math.Log(float64(i)))+1)
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 
 	// get data
 	sStart := 0
@@ -112,7 +101,7 @@ func ForceGCNoNeedReleaseStringMap(c int) {
 		sm[s] = i
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(sm)
 }
 
@@ -123,7 +112,7 @@ func AvoidForceGCNoNeedReleaseStringMap(c int) {
 		sm[i] = i
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(sm)
 }
 
@@ -141,7 +130,7 @@ func ForceGCStructPointerMap(c int) {
 		}
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(m)
 }
 
@@ -155,7 +144,7 @@ func ForceGCStructPointerSlice(c int) {
 		})
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -166,7 +155,7 @@ func ForceGCByteSlice(c int) {
 		s = append(s, make([]byte, 0, 24))
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 }
 
@@ -177,7 +166,7 @@ func ForceGCByteSliceMap(c int) {
 		m[i] = make([]byte, 0, 24)
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(m)
 }
 
@@ -207,7 +196,7 @@ func GCScanCompare(c int) {
 	// uintptr lost object memory reference
 	// but []byte catch object memory reference
 	// it will not release by GC
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 	time.Sleep(time.Second)
 
@@ -238,7 +227,7 @@ func AvoidGCScanByUintptr(c int) {
 
 	// uintptr lost object memory reference
 	// the object will be released by GC
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 	time.Sleep(time.Second)
 
@@ -278,7 +267,7 @@ func AvoidGCScanByByteSlice(c int) {
 	// uintptr lost object memory reference
 	// but []byte catch object memory reference
 	// it will not release by GC
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(s)
 	time.Sleep(time.Second)
 
@@ -301,7 +290,7 @@ func ForceGCFuncMap(c int) {
 		}
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(fMap)
 	time.Sleep(time.Second)
 }
@@ -314,7 +303,7 @@ func ForceGCFuncSlice(c int) {
 		})
 	}
 
-	forceGC(c, 10)
+	utility.ForceGC(c, 10)
 	runtime.KeepAlive(fMap)
 	time.Sleep(time.Second)
 }
