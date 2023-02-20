@@ -304,3 +304,24 @@ func TestAvoidGCScanByByteSlice(t *testing.T) {
 		})
 	}
 }
+
+func TestGCScanCompare(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 1 << 24},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			GCScanCompare(tt.args.c)
+		})
+	}
+}

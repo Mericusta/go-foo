@@ -190,8 +190,40 @@ type gcStruct2 struct {
 	i6 int
 }
 
+func GCScanCompare(c int) {
+	size := unsafe.Sizeof(gcStruct2{})
+	fmt.Printf("gcStruct2 size = %v\n", size)
+
+	s := make([]*gcStruct2, 0, c)
+	for i := 0; i < c; i++ {
+		sp := &gcStruct2{
+			i1: i + 1, i2: i + 2, i3: i + 3,
+			i4: i + 4, i5: i + 5, i6: i + 6,
+		}
+
+		s = append(s, sp)
+	}
+
+	// uintptr lost object memory reference
+	// but []byte catch object memory reference
+	// it will not release by GC
+	forceGC(c, 10)
+	runtime.KeepAlive(s)
+	time.Sleep(time.Second)
+
+	lost := 0
+	for i := 0; i < c; i++ {
+		sp := s[i]
+		if sp.i1 != i+1 || sp.i2 != i+2 || sp.i3 != i+3 {
+			lost++
+			fmt.Printf("%v not equal, sp = %+v, s[i] = %v\n", i, sp, s[i])
+		}
+	}
+	fmt.Printf("1, lost count = %v\n", lost)
+}
+
 func AvoidGCScanByUintptr(c int) {
-	fmt.Printf("gcStruct2 size = %v\n", unsafe.Sizeof(gcStruct{}))
+	fmt.Printf("gcStruct2 size = %v\n", unsafe.Sizeof(gcStruct2{}))
 
 	s := make([]uintptr, 0, c)
 
@@ -208,7 +240,7 @@ func AvoidGCScanByUintptr(c int) {
 	// the object will be released by GC
 	forceGC(c, 10)
 	runtime.KeepAlive(s)
-	time.Sleep(1)
+	time.Sleep(time.Second)
 
 	lost := 0
 	for i := 0; i < c; i++ {
@@ -222,7 +254,7 @@ func AvoidGCScanByUintptr(c int) {
 }
 
 func AvoidGCScanByByteSlice(c int) {
-	size := unsafe.Sizeof(gcStruct{})
+	size := unsafe.Sizeof(gcStruct2{})
 	fmt.Printf("gcStruct2 size = %v\n", size)
 
 	s := make([][]byte, 0, c)
@@ -248,7 +280,7 @@ func AvoidGCScanByByteSlice(c int) {
 	// it will not release by GC
 	forceGC(c, 10)
 	runtime.KeepAlive(s)
-	time.Sleep(1)
+	time.Sleep(time.Second)
 
 	lost := 0
 	for i := 0; i < c; i++ {
