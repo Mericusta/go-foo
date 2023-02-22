@@ -81,8 +81,13 @@ type structB struct{}
 
 func (s *structB) call() { fmt.Println("structB call") }
 
-type typeConstraints interface{ structA | structB }
 type basicnterface interface{ call() }
+
+func useBasicInterface(s basicnterface) {
+	s.call()
+}
+
+type typeConstraints interface{ structA | structB }
 type generalInterface interface {
 	*structA | *structB
 	call()
@@ -120,10 +125,20 @@ func useGGIOutsideTypeParamScope[T typeConstraints, PT genericGeneralInterface[T
 	PT(s).call()
 }
 
+func useGGIOutsideTypeParamScope1[T typeConstraints, PT genericGeneralInterface[T]](s PT) {
+	s.call()
+}
+
 func generalInterfaceCall() {
+	useBasicInterface(&structA{})
+	useBasicInterface(&structB{})
+
 	useGeneralInterface(&structA{})
 	useGeneralInterface(&structB{})
 
 	useGGIOutsideTypeParamScope(&structA{})
 	useGGIOutsideTypeParamScope(&structB{})
+
+	useGGIOutsideTypeParamScope1(&structA{})
+	useGGIOutsideTypeParamScope1(&structB{})
 }
