@@ -12,7 +12,7 @@ type Animal interface {
 type animal[T Animal] struct{}
 
 func (a *animal[T]) Eat() {
-	(*(*T)(unsafe.Pointer(a))).Eat()
+	(*(*T)(unsafe.Pointer(a))).Eat() // need type assert in compile time
 }
 
 type Lion struct {
@@ -20,7 +20,7 @@ type Lion struct {
 }
 
 func (l Lion) Eat() {
-	fmt.Printf("lion eat")
+	fmt.Printf("lion eat\n")
 }
 
 type Cat struct {
@@ -28,5 +28,14 @@ type Cat struct {
 }
 
 func (l Cat) Eat() {
-	fmt.Printf("cat eat")
+	fmt.Printf("cat eat\n")
+}
+
+func CRTPCall() {
+	var a Animal
+	a = &animal[Lion]{}
+	a.Eat()
+
+	a = &animal[Cat]{}
+	a.Eat()
 }
