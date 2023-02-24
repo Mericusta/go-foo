@@ -1,7 +1,6 @@
-package main
+package gcfoo
 
 import (
-	gcfoo "go-foo/src/gc-foo"
 	"reflect"
 	"unsafe"
 )
@@ -16,9 +15,5 @@ func simpleReturnFunc() ([]int, *reflect.SliceHeader) {
 }
 
 func EscapeFoo() {
-	_, _ = simpleReturnFunc()
-}
-
-func main() {
-	gcfoo.EscapeFoo()
+	_, _ = simpleReturnFunc() // escape to heap
 }
