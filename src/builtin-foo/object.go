@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"go-foo/pkg/utility"
 	"math"
+	"net"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -50,24 +52,50 @@ func GoroutinePassObjectPointerFoo(generatePointer bool) {
 	wg.Wait()
 }
 
-// in 64 word size platform:
-// ┌────────────────────────────────────┬────────┐
-// │type                                │size    │
-// ├────────────────────────────────────┼────────┤
-// │bool                                │1 byte  │
-// ├────────────────────────────────────┼────────┤
-// │intN, uintN, floatN, complexN       │N/8 byte│
-// ├────────────────────────────────────┼────────┤
-// │int, uint, uintptr                  │8 byte  │
-// ├────────────────────────────────────┼────────┤
-// │*T, map, func, chan                 │8 byte  │
-// ├────────────────────────────────────┼────────┤
-// │string (data, len)                  │16 byte │
-// ├────────────────────────────────────┼────────┤
-// │interface (tab, data or _type, data)│16 byte │
-// ├────────────────────────────────────┼────────┤
-// │[]T (array, len, cap)               │24 byte │
-// └────────────────────────────────────┴────────┘
+func GoTypeSizeAndAlign() {
+	fmt.Printf("ARCH: %v, OS: %v\n", runtime.GOARCH, runtime.GOOS)
+	fmt.Printf("type: %v, size %v, align %v\n", "bool", unsafe.Sizeof(true), unsafe.Alignof(true))
+	fmt.Printf("type: %v, size %v, align %v\n", "int", unsafe.Sizeof(int(1)), unsafe.Alignof(int(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "int8", unsafe.Sizeof(int8(1)), unsafe.Alignof(int8(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "int16", unsafe.Sizeof(int16(1)), unsafe.Alignof(int16(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "int32", unsafe.Sizeof(int32(1)), unsafe.Alignof(int32(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "int64", unsafe.Sizeof(int64(1)), unsafe.Alignof(int64(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uint", unsafe.Sizeof(uint(1)), unsafe.Alignof(uint(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uint8", unsafe.Sizeof(uint8(1)), unsafe.Alignof(uint8(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uint16", unsafe.Sizeof(uint16(1)), unsafe.Alignof(uint16(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uint32", unsafe.Sizeof(uint32(1)), unsafe.Alignof(uint32(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uint64", unsafe.Sizeof(uint64(1)), unsafe.Alignof(uint64(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "float32", unsafe.Sizeof(float32(1)), unsafe.Alignof(float32(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "float64", unsafe.Sizeof(float64(1)), unsafe.Alignof(float64(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "complex64", unsafe.Sizeof(complex64(1)), unsafe.Alignof(complex64(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "complex128", unsafe.Sizeof(complex128(1)), unsafe.Alignof(complex128(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "uintptr", unsafe.Sizeof(uintptr(1)), unsafe.Alignof(uintptr(1)))
+	fmt.Printf("type: %v, size %v, align %v\n", "pointer", unsafe.Sizeof(new(int)), unsafe.Alignof(new(int)))
+	fmt.Printf("type: %v, size %v, align %v\n", "map", unsafe.Sizeof(make(map[string]int)), unsafe.Alignof(make(map[string]int)))
+	fmt.Printf("type: %v, size %v, align %v\n", "func", unsafe.Sizeof(func() {}), unsafe.Alignof(func() {}))
+	fmt.Printf("type: %v, size %v, align %v\n", "chan", unsafe.Sizeof(make(chan int)), unsafe.Alignof(make(chan int)))
+	fmt.Printf("type: %v, size %v, align %v\n", "interface", unsafe.Sizeof(net.Listener(&net.TCPListener{})), unsafe.Alignof(net.Listener(&net.TCPListener{})))
+	fmt.Printf("type: %v, size %v, align %v\n", "string", unsafe.Sizeof(string("1")), unsafe.Alignof(string("1")))
+	fmt.Printf("type: %v, size %v, align %v\n", "array", unsafe.Sizeof(make([]int, 0)), unsafe.Alignof(make([]int, 0)))
+}
+
+// ┌────────────────────────────────────┬─────────────────┬──────────────────┬─────────────────┬──────────────────┐
+// │type                                │x64 platform size│x64 platform align│x32 platform size│x32 platform align│
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │bool                                │1 byte           │1 byte            │1 byte           │1 byte            │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │intN, uintN, floatN, complexN       │N/8 byte         │N/8 byte          │N/4 byte         │N/4 byte          │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │int, uint, uintptr                  │8 byte           │8 byte            │4 byte           │4 byte            │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │pointer, map, func, chan            │8 byte           │8 byte            │4 byte           │4 byte            │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │interface (tab, data or _type, data)│16 byte          │8 byte            │8 byte           │4 byte            │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │string (ptr, len)                   │16 byte          │8 byte            │8 byte           │4 byte            │
+// ├────────────────────────────────────┼─────────────────┼──────────────────┼─────────────────┼──────────────────┤
+// │array (ptr, len, cap)               │24 byte          │8 byte            │12 byte          │4 byte            │
+// └────────────────────────────────────┴─────────────────┴──────────────────┴─────────────────┴──────────────────┘
 
 // 编译器结构体内存对齐规则
 // 规则一
