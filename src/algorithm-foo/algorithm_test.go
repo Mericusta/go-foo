@@ -673,3 +673,63 @@ func TestCalculateYearsOld(t *testing.T) {
 		})
 	}
 }
+
+func TestFullArrangementBackTracingMethod(t *testing.T) {
+	type args struct {
+		c int
+		s int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 12, s: 12},
+			[][]int{
+				{0, 1, 2}, {0, 2, 1},
+				{1, 0, 2}, {1, 2, 0},
+				{2, 0, 1}, {2, 1, 0},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FullArrangementBackTracingMethod(tt.args.c, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FullArrangementBackTracingMethod() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFullArrangementBackTracingMethodDeepFirstSearch(t *testing.T) {
+	type args struct {
+		c int
+		s int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{c: 12, s: 12},
+			[][]int{
+				{0, 1, 2}, {0, 2, 1},
+				{1, 0, 2}, {1, 2, 0},
+				{2, 0, 1}, {2, 1, 0},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FullArrangementBackTracingMethodDeepFirstSearch(tt.args.c, tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FullArrangementBackTracingMethodDeepFirstSearch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
