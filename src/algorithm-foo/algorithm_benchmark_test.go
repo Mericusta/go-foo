@@ -668,3 +668,59 @@ func BenchmarkConvertCamelCase2SnakeCaseWithPhrase(b *testing.B) {
 		}
 	}
 }
+
+func Benchmark_FullArrangementBackTracingMethod(b *testing.B) {
+	type args struct {
+		c int
+		s int
+	}
+	tests := []struct {
+		name  string
+		limit time.Duration
+		args  args
+	}{
+		{
+			"test case 1",
+			time.Second * 30,
+			args{c: 8, s: 8},
+		},
+	}
+	for _, tt := range tests {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_ = FullArrangementBackTracingMethod(tt.args.c, tt.args.s)
+		}
+		b.StopTimer()
+		if b.Elapsed() > tt.limit*time.Duration(b.N) {
+			b.Fatalf("overtime limit %v, got %.2f\n", tt.limit, float64(b.Elapsed())/float64(b.N))
+		}
+	}
+}
+
+func Benchmark_FullArrangementBackTracingMethodDeepFirstSearch(b *testing.B) {
+	type args struct {
+		c int
+		s int
+	}
+	tests := []struct {
+		name  string
+		limit time.Duration
+		args  args
+	}{
+		{
+			"test case 1",
+			time.Second * 30,
+			args{c: 8, s: 8},
+		},
+	}
+	for _, tt := range tests {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_ = FullArrangementBackTracingMethodDeepFirstSearch(tt.args.c, tt.args.s)
+		}
+		b.StopTimer()
+		if b.Elapsed() > tt.limit*time.Duration(b.N) {
+			b.Fatalf("overtime limit %v, got %.2f\n", tt.limit, float64(b.Elapsed())/float64(b.N))
+		}
+	}
+}
