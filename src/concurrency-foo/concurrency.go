@@ -78,6 +78,8 @@ func GoroutineCommunicateBySharedMemoryFoo() {
 func GoroutineCommunicateByBufferChannelAndSharedMemoryFoo() {
 }
 
+// ----------------------------------------------------------------
+
 // sync.Pool 切片测试
 func SyncFoolWithSliceFoo() {
 	defaultCapacity := 16

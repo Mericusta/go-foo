@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"fmt"
 	"runtime"
 	"time"
 )
@@ -13,7 +12,7 @@ func ForceGC(n, c int) {
 		runtime.GC()
 		d := time.Since(t)
 		totalDuration += d
-		fmt.Printf("number of elements %v, No.%v GC using time %s\n", n, i, d)
+		// fmt.Printf("number of elements %v, No.%v GC using time %s\n", n, i, d)
 	}
-	fmt.Printf("number of elements %v, average GC using time %s\n", n, totalDuration/10)
+	// fmt.Printf("number of elements %v, average GC using time %s\n", n, totalDuration/10)
 }
