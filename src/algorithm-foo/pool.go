@@ -287,7 +287,7 @@ func poolFoo(c int) {
 	var t simpleStruct
 	tSize := int(unsafe.Sizeof(t))
 	allocateMemory(c * tSize)
-	fmt.Printf("pool = %v\n", poolByte)
+	fmt.Printf("pool = %v, len %v\n", poolByte, len(poolByte))
 
 	// 第二种写法
 	// 初始化：
@@ -300,7 +300,7 @@ func poolFoo(c int) {
 	// - 不需要定义任何接口
 	pool1 := &_pool1[simpleStruct]{}
 	pool1.allocateMemory(c)
-	fmt.Printf("pool1 = %v\n", pool1.b)
+	fmt.Printf("pool1 = %v, len %v\n", pool1.b, len(pool1.b))
 
 	// 第三种写法
 	// 初始化：
@@ -313,7 +313,7 @@ func poolFoo(c int) {
 	// - 需要定义一般接口：anyInit
 	pool2 := &_pool2[simpleStruct, *simpleStruct]{}
 	pool2.allocateMemory(c)
-	fmt.Printf("pool2 = %v\n", pool2.b)
+	fmt.Printf("pool2 = %v, len %v\n", pool2.b, len(pool2.b))
 
 	// 第四种写法
 	// 初始化：
@@ -326,7 +326,7 @@ func poolFoo(c int) {
 	// - 需要定义泛型接口：TC
 	pool3 := &_pool3[*simpleStruct]{}
 	pool3.allocateMemory(c, &simpleStruct{})
-	fmt.Printf("pool3 = %v\n", pool3.b)
+	fmt.Printf("pool3 = %v, len %v\n", pool3.b, len(pool3.b))
 
 	// 第五种写法：无泛型
 	// 初始化：
@@ -339,7 +339,11 @@ func poolFoo(c int) {
 	// - 不需要定义任何接口
 	pool4 := &_pool4{}
 	pool4.allocateMemory(c)
-	fmt.Printf("pool4 = %v\n", pool4.b)
+	fmt.Printf("pool4 = %v, len %v\n", pool4.b, len(pool4.b))
+
+	pool5 := &_pool5[simpleStruct]{}
+	pool5.allocateMemory(c)
+	fmt.Printf("pool5 = %v, len %v\n", pool5.b, len(pool5.b))
 
 	for i := 0; i < c; i++ {
 		o := getObject[*simpleStruct](tSize*i, tSize)
@@ -376,6 +380,13 @@ func poolFoo(c int) {
 		o4.Use()
 		fmt.Printf("i %v, o4 %v, ptr %p\n", i, o4, &o4)
 		fmt.Printf("i %v, pool4 = %v\n", i, pool4.b)
+
+		o5 := pool5.getObject()
+		o5.V().Init()
+		fmt.Printf("i %v, o5 %v, ptr %p\n", i, o5, &o5)
+		o5.V().Use()
+		fmt.Printf("i %v, o5 %v, ptr %p\n", i, o5, &o5)
+		fmt.Printf("i %v, pool5 = %v\n", i, pool5.b)
 	}
 }
 
@@ -401,7 +412,7 @@ func poolFooOrigin(c int) {
 			o.Free()
 			// fmt.Printf("after free o %v, ptr %p\n", o, &o)
 		}
-		utility.ForceGC(c, 1)
+		// utility.ForceGC(c, 1)
 		// fmt.Printf("after free pool = %v\n", pool.b)
 		// fmt.Println()
 	}
@@ -432,7 +443,7 @@ func poolFooCompare(c int) {
 			pool.Put(o)
 			// fmt.Printf("after put o %v, ptr %p\n", o, &o)
 		}
-		utility.ForceGC(c, 1)
+		// utility.ForceGC(c, 1)
 		// fmt.Println()
 	}
 }
@@ -526,6 +537,135 @@ func poolFooCompare1(c int) {
 		}
 		utility.ForceGC(c, 1)
 		// fmt.Println()
+	}
+}
+
+type A struct {
+	Name string
+}
+
+func (a *A) Reset() {
+	a.Name = ""
+}
+
+type poolObj[T any] struct {
+	b bool
+	v T
+}
+
+func (o *poolObj[T]) V() *T {
+	return &o.v
+}
+
+func (o *poolObj[T]) Free() {
+	o.b = false
+}
+
+type _pool5[T any] struct {
+	eCount int
+	eSize  int
+	last   int
+	b      []byte
+}
+
+func (p *_pool5[T]) allocateMemory(c int) {
+	var e poolObj[T]
+	p.eSize = int(unsafe.Sizeof(e))
+	p.eCount = c
+	p.b = make([]byte, p.eCount*p.eSize)
+}
+
+func (p *_pool5[T]) isFree(b, e int) bool {
+	return p.b[b] == 0
+}
+
+func (p *_pool5[T]) scan(b, e int) int {
+	for i := b; i < e; i++ {
+		if !p.isFree(i*p.eSize, (i+1)*p.eSize) {
+			goto NEXT
+		}
+		return i
+	NEXT:
+	}
+	return -1
+}
+
+func (p *_pool5[T]) getObject() *poolObj[T] {
+	i := p.scan(p.last, p.eCount)
+	if i == -1 {
+		i = p.scan(0, p.last)
+		if i == -1 {
+			return nil
+		}
+	}
+
+	p.last = (i + 1) % p.eCount
+	p.b[i*(p.eSize)] = 1
+	return tConvertByteArrayToObject[*poolObj[T]](p.b[i*p.eSize : (i+1)*p.eSize])
+}
+
+// 内存池对比测试函数
+func poolFooOrigin2(c int) {
+	pool := &_pool1[A]{}
+	pool.allocateMemory(c)
+
+	// for i := 0; i < c; i++ {
+	// 	o := pool.getObject()
+	// 	o.V().Reset()
+	// 	o.V().Name = "Hello Pool"
+	// 	o.Free()
+	// 	// if i == c/2 {
+	// 	// 	utility.ForceGC(c, 1)
+	// 	// }
+	// }
+
+	// fmt.Printf("%v\n", pool.b)
+
+	for i := 1; i <= c; i++ {
+		os := make([]*A, 0, i)
+		for j := 0; j < i; j++ {
+			o := pool.getObject()
+			o.Reset()
+			o.Name = "Hello Pool"
+			os = append(os, o)
+		}
+		for _, o := range os {
+			o.Reset()
+		}
+		// utility.ForceGC(c, 1)
+	}
+}
+
+// 内存池对比测试函数
+func poolFooCompare2(c int) {
+	pool := sync.Pool{
+		New: func() any {
+			return new(A)
+		},
+	}
+
+	// for i := 0; i < c; i++ {
+	// 	o := pool.Get().(*A)
+	// 	o.Reset()
+	// 	o.Name = "Hello Pool"
+	// 	pool.Put(o)
+	// 	// if i == c/2 {
+	// 	// 	utility.ForceGC(c, 1)
+	// 	// }
+	// }
+
+	for i := 0; i <= c; i++ {
+		os := make([]*A, 0, i)
+		for j := 0; j < i; j++ {
+			o := pool.Get().(*A)
+			o.Reset()
+			o.Name = "Hello Pool"
+			os = append(os, o)
+		}
+		for _, o := range os {
+			pool.Put(o)
+		}
+		// utility.ForceGC(c, 1)
 	}
 }
 
