@@ -3,6 +3,7 @@ package netfoo
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -204,4 +205,283 @@ func CloseAndReconnectFoo(reconnectCount int) {
 	fmt.Printf("main: cancel\n")
 	canceler()
 	time.Sleep(time.Second * 10)
+}
+
+// ----------------------------------------------------------------
+
+// ┌─────┬────────┬───────┐
+// │ Tag │ Length │ Value │
+// ├─────┼────────┼───────┤
+// │  4  │   4    │       │
+// └─────┴────────┴───────┘
+
+const (
+	// TLV 格式数据包中数据的标识的值的占位长度
+	TLVPacketDataTagSize = 4
+
+	// TLV 格式数据包中数据的长度的值的占位长度
+	TLVPacketDataLengthSize = 4
+)
+
+func Pack[T any](connection net.Conn, msgID uint32, msgData any) error {
+	msgValueByte, err := json.Marshal(msgData)
+	if len(msgValueByte) == 0 {
+		return fmt.Errorf("marshal msg %v %v got empty slice", msgID, msgData)
+	}
+	if err != nil {
+		return err
+	}
+
+	msgByteDataLength := len(msgValueByte)
+	tlvPacketLength := TLVPacketDataTagSize + TLVPacketDataLengthSize + msgByteDataLength
+	tlvPacket := make([]byte, tlvPacketLength)
+
+	// tlvPackMsg[0,TLVPacketDataTagSize]
+	binary.BigEndian.PutUint32(tlvPacket, uint32(msgID))
+
+	// tlvPackMsg[TLVPacketDataTagSize,TLVPacketDataTagSize+TLVPacketDataLengthSize]
+	binary.BigEndian.PutUint32(tlvPacket[TLVPacketDataTagSize:], uint32(msgByteDataLength))
+
+	// tlvPackMsg[TLVPacketDataTagSize+TLVPacketDataLengthSize:]
+	copy(tlvPacket[TLVPacketDataTagSize+TLVPacketDataLengthSize:], msgValueByte)
+
+	writeLength, writeError := connection.Write(tlvPacket)
+	if writeError != nil {
+		return writeError
+	} else if writeLength != tlvPacketLength {
+		return fmt.Errorf("write msg %v %v length %v not equal packet length %v", msgID, msgData, writeLength, msgByteDataLength)
+	}
+
+	return nil
+}
+
+func Unpack[T any](connection net.Conn) (uint32, any, error) {
+	tagBytes := make([]byte, TLVPacketDataTagSize)
+	_, readTagError := connection.Read(tagBytes)
+	if readTagError != nil {
+		return 0, nil, readTagError
+	}
+	tag := binary.BigEndian.Uint32(tagBytes)
+
+	lengthBytes := make([]byte, TLVPacketDataLengthSize)
+	_, readLengthError := connection.Read(lengthBytes)
+	if readLengthError != nil {
+		return 0, nil, readLengthError
+	}
+	length := binary.BigEndian.Uint32(lengthBytes)
+
+	valueBytes := make([]byte, int(length))
+	readValueLength, readValueError := connection.Read(valueBytes)
+	if readValueError != nil {
+		return 0, nil, readValueError
+	} else if readValueLength != int(length) {
+		return 0, nil, fmt.Errorf("read msg %v %v length %v not equal packet length %v", tag, valueBytes, readValueLength, length)
+	}
+
+	msg := new(T)
+	err := json.Unmarshal(valueBytes, msg)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return tag, msg, nil
+}
+
+type user struct {
+	ID   uint64 `json:"id"`
+	Name string `json:"name"`
+}
+
+func tlvFoo() {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	t := time.Now().Unix()
+	u := &user{ID: 1, Name: "TLV-FOO"}
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		defer func() {
+			cancel()
+			wg.Done()
+		}()
+		listener, err := net.Listen("tcp", "127.0.0.1:6666")
+		if err != nil {
+			panic(err)
+		}
+		connection, connectError := listener.Accept()
+		if connectError != nil {
+			panic(connectError)
+		}
+		_t, _uAny, err := Unpack[user](connection)
+		if err != nil {
+			panic(err)
+		}
+		_u, ok := _uAny.(*user)
+		if !ok {
+			panic(_uAny)
+		}
+		if _t != uint32(t) || _u.ID != u.ID || _u.Name != u.Name {
+			panic("not equal")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		connection, err := net.Dial("tcp", "127.0.0.1:6666")
+		if err != nil {
+			panic(err)
+		}
+		err = Pack[user](connection, uint32(t), u)
+		if err != nil {
+			panic(err)
+		}
+		<-ctx.Done()
+	}()
+
+	wg.Wait()
+}
+
+// ----------------------------------------------------------------
+
+type socketBuffer struct {
+	b []byte
+	s int
+}
+
+func NewSocketBuffer(s int) *socketBuffer {
+	return &socketBuffer{b: make([]byte, s), s: s}
+}
+
+func (sb *socketBuffer) Get(l int) []byte {
+	if sb.s < l {
+		return make([]byte, l)
+	}
+	return sb.b[:l]
+}
+
+var socketBufferPool sync.Pool = sync.Pool{
+	New: func() any {
+		return NewSocketBuffer(1024)
+	},
+}
+
+func BufferPack[T any](connection net.Conn, buffer *socketBuffer, msgID uint32, msgData any) error {
+	msgValueByte, err := json.Marshal(msgData)
+	if len(msgValueByte) == 0 {
+		return fmt.Errorf("marshal msg %v %v got empty slice", msgID, msgData)
+	}
+	if err != nil {
+		return err
+	}
+
+	msgByteDataLength := len(msgValueByte)
+	tlvPacketLength := TLVPacketDataTagSize + TLVPacketDataLengthSize + msgByteDataLength
+	// tlvPacket := make([]byte, tlvPacketLength)
+	tlvPacket := buffer.Get(tlvPacketLength)
+
+	// tlvPackMsg[0,TLVPacketDataTagSize]
+	binary.BigEndian.PutUint32(tlvPacket, uint32(msgID))
+
+	// tlvPackMsg[TLVPacketDataTagSize,TLVPacketDataTagSize+TLVPacketDataLengthSize]
+	binary.BigEndian.PutUint32(tlvPacket[TLVPacketDataTagSize:], uint32(msgByteDataLength))
+
+	// tlvPackMsg[TLVPacketDataTagSize+TLVPacketDataLengthSize:]
+	copy(tlvPacket[TLVPacketDataTagSize+TLVPacketDataLengthSize:], msgValueByte)
+
+	writeLength, writeError := connection.Write(tlvPacket)
+	if writeError != nil {
+		return writeError
+	} else if writeLength != tlvPacketLength {
+		return fmt.Errorf("write msg %v %v length %v not equal packet length %v", msgID, msgData, writeLength, msgByteDataLength)
+	}
+
+	return nil
+}
+
+func BufferUnpack[T any](connection net.Conn, buffer *socketBuffer) (uint32, any, error) {
+	// tagBytes := make([]byte, TLVPacketDataTagSize)
+	tagBytes := buffer.Get(TLVPacketDataTagSize)
+	_, readTagError := connection.Read(tagBytes)
+	if readTagError != nil && readTagError != io.EOF {
+		return 0, nil, readTagError
+	}
+	tag := binary.BigEndian.Uint32(tagBytes)
+
+	// lengthBytes := make([]byte, TLVPacketDataLengthSize)
+	lengthBytes := buffer.Get(TLVPacketDataLengthSize)
+	_, readLengthError := connection.Read(lengthBytes)
+	if readLengthError != nil {
+		return 0, nil, readLengthError
+	}
+	length := binary.BigEndian.Uint32(lengthBytes)
+
+	// valueBytes := make([]byte, int(length))
+	valueBytes := buffer.Get(int(length))
+	readValueLength, readValueError := connection.Read(valueBytes)
+	if readValueError != nil {
+		return 0, nil, readValueError
+	} else if readValueLength != int(length) {
+		return 0, nil, fmt.Errorf("read msg %v %v length %v not equal packet length %v", tag, valueBytes, readValueLength, length)
+	}
+
+	msg := new(T)
+	err := json.Unmarshal(valueBytes, msg)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return tag, msg, nil
+}
+
+func tlvNetBufferFoo() {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	t := time.Now().Unix()
+	u := &user{ID: 1, Name: "TLV-FOO"}
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		defer func() {
+			cancel()
+			wg.Done()
+		}()
+		listener, err := net.Listen("tcp", "127.0.0.1:6666")
+		if err != nil {
+			panic(err)
+		}
+		connection, connectError := listener.Accept()
+		if connectError != nil {
+			panic(connectError)
+		}
+		b := socketBufferPool.Get().(*socketBuffer)
+		_t, _uAny, err := BufferUnpack[user](connection, b)
+		if err != nil {
+			panic(err)
+		}
+		_u, ok := _uAny.(*user)
+		if !ok {
+			panic(_uAny)
+		}
+		if _t != uint32(t) || _u.ID != u.ID || _u.Name != u.Name {
+			panic("not equal")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		connection, err := net.Dial("tcp", "127.0.0.1:6666")
+		if err != nil {
+			panic(err)
+		}
+		b := socketBufferPool.Get().(*socketBuffer)
+		err = BufferPack[user](connection, b, uint32(t), u)
+		if err != nil {
+			panic(err)
+		}
+		<-ctx.Done()
+	}()
+
+	wg.Wait()
 }
