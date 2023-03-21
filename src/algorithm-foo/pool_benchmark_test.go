@@ -159,3 +159,58 @@ func Benchmark_poolFooCompare2(b *testing.B) {
 		}
 	}
 }
+
+// Benchmark_poolFooOrigin3-12    	       6	 167846017 ns/op	222935582 B/op	 2100231 allocs/op
+func Benchmark_poolFooOrigin3(b *testing.B) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name  string
+		limit time.Duration
+		args  args
+	}{
+		{
+			"test case 1",
+			time.Second * 2,
+			args{c: 2048},
+		},
+	}
+	for _, tt := range tests {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			poolFooOrigin3(tt.args.c)
+		}
+		b.StopTimer()
+		if b.Elapsed() > tt.limit*time.Duration(b.N) {
+			b.Fatalf("overtime limit %v, got %.2f\n", tt.limit, float64(b.Elapsed())/float64(b.N))
+		}
+	}
+}
+
+func Benchmark_poolFooCompare3(b *testing.B) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name  string
+		limit time.Duration
+		args  args
+	}{
+		{
+			"test case 1",
+			time.Second * 3,
+			args{c: 2048},
+		},
+	}
+	for _, tt := range tests {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			poolFooCompare3(tt.args.c)
+		}
+		b.StopTimer()
+		if b.Elapsed() > tt.limit*time.Duration(b.N) {
+			b.Fatalf("overtime limit %v, got %.2f\n", tt.limit, float64(b.Elapsed())/float64(b.N))
+		}
+	}
+}

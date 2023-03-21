@@ -18,7 +18,7 @@ func TestFloat32ZeroDivide(t *testing.T) {
 	}
 }
 
-func Test_BitOp(t *testing.T) {
+func Test_BitOp1(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -28,7 +28,22 @@ func Test_BitOp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			BitOp()
+			BitOp1()
+		})
+	}
+}
+
+func Test_BitOp2(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			BitOp2()
 		})
 	}
 }

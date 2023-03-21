@@ -141,3 +141,43 @@ func Test_poolFooCompare2(t *testing.T) {
 		})
 	}
 }
+
+func Test_poolFooOrigin3(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			"test case 1",
+			args{c: 2},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			poolFooOrigin3(tt.args.c)
+		})
+	}
+}
+
+func Test_poolFooCompare3(t *testing.T) {
+	type args struct {
+		c int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			"test case 1",
+			args{c: 2},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			poolFooCompare3(tt.args.c)
+		})
+	}
+}
