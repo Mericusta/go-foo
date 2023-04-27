@@ -62,8 +62,22 @@ func (m *Mocker) mock(v interface{}) interface{} {
 		return fmt.Errorf("error")
 	case string:
 		return string("string")
+	default:
+		if s, ev := traitSlice[any](v); s != nil {
+			sv := DefaultMocker.mock(ev)
+			// return mockSlice[sv]()
+		}
 	}
 	return nil
+}
+
+func traitSlice[T any](v interface{}) ([]T, T) {
+	var ev T
+	s, ok := v.([]T)
+	if !ok {
+		return nil, ev
+	}
+	return s, ev
 }
 
 func mockSlice[T any]() []T {
