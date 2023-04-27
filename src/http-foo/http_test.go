@@ -11,6 +11,10 @@ func TestRequestExample(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{index: 1},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
