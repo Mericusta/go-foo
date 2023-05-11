@@ -6,7 +6,7 @@ import (
 )
 
 func SwapStructValueOneLine() {
-	s := &struct {
+	s := struct {
 		A int
 		B int
 	}{
@@ -16,6 +16,9 @@ func SwapStructValueOneLine() {
 
 	fmt.Printf("struct s.A = %v, s.B = %v\n", s.A, s.B)
 	s.A, s.B = s.B, s.A
+	fmt.Printf("after one-line swap struct s.A = %v, s.B = %v\n", s.A, s.B)
+	s.A = s.A * 10
+	s.B = s.B * 10
 	fmt.Printf("after one-line swap struct s.A = %v, s.B = %v\n", s.A, s.B)
 }
 
