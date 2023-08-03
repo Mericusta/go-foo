@@ -3,6 +3,7 @@ package mockfoo
 import (
 	"fmt"
 	"math"
+	"reflect"
 )
 
 type ExampleInterface interface {
@@ -27,32 +28,45 @@ func toInterface(v interface{}) interface{} {
 	return v
 }
 
-func castSingleType[T any](iv interface{}) (T, bool) {
+func mockSingleType[T any](iv interface{}) (T, bool) {
 	switch iv.(type) {
 	case int:
 		iv = int(math.MaxInt)
+	case string:
+		iv = string(mockComplexType[[]rune]([]rune{}))
 	default:
 		return iv.(T), false
 	}
 	return iv.(T), true
 }
 
-func castComplexType[T any](iv interface{}) (T, bool) {
-	switch iv.(type) {
-	case int:
-		iv = int(math.MaxInt)
-	default:
-		return iv.(T), false
+func mockComplexType[T any](iv interface{}) T {
+	typeI := reflect.TypeOf(iv)
+	fmt.Printf("typeI = %v\n", typeI)
+	switch typeI.Kind() {
+	case reflect.Array:
+		iv = reflect.MakeSlice(typeI, 8, 8).Interface()
+	case reflect.Slice:
+		iv = reflect.MakeSlice(typeI, 0, 8).Interface()
+	case reflect.Map:
+		iv = reflect.MakeMap(typeI).Interface()
+	case reflect.Struct:
+		numField := typeI.NumField()
+		for i := 0; i < numField; i++ {
+
+		}
+		// structValue := reflect.New(typeI)
+		// structValue.
 	}
-	return iv.(T), true
+	return iv.(T)
 }
 
 func Mock[T any](v T) T {
-	mockValue, isSingle := castSingleType[T](toInterface(v))
+	mockValue, isSingle := mockSingleType[T](v)
 	if isSingle {
 		return mockValue
 	}
-	return v
+	return mockComplexType[T](v)
 }
 
 func TMock[T any]() T {
@@ -62,13 +76,18 @@ func TMock[T any]() T {
 
 func MockFoo() {
 	// mock by value
-	var i1 int
+	// var i1 int
+	var i1 []int
 	i1 = Mock(i1)
 	fmt.Printf("i1 = %v\n", i1)
 
-	// mock by type
-	i2 := TMock[int]()
-	fmt.Printf("i2 = %v\n", i2)
+	var s1 string
+	s1 = Mock(s1)
+	fmt.Printf("s1 = %v\n", s1)
+
+	// // mock by type
+	// i2 := TMock[int]()
+	// fmt.Printf("i2 = %v\n", i2)
 
 	var (
 	// b     bool

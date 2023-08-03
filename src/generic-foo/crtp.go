@@ -31,11 +31,22 @@ func (l Cat) Eat() {
 	fmt.Printf("cat eat\n")
 }
 
-func CRTPCall() {
-	var a Animal
-	a = &animal[Lion]{}
-	a.Eat()
+func Call(animal Animal) {
+	animal.Eat()
+}
 
-	a = &animal[Cat]{}
+func AInsert(a ...Animal) {
+
+}
+
+func CRTPCall() {
+	a := &animal[Lion]{}
 	a.Eat()
+	Call(a)
+
+	b := &animal[Cat]{}
+	b.Eat()
+	Call(b)
+
+	AInsert(a, b)
 }

@@ -1,6 +1,9 @@
 package algorithmfoo
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // CalculateYearsOld 根据出生时间戳计算当前年龄
 func CalculateYearsOld(birthTimstamp int64) int {
@@ -134,6 +137,23 @@ func (a *AntiAddictionData) GetReleaseOnlineTime(ts int64, antiAddictionNormalCf
 			return timeReleaseSeconds
 		} else {
 			return durationReleaseSeconds
+		}
+	}
+}
+
+func MiddleOfYear(year int) {
+	t, err := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%v-01-01 00:00:00", year))
+	if err != nil {
+		panic(err)
+	}
+
+	overDay := 0
+	for t.Year() == year {
+		t = t.Add(time.Hour * 24)
+		overDay++
+		if overDay == 365/2 {
+			fmt.Printf("%v\n", t.Format("2006-01-02"))
+			break
 		}
 	}
 }
