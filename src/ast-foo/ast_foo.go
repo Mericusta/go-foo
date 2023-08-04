@@ -155,3 +155,25 @@ func MultiParseFoo() {
 	}
 	ast.Print(fileSet, file1AST)
 }
+
+// ParseExpressionFoo
+// @expression        待解析的表达式
+func ParseExpressionFoo(expression string) {
+	exprAST, err := parser.ParseExpr(expression)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ast.Print(token.NewFileSet(), exprAST)
+	if err != nil {
+		panic(err)
+	}
+
+	buffer := &bytes.Buffer{}
+	err = format.Node(buffer, token.NewFileSet(), exprAST)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", buffer.Bytes())
+	fmt.Println()
+}
