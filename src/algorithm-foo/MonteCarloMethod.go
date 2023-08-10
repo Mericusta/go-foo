@@ -56,3 +56,7 @@ func MonteCarloMethod_Estimating_PI(points int) {
 	fmt.Printf("math.Pi = %f\n", math.Pi)
 	fmt.Printf("delta = %.2f%%\n", delta*v*10000)
 }
+
+func MonteCarloMethod_Integrating(points int) {
+
+}
