@@ -28,3 +28,34 @@ func ReturnExampleStructTest() {
 	fmt.Printf("pe.A = %p\n", &pe.A)
 	fmt.Printf("pe.B = %p\n", &pe.B)
 }
+
+func passStructFoo() {
+	s := make([]struct {
+		// a string
+		A string
+		B string
+	}, 0, 8)
+	for i := 0; i != 8; i++ {
+		s = append(s, struct {
+			// a string
+			A string
+			B string
+		}{
+			// a: fmt.Sprintf("a%v", i),
+			A: fmt.Sprintf("A%v", i),
+			B: fmt.Sprintf("B%v", i),
+		})
+	}
+	passStructSlice(s)
+}
+
+// 带有未导出变量的匿名结构体数组，无法通过函数传递
+func passStructSlice(s []struct {
+	// a string
+	A string
+	B string
+}) {
+	for _, _s := range s {
+		fmt.Printf("%v, %v\n", _s.A, _s.B)
+	}
+}
