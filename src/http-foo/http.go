@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 func RequestExample(index int) {
@@ -36,4 +39,36 @@ func RequestExample(index int) {
 	}
 
 	fmt.Printf("%s", responseBody)
+}
+
+func JustPost(d time.Duration, useResty bool) {
+	var postHandler func()
+	if useResty {
+		postHandler = func() {
+			client := resty.New()
+			client.R().Post("http://127.0.0.1:8182/pay/cb/mock")
+		}
+	} else {
+		postHandler = func() {
+			client := &http.Client{}
+			url := "http://127.0.0.1:8182/pay/cb"
+			request, err := http.NewRequest("POST", url, nil)
+			if err != nil {
+				panic(err)
+			}
+			request.Header.Set("Origin", "http://ios.appstore.com")
+			client.Do(request)
+		}
+	}
+
+	if d == 0 {
+		for {
+			postHandler()
+		}
+	} else {
+		t := time.NewTicker(d)
+		for range t.C {
+			postHandler()
+		}
+	}
 }
