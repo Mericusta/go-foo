@@ -41,34 +41,61 @@ func RequestExample(index int) {
 	fmt.Printf("%s", responseBody)
 }
 
-func JustPost(d time.Duration, useResty bool) {
+func JustPost(url string, header map[string]string, d time.Duration, useResty, concurrency bool, concurrencyCount int) {
 	var postHandler func()
 	if useResty {
 		postHandler = func() {
 			client := resty.New()
-			client.R().Post("http://127.0.0.1:8182/pay/cb/mock")
+			request := client.R()
+			for k, v := range header {
+				request.SetHeader(k, v)
+			}
+			request.Post(url)
 		}
 	} else {
 		postHandler = func() {
 			client := &http.Client{}
-			url := "http://127.0.0.1:8182/pay/cb"
 			request, err := http.NewRequest("POST", url, nil)
 			if err != nil {
 				panic(err)
 			}
-			request.Header.Set("Origin", "http://ios.appstore.com")
+			for k, v := range header {
+				request.Header.Set(k, v)
+			}
 			client.Do(request)
 		}
 	}
 
+	var rangeHandler func(int)
 	if d == 0 {
-		for {
-			postHandler()
+		rangeHandler = func(i int) {
+			counter := 0
+			for {
+				counter++
+				postHandler()
+				fmt.Printf("index %v, counter = %v\n", i, counter)
+			}
 		}
 	} else {
-		t := time.NewTicker(d)
-		for range t.C {
-			postHandler()
+		rangeHandler = func(i int) {
+			counter := 0
+			t := time.NewTicker(d)
+			for range t.C {
+				counter++
+				postHandler()
+				fmt.Printf("index %v, counter = %v\n", i, counter)
+			}
 		}
 	}
+
+	if concurrency {
+		for i := 0; i < concurrencyCount; i++ {
+			_i := i
+			go rangeHandler(_i)
+		}
+		select {}
+	} else {
+		rangeHandler(0)
+	}
+
 }
