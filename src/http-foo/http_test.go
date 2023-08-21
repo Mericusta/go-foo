@@ -26,43 +26,6 @@ func TestRequestExample(t *testing.T) {
 	}
 }
 
-// func TestJustPost(t *testing.T) {
-// 	type args struct {
-// 		url      string
-// 		header   map[string]string
-// 		d        time.Duration
-// 		useResty bool
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 	}{
-// 		// TODO: Add test cases.
-// 		// {
-// 		// 	"test case 1",
-// 		// 	args{
-// 		// 		url:      "http://127.0.0.1:8182/pay/cb/mock",
-// 		// 		header:   map[string]string{"Origin": "http://ios.appstore.com"},
-// 		// 		d:        0,
-// 		// 		useResty: false,
-// 		// 	},
-// 		// },
-// 		{
-// 			"test case 2",
-// 			args{
-// 				url:      "http://192.168.2.31:31604/task/list/27f86c23e68aac74eb127bcfea45a5c9@abcde",
-// 				d:        0,
-// 				useResty: true,
-// 			},
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			JustPost(tt.args.url, tt.args.header, tt.args.d, tt.args.useResty)
-// 		})
-// 	}
-// }
-
 func TestJustPost(t *testing.T) {
 	type args struct {
 		url              string
