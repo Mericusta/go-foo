@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 func RequestExample(index int) {
@@ -36,4 +39,63 @@ func RequestExample(index int) {
 	}
 
 	fmt.Printf("%s", responseBody)
+}
+
+func JustPost(url string, header map[string]string, d time.Duration, useResty, concurrency bool, concurrencyCount int) {
+	var postHandler func()
+	if useResty {
+		postHandler = func() {
+			client := resty.New()
+			request := client.R()
+			for k, v := range header {
+				request.SetHeader(k, v)
+			}
+			request.Post(url)
+		}
+	} else {
+		postHandler = func() {
+			client := &http.Client{}
+			request, err := http.NewRequest("POST", url, nil)
+			if err != nil {
+				panic(err)
+			}
+			for k, v := range header {
+				request.Header.Set(k, v)
+			}
+			client.Do(request)
+		}
+	}
+
+	var rangeHandler func(int)
+	if d == 0 {
+		rangeHandler = func(i int) {
+			counter := 0
+			for {
+				counter++
+				postHandler()
+				fmt.Printf("index %v, counter = %v\n", i, counter)
+			}
+		}
+	} else {
+		rangeHandler = func(i int) {
+			counter := 0
+			t := time.NewTicker(d)
+			for range t.C {
+				counter++
+				postHandler()
+				fmt.Printf("index %v, counter = %v\n", i, counter)
+			}
+		}
+	}
+
+	if concurrency {
+		for i := 0; i < concurrencyCount; i++ {
+			_i := i
+			go rangeHandler(_i)
+		}
+		select {}
+	} else {
+		rangeHandler(0)
+	}
+
 }

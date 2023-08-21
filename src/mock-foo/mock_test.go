@@ -20,3 +20,19 @@ func TestExampleMethod(t *testing.T) {
 	testUsageStruct.Use(1, "2", []int{3})
 	testUsageStruct.Use(2, "2", []int{3})
 }
+
+func TestMockFoo(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MockFoo()
+		})
+	}
+}

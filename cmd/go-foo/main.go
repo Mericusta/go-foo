@@ -1,7 +1,6 @@
 package main
 
 import (
-	gcfoo "go-foo/src/gc-foo"
 	"reflect"
 	"unsafe"
 )
@@ -20,5 +19,8 @@ func EscapeFoo() {
 }
 
 func main() {
-	gcfoo.EscapeFoo()
+	// gcfoo.EscapeFoo()
+	// go httpfoo.JustPost(0, true)
+	// go httpfoo.JustPost(0, false)
+	select {}
 }

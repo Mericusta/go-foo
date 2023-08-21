@@ -1,6 +1,8 @@
 package builtinfoo
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestFloat32ZeroDivide(t *testing.T) {
 	tests := []struct {
@@ -44,6 +46,38 @@ func Test_BitOp2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			BitOp2()
+		})
+	}
+}
+
+func TestBitOp3(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			BitOp3()
+		})
+	}
+}
+
+func TestMod(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Mod()
 		})
 	}
 }

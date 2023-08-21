@@ -67,3 +67,30 @@ func BitOp2() {
 	// push head
 	fmt.Printf("full check %b\n", (low+uint8(len(a)))&mask)
 }
+
+func BitOp3() {
+	var head, tail, mask uint8 = 5, 5, 1<<8 - 1
+	fmt.Printf("head = %v, %b\n", head, head)
+	fmt.Printf("tail = %v, %b\n", tail, tail)
+	for len := 0; len < 8; len++ {
+		var _v uint8 = uint8(len - 1)
+		slotIndex := head & _v
+		fullChecker := tail + uint8(len)&mask
+		fmt.Printf("len = %v\n", len)
+		fmt.Printf("- head = %v %b\n", head, head)
+		fmt.Printf("- tail = %v %b\n", tail, tail)
+		fmt.Printf("- fullChecker = %v, %b\n", fullChecker, fullChecker)
+		fmt.Printf("- _v = %v, %b\n", _v, _v)
+		fmt.Printf("- slotIndex = %v, %b\n", slotIndex, slotIndex)
+		fmt.Println()
+	}
+}
+
+func Mod() {
+	r, i1, i2 := 5, 1, 3
+	fmt.Printf("%v mod %v = %v\n", i1, r, i1%r)
+	fmt.Printf("%v mod %v = %v\n", i2, r, i2%r)
+	r, i1, i2 = 5, 3, 1
+	fmt.Printf("%v mod %v = %v\n", i1, r, i1%r)
+	fmt.Printf("%v mod %v = %v\n", i2, r, i2%r)
+}

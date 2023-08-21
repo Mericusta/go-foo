@@ -2,6 +2,80 @@ package genericfoo
 
 import "fmt"
 
+// 真·接口
+type Adder[T any] interface {
+	Add(T, T)
+}
+
+type Adder2 interface {
+	Add2(any, any)
+}
+
+type Adder3[T MyString | MyInt] interface {
+	*MyString | *MyInt
+	Add3(*T)
+}
+
+func Add3[T Adder3[TT], TT MyString | MyInt](l T, r *TT) {
+	l.Add3(r)
+}
+
+type MyString struct{}
+
+func NewMyString() *MyString {
+	return &MyString{}
+}
+
+func (a *MyString) Add(S1, S2 MyString) {
+
+}
+
+func (a *MyString) Add2(S1, S2 any) {
+
+}
+
+func (a *MyString) Add3(s *MyString) {
+
+}
+
+type MyInt struct{}
+
+func (a *MyInt) Add(S1, S2 MyInt) {
+
+}
+
+func (a *MyInt) Add2(S1, S2 any) {
+
+}
+
+func (a *MyInt) Add3(s *MyInt) {
+
+}
+
+func Insert[T any](e ...Adder[T]) {
+	var c []Adder[T]
+	c = append(c, e...)
+}
+
+func Insert2(e ...Adder2) {
+	var c []Adder2
+	c = append(c, e...)
+}
+
+func f() {
+	var i1 Adder[MyString] = &MyString{}
+	var i2 Adder[MyInt] = &MyInt{}
+	Insert(i1)
+	Insert(i2)
+
+	Insert2(&MyString{}, &MyInt{})
+
+	Add3(&MyString{}, &MyString{})
+	// Add3(&MyString{}, &MyInt{})
+}
+
+// --------------------------------
+
 type IBase interface {
 	Init()
 }

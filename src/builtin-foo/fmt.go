@@ -101,7 +101,7 @@ func FmtPtr() {
 	fmt.Printf("- the underlying type is slice, a struct named slice defined in runtime/slice.go\n")
 	fmt.Printf("- struct looks like reflect.SliceHeader but using unsafe.Pointer to hold content memory address\n")
 	fmt.Printf("- %%v is struct content value\n")
-	fmt.Printf("- %%p is different from struct, befause fmt.Printf output its first element address\n")
+	fmt.Printf("- %%p is different from struct, because fmt.Printf output its first element address\n")
 	fmt.Printf("for slice type's pointer\n")
 	fmt.Printf("- %%v is pointed value, same like output %%v struct\n")
 	fmt.Printf("- %%p is pointer value\n")

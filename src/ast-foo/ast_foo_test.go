@@ -173,3 +173,50 @@ func TestMultiParseFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestParseExpressionFoo(t *testing.T) {
+	type args struct {
+		expression string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{expression: `formation(single(RogueTemplate.id))`},
+		},
+		{
+			"test case 2",
+			args{expression: `formation(single(RogueTemplateParam.id))`},
+		},
+		{
+			"test case 3",
+			args{expression: `formation(single(RogueEvent.id))`},
+		},
+		{
+			"test case 4",
+			args{expression: `formation(
+				reference(RogueEvent.Type(1,2,3,4,12),slice(RogueOptionalEvent.Type)),
+				reference(RogueEvent.Type(5,6,11,13),slice(RogueEventEnum.id)),
+				reference(RogueEvent.Type(14),slice(RogueFightEvent.id)),
+				reference(RogueEvent.Type(15),slice(RogueOptionalEvent.id)),
+				reference(RogueEvent.Type(7),field(RogueTemplateParam)),
+			)`},
+		},
+		{
+			"test case 5",
+			args{expression: `formation(
+				reference(RogueEvent.Type(5,6,11,13,14),group(slice(RogueEventOutput.id))),
+				reference(RogueEvent.Type(8),slice(RogueEventOutput.id)),
+				reference(RogueEvent.Type(7),field(RogueTemplateParam)),
+			)`},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ParseExpressionFoo(tt.args.expression)
+		})
+	}
+}
