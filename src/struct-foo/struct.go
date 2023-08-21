@@ -185,12 +185,34 @@ func SubStructAssign() {
 	fmt.Printf("ss.Val() = %v\n", ss.Val()) // 0
 }
 
-type subStructDerivative struct {
+type subStructDerivative1 struct {
 	substruct.SubStruct
 }
 
-func SubStructDerivative() {
-	s := subStructDerivative{}
+func SubStructDerivative1() {
+	s := subStructDerivative1{}
 	s.SubStruct.PubV = 10
 	fmt.Printf("PubV = %v\n", s.GetPubV())
+	s.PubV = 11
+	fmt.Printf("PubV = %v\n", s.GetPubV())
+	s.SubStruct.Assign(12)
+	fmt.Printf("Val = %v\n", s.Val())
+	s.Assign(13)
+	fmt.Printf("Val = %v\n", s.Val())
+}
+
+type subStructDerivative2 struct {
+	*substruct.SubStruct
+}
+
+func SubStructDerivativ2() {
+	s := subStructDerivative2{SubStruct: &substruct.SubStruct{}}
+	s.SubStruct.PubV = 11
+	fmt.Printf("PubV = %v\n", s.GetPubV())
+	s.PubV = 11
+	fmt.Printf("PubV = %v\n", s.GetPubV())
+	s.SubStruct.Assign(12)
+	fmt.Printf("Val = %v\n", s.Val())
+	s.Assign(13)
+	fmt.Printf("Val = %v\n", s.Val())
 }
