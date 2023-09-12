@@ -682,3 +682,23 @@ func ChangeChannelWhichIsSelectedFoo(stack bool) {
 
 	canceler()
 }
+
+func MultiSelectReceiverChannel() {
+	c := make(chan int)
+
+	// multi receiver
+	for index := 0; index != 3; index++ {
+		go func(i int) {
+			fmt.Printf("index %v wait\n", i)
+			<-c
+			fmt.Printf("index %v receive\n", i)
+		}(index)
+	}
+
+	time.Sleep(time.Second)
+
+	// single sender
+	c <- 1
+
+	select {}
+}
