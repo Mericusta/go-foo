@@ -22,6 +22,8 @@ func init() {
 	currentRoomGroup = -1
 }
 
+// 简单防猜离散ID算法
+// 按总数划分组 -> 取随机组 -> 按组大小划分组ID -> 取组内随机ID并删除 -> 组ID消耗尽删除组
 func GenerateRoomID() int64 {
 	// re-assign room ID group
 	if len(roomIDGroup) == 0 {
@@ -56,4 +58,8 @@ func GenerateRoomID() int64 {
 	roomIDGroup = append(roomIDGroup[:randomIndex], roomIDGroup[randomIndex+1:]...)
 
 	return roomID
+}
+
+func LocalUniqueID() {
+	
 }
