@@ -12,7 +12,7 @@ import (
 	"os"
 	"sort"
 
-	stpmap "github.com/Mericusta/go-stp/map"
+	"github.com/Mericusta/go-stp"
 )
 
 // ParseFileFoo
@@ -31,7 +31,7 @@ func ParseFileFoo(parseFilePath string) (string, []string, []string, []string, [
 
 	var fileStructName, fileFuncName, fileConstantName, fileVariableName []string
 	if fileAST.Scope != nil {
-		keys := stpmap.Key(fileAST.Scope.Objects)
+		keys := stp.Key(fileAST.Scope.Objects)
 		sort.Strings(keys)
 		for _, name := range keys {
 			switch fileAST.Scope.Objects[name].Kind {
@@ -64,7 +64,7 @@ func ParseDirFoo(parseDirPath string, filter func(fs.FileInfo) bool) ([]string, 
 	var dirPkgs, filepath []string
 	for _, pkg := range pkgs {
 		dirPkgs = append(dirPkgs, pkg.Name)
-		filepath = stpmap.Key(pkg.Files) // 里面是 *ast.File，同 parser.ParseFile
+		filepath = stp.Key(pkg.Files) // 里面是 *ast.File，同 parser.ParseFile
 		sort.Strings(filepath)
 	}
 
