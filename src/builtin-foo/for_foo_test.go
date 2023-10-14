@@ -1,6 +1,7 @@
 package builtinfoo
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -62,6 +63,28 @@ func Test_forCompareCall(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			forCompareCall(tt.args.c)
+		})
+	}
+}
+
+func Test_myMap_passValueFoo(t *testing.T) {
+	tests := []struct {
+		name  string
+		m     *myMap
+		want0 map[int]int
+	}{
+		{
+			"test case 1",
+			&myMap{},
+			map[int]int{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got0 := tt.m.passValueFoo()
+			if !reflect.DeepEqual(got0, tt.want0) {
+				t.Errorf("passValueFoo() got0 = %v, want0 %v", got0, tt.want0)
+			}
 		})
 	}
 }

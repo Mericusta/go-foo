@@ -53,8 +53,22 @@ func getFoo(url, password string, DB int) {
 func hsetFoo(url, password string, DB int) {
 	rdb := connect(url, password, DB)
 	m := make(map[string]interface{})
-	m["field"] = "value"
+	im := make(map[int]int)
+	for index := 1; index != 10; index++ {
+		im[index] = index
+	}
+	for k, v := range im {
+		m[fmt.Sprintf("field%v", k)] = fmt.Sprintf("value%v", v)
+	}
 	r, e := rdb.HSet(context.Background(), "HSET_TEST", m).Result()
+	fmt.Printf("r = %v, e = %v\n", r, e)
+}
+
+func hgetallFoo(url, password string, DB int) {
+	rdb := connect(url, password, DB)
+	m := make(map[string]interface{})
+	m["field"] = "value"
+	r, e := rdb.HGetAll(context.Background(), "HSET_TEST").Result()
 	fmt.Printf("r = %v, e = %v\n", r, e)
 }
 

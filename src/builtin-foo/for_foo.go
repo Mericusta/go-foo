@@ -77,3 +77,28 @@ func forCompareCall(c int) {
 		fmt.Printf("i = %v\n", i)
 	}
 }
+
+type myMap struct {
+	m map[int]int
+}
+
+func (m *myMap) myForeach(f func(k, v int) bool) {
+	for key, value := range m.m {
+		if !f(key, value) {
+			return
+		}
+	}
+}
+
+func (m *myMap) passValueFoo() map[int]int {
+	m.m = make(map[int]int)
+	for index := 0; index != 10; index++ {
+		m.m[index] = index
+	}
+	ret := make(map[int]int)
+	m.myForeach(func(k, v int) bool {
+		ret[k] = v
+		return true
+	})
+	return ret
+}
