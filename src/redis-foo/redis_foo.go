@@ -39,8 +39,20 @@ func connectTest(url, password string, DB int) string {
 func zaddFoo(url, password string, DB int) {
 	rdb := connect(url, password, DB)
 	r, e := rdb.ZAdd(context.Background(), "LGR_S1_TEST", &redis.Z{
-		Score: 124, Member: 123,
+		Score: 122, Member: 122,
 	}).Result()
+	fmt.Printf("r = %v, e = %v\n", r, e)
+}
+
+func zrankFoo(url, password string, DB int) {
+	rdb := connect(url, password, DB)
+	r, e := rdb.ZRank(context.Background(), "liyunpeng_dev_local_LGR_S6_G1", "13472").Result()
+	fmt.Printf("r = %v, e = %v\n", r, e)
+}
+
+func zrevrankFoo(url, password string, DB int) {
+	rdb := connect(url, password, DB)
+	r, e := rdb.ZRevRank(context.Background(), "liyunpeng_dev_local_LGR_S6_G1", "13488").Result()
 	fmt.Printf("r = %v, e = %v\n", r, e)
 }
 

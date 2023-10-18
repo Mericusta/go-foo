@@ -62,6 +62,60 @@ func Test_zaddFoo(t *testing.T) {
 	}
 }
 
+func Test_zrankFoo(t *testing.T) {
+	type args struct {
+		url      string
+		password string
+		DB       int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				url:      "192.168.2.147:6379",
+				password: "",
+				DB:       1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			zrankFoo(tt.args.url, tt.args.password, tt.args.DB)
+		})
+	}
+}
+
+func Test_zrevrankFoo(t *testing.T) {
+	type args struct {
+		url      string
+		password string
+		DB       int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				url:      "192.168.2.147:6379",
+				password: "",
+				DB:       1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			zrevrankFoo(tt.args.url, tt.args.password, tt.args.DB)
+		})
+	}
+}
+
 func Test_getFoo(t *testing.T) {
 	type args struct {
 		url      string
