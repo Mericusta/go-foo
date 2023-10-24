@@ -2,8 +2,9 @@ package mysqlfoo
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func BenchmarkBatchInsertPrayRecordData(b *testing.B) {
@@ -36,7 +37,7 @@ func BenchmarkOpenMySQLDatabase(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, tt := range tests {
-			OpenMySQLDatabase(tt.args.URI)
+			connect(tt.args.URI)
 		}
 	}
 }

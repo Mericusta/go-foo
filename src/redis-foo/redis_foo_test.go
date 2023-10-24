@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_connectTest(t *testing.T) {
+func Test_ping(t *testing.T) {
 	type args struct {
 		url      string
 		password string
@@ -28,8 +28,8 @@ func Test_connectTest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := connectTest(tt.args.url, tt.args.password, tt.args.DB); got != tt.want {
-				t.Errorf("connectTest() = %v, want %v", got, tt.want)
+			if got := ping(tt.args.url, tt.args.password, tt.args.DB); got != tt.want {
+				t.Errorf("ping() = %v, want %v", got, tt.want)
 			}
 		})
 	}

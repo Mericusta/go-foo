@@ -23,7 +23,7 @@ func connect(url, password string, DB int) *redis.Client {
 	return rdb
 }
 
-func connectTest(url, password string, DB int) string {
+func ping(url, password string, DB int) string {
 	rdb := connect(url, password, DB)
 	cmd := rdb.Ping(context.Background())
 	if cmd == nil {

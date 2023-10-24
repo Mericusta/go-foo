@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -13,9 +14,10 @@ import (
 const (
 	MYSQL_MAX_OPEN_CONNECTIONS = 1000
 	MYSQL_MAX_IDLE_CONNECTIONS = 100 // 并发协程数 = 保活链接数 / 10
+	MYSQL_DATABASE_FOO         = "root:yunpeng.li@VanePlus950605@tcp(192.168.2.203:3306)/foo"
 )
 
-func OpenMySQLDatabase(URI string) *sql.DB {
+func connect(URI string) *sql.DB {
 	db, openError := sql.Open("mysql", URI)
 	if db == nil || openError != nil {
 		panic(openError)
@@ -24,12 +26,65 @@ func OpenMySQLDatabase(URI string) *sql.DB {
 	db.SetMaxOpenConns(MYSQL_MAX_OPEN_CONNECTIONS)
 	db.SetMaxIdleConns(MYSQL_MAX_IDLE_CONNECTIONS)
 
+	return db
+}
+
+func ping(url string) {
+	db := connect(url)
 	if pingError := db.Ping(); pingError != nil {
 		panic(pingError)
 	}
-
-	return db
 }
+
+var INSERT_OR_UPDATE_SQL string = `
+	INSERT INTO insert_or_update_table VALUES (?, ?, ?, ?) AS new(primary_key, new_field1, new_field2, new_condition1) ON DUPLICATE KEY UPDATE field1 = IF(condition1 < new.new_condition1, new.new_field1, field1), field2 = IF(condition1 < new.new_condition1, new.new_field2, field2), condition1 = IF(condition1 < new.new_condition1, new.new_condition1, condition1)
+`
+
+func insertOrUpdateFoo(url string) {
+	db := connect(url)
+	key := time.Now().Unix()
+	for index := 0; index != 10; index++ {
+		field1, field2, condition1 := index, -index, index
+		result, err := db.Exec(INSERT_OR_UPDATE_SQL, key, field1, field2, condition1)
+		if err != nil {
+			panic(err)
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("rowsAffected %v\n", rowsAffected)
+	}
+}
+
+func concurrentlyInsertOrUpdateFoo(url string, goroutineCount int) {
+	db := connect(url)
+	wg := &sync.WaitGroup{}
+	key := time.Now().Unix()
+	wg.Add(goroutineCount)
+	for g := 0; g != goroutineCount; g++ {
+		go func(_g int, _wg *sync.WaitGroup) {
+			defer _wg.Done()
+			for index := 0; index != goroutineCount; index++ {
+				field1, field2, condition1 := index, -index, index
+				result, err := db.Exec(INSERT_OR_UPDATE_SQL, key, field1, field2, condition1)
+				if err != nil {
+					panic(err)
+				}
+				rowsAffected, err := result.RowsAffected()
+				if err != nil {
+					panic(err)
+				}
+				if rowsAffected > 0 {
+					fmt.Printf("_g %v, rowsAffected %v\n", _g, rowsAffected)
+				}
+			}
+		}(g, wg)
+	}
+	wg.Wait()
+}
+
+// --------------------------------
 
 type prayResult struct {
 	r map[int32]int64
@@ -40,7 +95,7 @@ func (p *prayResult) GetItem() map[int32]int64 {
 }
 
 func BatchInsertPrayRecordData() {
-	db := OpenMySQLDatabase("root:yunpeng.li@VanePlus950605@tcp(192.168.2.203:3306)/sg_centerdb")
+	db := connect("user@password@tcp(192.168.2.203:3306)/db")
 
 	playerID, prayID, prayTimestamp := 1, 1, time.Now().Unix()
 	prayResult := []*prayResult{
