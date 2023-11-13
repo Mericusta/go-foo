@@ -117,3 +117,30 @@ func InterfaceTypeAssert(i interface{}) (int, bool) {
 	}
 	return is.i, ok
 }
+
+type MyError1 struct {
+	error
+}
+
+func newMyError1(e error) *MyError1 {
+	return &MyError1{error: e}
+}
+
+type MyError2 struct {
+	error
+}
+
+func newMyError2(e error) *MyError2 {
+	return &MyError2{error: e}
+}
+
+func ErrorPassNilCheckFoo() {
+	myError1 := newMyError1(nil)
+	if myError1.error != nil {
+		fmt.Printf("myError1 is not nil\n")
+	}
+	myError2 := newMyError2(myError1.error)
+	if myError2.error != nil {
+		fmt.Printf("myError2 is not nil\n")
+	}
+}
