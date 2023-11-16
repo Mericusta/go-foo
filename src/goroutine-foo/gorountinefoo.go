@@ -253,3 +253,65 @@ func RecoverAtGoroutine(gCount, hCount, mod int, concurrently bool) (int64, int3
 
 	return handleCounter, recoverCounter
 }
+
+// it will cost all of CPU
+func ConcurrentlyReadWriteSlice() {
+	s := make([]int, 0, 8)
+	for v := 0; v != 8; v++ {
+		s = append(s, v)
+	}
+	g1 := func(_i int, _s []int) {
+		for {
+			for i, v := range _s {
+				fmt.Printf("g %v, i %v, v %v\n", _i, i, v)
+			}
+			time.Sleep(time.Millisecond * 10)
+		}
+	}
+	g2 := func(_i int, _s []int) {
+		for {
+			for i := 0; i < len(_s); i++ {
+				_s[i] += _i
+			}
+			time.Sleep(time.Millisecond * 10)
+		}
+	}
+
+	for index := 0; index != 100; index++ {
+		go g1(index, s)
+		go g2(index, s)
+	}
+
+	select {}
+}
+
+// fatal error, will kill process
+func ConcurrentlyReadWriteMap() {
+	m := make(map[int]int)
+	for v := 0; v != 8; v++ {
+		m[v] = v
+	}
+	g1 := func(_i int, _m map[int]int) {
+		for {
+			for i, v := range _m {
+				fmt.Printf("g %v, i %v, v %v\n", _i, i, v)
+			}
+			time.Sleep(time.Millisecond * 10)
+		}
+	}
+	g2 := func(_i int, _m map[int]int) {
+		for {
+			for i := 0; i != 8; i++ {
+				_m[i] += _i
+			}
+			time.Sleep(time.Millisecond * 10)
+		}
+	}
+
+	for index := 0; index != 100; index++ {
+		go g1(index, m)
+		go g2(index, m)
+	}
+
+	select {}
+}

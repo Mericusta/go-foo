@@ -158,3 +158,35 @@ func TestRecoverAtGoroutine(t *testing.T) {
 		})
 	}
 }
+
+func TestConcurrentlyReadWriteSlice(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ConcurrentlyReadWriteSlice()
+		})
+	}
+}
+
+func TestConcurrentlyReadWriteMap(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ConcurrentlyReadWriteMap()
+		})
+	}
+}
