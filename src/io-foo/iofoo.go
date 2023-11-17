@@ -5,9 +5,45 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"os"
+	"time"
 )
 
+func ConcurrencyWriteFileFoo(sameWriter bool) {
+	getWriter := func() io.Writer {
+		f, err := os.OpenFile("./temp_file", os.O_CREATE|os.O_RDWR, 0644)
+		if err != nil {
+			panic(err)
+		}
+		return f
+	}
+
+	if sameWriter {
+		writer := getWriter()
+		for index := 0; index != 10; index++ {
+			_i := index
+			go WriteFileFoo(_i, writer)
+		}
+	} else {
+		for index := 0; index != 10; index++ {
+			_i := index
+			go WriteFileFoo(_i, getWriter())
+		}
+	}
+
+	t := time.NewTimer(time.Second * 5)
+	<-t.C
+}
+
 func WriteFileFoo(writerIndex int, outputFile io.Writer) {
+	for index := 0; index != 1000; index++ {
+		b := []byte(fmt.Sprintf("writer %v output file content at index %v\n", writerIndex, index))
+		outputFile.Write(b)
+	}
+	fmt.Printf("writer %v done\n", writerIndex)
+}
+
+func WriteFileFooWithBuffer(writerIndex int, outputFile io.Writer) {
 	buffer := bufio.NewWriterSize(outputFile, 1<<24)
 	flushCount := 0
 

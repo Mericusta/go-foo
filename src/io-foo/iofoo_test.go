@@ -69,3 +69,24 @@ func Test_tlvSocketPacketFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestConcurrencyWriteFileFoo(t *testing.T) {
+	type args struct {
+		sameWriter bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{sameWriter: false},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ConcurrencyWriteFileFoo(tt.args.sameWriter)
+		})
+	}
+}
