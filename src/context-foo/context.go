@@ -3,6 +3,7 @@ package contextfoo
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -357,4 +358,65 @@ func socketWriteWithContext(ctx context.Context, index int, writeSignal chan int
 			}
 		}
 	}
+}
+
+// timeout
+
+func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) {
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
+
+	defer func() {
+		fmt.Println("timeoutContextFoo defer")
+	}()
+
+	workerFunc := func() {
+		fmt.Printf("in worker, long time business begin, %vs\n", businessSeconds)
+		if businessPanic {
+			fmt.Println("in worker, long time business occurs panic")
+			panic("business panic")
+		} else {
+			time.Sleep(time.Second * time.Duration(businessSeconds))
+			fmt.Println("in worker, long time business done")
+		}
+	}
+
+	workerDone, workerPanic := make(chan struct{}), make(chan any, 1)
+	workerGoroutine := func(_ctx context.Context, workerFunc func()) {
+		defer func() {
+			if p := recover(); p != nil {
+				workerPanic <- p
+			}
+			fmt.Println("workerGoroutine, defer")
+			wg.Done()
+		}()
+		workerFunc()
+		close(workerDone)
+	}
+
+	guardGoroutine := func(_ctx context.Context, canceler context.CancelFunc) {
+		defer func() {
+			fmt.Println("guardGoroutine, defer")
+			wg.Done()
+		}()
+
+		go workerGoroutine(_ctx, workerFunc)
+		select {
+		case <-workerDone:
+			fmt.Println("in guard, business complete on time")
+			break
+		case p := <-workerPanic:
+			fmt.Printf("in guard, business occurs panic, %v\n", p)
+			break
+		case <-_ctx.Done():
+			fmt.Println("in guard, business is overtime, call cancel")
+			canceler()
+			break
+		}
+	}
+
+	go guardGoroutine(ctx, canceler)
+
+	wg.Wait()
 }
