@@ -122,7 +122,7 @@ func TestTimeoutContextFoo(t *testing.T) {
 				businessPanic:   false,
 			},
 			&fooError{
-				e: context.DeadlineExceeded,
+				e: context.DeadlineExceeded.Error(),
 			},
 		},
 		{
@@ -133,7 +133,7 @@ func TestTimeoutContextFoo(t *testing.T) {
 				businessPanic:   true,
 			},
 			&fooError{
-				e: context.Canceled,
+				e: context.Canceled.Error(),
 			},
 		},
 		{
@@ -144,7 +144,7 @@ func TestTimeoutContextFoo(t *testing.T) {
 				businessPanic:   false,
 			},
 			&fooError{
-				e: nil,
+				e: "",
 			},
 		},
 	}
