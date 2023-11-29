@@ -334,7 +334,6 @@ type fooError struct {
 func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) *fooError {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
-	ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
 
 	defer func() {
 		fmt.Println("timeoutContextFoo defer")
@@ -364,13 +363,17 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 		close(workerDone)
 	}
 
-	guardGoroutine := func(_ctx context.Context, canceler context.CancelFunc) {
+	var guardReturn error
+	guardReturnLocker := &sync.Mutex{}
+	guardGoroutine := func() {
 		defer func() {
 			fmt.Println("guardGoroutine, defer")
 			wg.Done()
 		}()
 
-		go workerGoroutine(_ctx, workerFunc)
+		ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
+
+		go workerGoroutine(ctx, workerFunc)
 		select {
 		case <-workerDone:
 			fmt.Println("in guard, business complete on time")
@@ -379,17 +382,21 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 			fmt.Printf("in guard, business occurs panic, %v\n", p)
 			canceler()
 			break
-		case <-_ctx.Done():
+		case <-ctx.Done():
 			fmt.Println("in guard, business is overtime, call cancel")
 			break
 		}
+
+		guardReturnLocker.Lock()
+		guardReturn = ctx.Err()
+		guardReturnLocker.Unlock()
 	}
 
-	go guardGoroutine(ctx, canceler)
+	go guardGoroutine()
 
 	wg.Wait()
 
-	return &fooError{e: ctx.Err()}
+	return &fooError{e: guardReturn}
 }
 
 func ControlContextTree() {
