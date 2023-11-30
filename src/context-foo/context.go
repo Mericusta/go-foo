@@ -336,6 +336,9 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 	wg.Add(2)
 
 	defer func() {
+		if p := recover(); p != nil {
+			fmt.Println("TimeoutContextFoo, defer recover with panic info", p)
+		}
 		fmt.Println("timeoutContextFoo defer")
 	}()
 
@@ -371,34 +374,34 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 			wg.Done()
 		}()
 
-		// // - 写法1：统一 defer 里调用 canceler，panic 时候单独调用 canceler
-		// // - 不完美：panic 分支下调用两次 canceler，多次锁判断
-		// ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
-		// defer func() {
-		// 	fmt.Println("guardGoroutine, defer, call canceler()")
-		// 	canceler()
-		// }()
-		// go workerGoroutine(ctx, workerFunc)
-		// select {
-		// case <-workerDone:
-		// 	fmt.Println("in guard, business complete on time")
-		// 	break
-		// case p := <-workerPanic:
-		// 	fmt.Printf("in guard, business occurs panic, %v\n", p)
-		// 	canceler()
-		// 	break
-		// case <-ctx.Done():
-		// 	fmt.Println("in guard, business is overtime, call cancel")
-		// 	break
-		// }
-		// guardReturnLocker.Lock()
-		// guardReturn = ctx.Err()
-		// if guardReturn != nil {
-		// 	fmt.Println("in guard, save context error:", guardReturn.Error())
-		// } else {
-		// 	fmt.Println("in guard, save context error: nil")
-		// }
-		// guardReturnLocker.Unlock()
+		// - 写法1：统一 defer 里调用 canceler，panic 时候单独调用 canceler
+		// - 不完美：panic 分支下调用两次 canceler，多次锁判断
+		ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
+		defer func() {
+			fmt.Println("guardGoroutine, defer, call canceler()")
+			canceler()
+		}()
+		go workerGoroutine(ctx, workerFunc)
+		select {
+		case <-workerDone:
+			fmt.Println("in guard, business complete on time")
+			break
+		case p := <-workerPanic:
+			fmt.Printf("in guard, business occurs panic, %v\n", p)
+			canceler()
+			break
+		case <-ctx.Done():
+			fmt.Println("in guard, business is overtime, call cancel")
+			break
+		}
+		guardReturnLocker.Lock()
+		guardReturn = ctx.Err()
+		if guardReturn != nil {
+			fmt.Println("in guard, save context error:", guardReturn.Error())
+		} else {
+			fmt.Println("in guard, save context error: nil")
+		}
+		guardReturnLocker.Unlock()
 
 		// // 写法2：在捕获 context 的错误之前调用一次 canceler
 		// // - 错误：会导致正常完成时捕获的 context 错误为 context canceled
@@ -465,35 +468,6 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 		// 	guardReturnLocker.Unlock()
 		// 	break
 		// }
-
-		// - 写法4：统一 defer 里调用 canceler，panic 时候单独调用 canceler
-		// - 不完美：panic 分支下调用两次 canceler，多次锁判断
-		ctx, canceler := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSeconds))
-		defer func() {
-			fmt.Println("guardGoroutine, defer, call canceler()")
-			canceler()
-		}()
-		go workerGoroutine(ctx, workerFunc)
-		select {
-		case <-workerDone:
-			fmt.Println("in guard, business complete on time")
-			break
-		case p := <-workerPanic:
-			fmt.Printf("in guard, business occurs panic, %v\n", p)
-			canceler()
-			break
-		case <-ctx.Done():
-			fmt.Println("in guard, business is overtime, call cancel")
-			break
-		}
-		guardReturnLocker.Lock()
-		guardReturn = ctx.Err()
-		if guardReturn != nil {
-			fmt.Println("in guard, save context error:", guardReturn.Error())
-		} else {
-			fmt.Println("in guard, save context error: nil")
-		}
-		guardReturnLocker.Unlock()
 	}
 
 	go guardGoroutine()
