@@ -41,3 +41,20 @@ func deferAnonymousFunc(v interface{}) {
 	}
 	fmt.Printf("deferAnonymousFunc catch variable %v\n", v)
 }
+
+func deferRecoverInFunc() {
+	recoverFunc := func() {
+		if p := recover(); p != nil {
+			fmt.Println("recoverFunc, p =", p)
+		}
+	}
+
+	defer func() {
+		recoverFunc()
+		if p := recover(); p != nil {
+			fmt.Println("recoverFunc, p =", p)
+		}
+	}()
+
+	panic("panic here")
+}
