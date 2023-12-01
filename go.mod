@@ -27,11 +27,12 @@ require (
 require (
 	github.com/gammazero/deque v0.2.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/onsi/gomega v1.23.0 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 )
