@@ -92,3 +92,21 @@ func InterfaceMarshalFoo() {
 		panic(fmt.Sprintf("LastTime not equal %+v %+v", unmarshalStruct, unmarshalInterface))
 	}
 }
+
+func MarshalEmptyStructFoo() (int, int) {
+	emptyMsg := &cargo_def.BagDataInfo{}
+	notEmptyMsg := &cargo_def.BagDataInfo{}
+	notEmptyMsg.Items = make(map[uint64]*cargo_def.ItemInfo)
+	notEmptyMsg.Items[1] = &cargo_def.ItemInfo{
+		GUID: 1, ClassID: 1, Count: 1, OverTime: 0,
+	}
+	emptyMsgResult, err := proto.Marshal(emptyMsg)
+	if err != nil {
+		panic(err)
+	}
+	notEmptyMsgResult, err := proto.Marshal(notEmptyMsg)
+	if err != nil {
+		panic(err)
+	}
+	return len(emptyMsgResult), len(notEmptyMsgResult)
+}

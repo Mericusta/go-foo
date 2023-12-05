@@ -35,3 +35,29 @@ func TestInterfaceMarshalFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestMarshalEmptyStructFoo(t *testing.T) {
+	tests := []struct {
+		name  string
+		want  int
+		want1 int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			0,
+			12,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := MarshalEmptyStructFoo()
+			if got != tt.want {
+				t.Errorf("MarshalEmptyStructFoo() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("MarshalEmptyStructFoo() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
