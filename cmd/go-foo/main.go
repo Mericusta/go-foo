@@ -1,7 +1,7 @@
 package main
 
 import (
-	contextfoo "go-foo/src/context-foo"
+	iofoo "go-foo/src/io-foo"
 	"reflect"
 	"unsafe"
 )
@@ -20,9 +20,5 @@ func EscapeFoo() {
 }
 
 func main() {
-	// gcfoo.EscapeFoo()
-	// go httpfoo.JustPost(0, true)
-	// go httpfoo.JustPost(0, false)
-	contextfoo.TimeoutContextFoo(3, 2)
-	// select {}
+	iofoo.ConcurrencyControlConsoleFoo()
 }
