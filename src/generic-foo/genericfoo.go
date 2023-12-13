@@ -1,6 +1,8 @@
 package genericfoo
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // 真·接口
 type Adder[T any] interface {
@@ -215,4 +217,52 @@ func generalInterfaceCall() {
 
 	useGGIOutsideTypeParamScope1(&structA{})
 	useGGIOutsideTypeParamScope1(&structB{})
+}
+
+// --------
+
+// 指针的结构体类型萃取 *p -> p
+// 利用 类型参数表 中 指针类型的类型参数 萃取指针的结构体类型
+// 为了在 类型参数表 中 构造指针类型的参数，需要使用 类型的类型（模板的模板）约束
+func structPointerTypeTraitFoo[T any](tv *T) T {
+	return *tv
+}
+
+// 指针的结构体类型萃取，传递到函数中
+type traitStruct struct{}
+
+func (s *traitStruct) GetProtocolID() uint32 { return 1024 }
+
+func structPointerTypeTraitFooWithFunc() {
+	RegisterServerHandler(func(IRobotServerContext, *traitStruct) {})
+}
+
+type ProtocolMsg any
+type ProtocolID uint32
+
+var protocolMakerMap map[ProtocolID]func() ProtocolMsg = make(map[ProtocolID]func() ProtocolMsg)
+
+func RegisterProtocolMaker(id ProtocolID, f func() ProtocolMsg) {
+	protocolMakerMap[id] = f
+}
+
+type IRobotServerContext any
+type MessageProtocol interface{ GetProtocolID() uint32 }
+
+var serverHandlerMap = make(map[ProtocolID]func(IRobotServerContext, MessageProtocol))
+
+func RegisterServerHandler[T func(IRobotServerContext, *TT), TT any](handler T) {
+	msgID := register(serverHandlerMap, handler)
+	RegisterProtocolMaker(msgID, func() ProtocolMsg { return new(TT) })
+}
+
+func register[T any, C any](m map[ProtocolID]func(C, MessageProtocol), handler func(C, T)) ProtocolID {
+	msgID := ProtocolID(func(t any) MessageProtocol { return t.(MessageProtocol) }(*new(T)).GetProtocolID())
+	f := func(ctx C, iMsg MessageProtocol) {
+		if msg, ok := iMsg.(T); ok {
+			handler(ctx, msg)
+		}
+	}
+	m[msgID] = f
+	return msgID
 }
