@@ -253,41 +253,6 @@ func GoChannelBlock() {
 	}
 }
 
-// 使用 select case 语法处理发送的 channel
-func GoSelectSendChannel() {
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-	c := make(chan int)
-	go func() {
-		for index := 0; index != 3; index++ {
-			fmt.Printf("send %v and block\n", index)
-			select {
-			case c <- index:
-				fmt.Printf("send %v done\n", index)
-			}
-		}
-		wg.Done()
-	}()
-
-	time.Sleep(time.Second)
-
-	go func() {
-		for index := 0; index != 3; index++ {
-			time.Sleep(time.Second)
-			select {
-			case v, ok := <-c:
-				fmt.Printf("recv %v done\n", v)
-				if !ok {
-					break
-				}
-			}
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-}
-
 // https://github.com/kubernetes/kubernetes/blob/7509c4eb478a3ab94ff26be2b4068da53212d538/pkg/controller/nodelifecycle/scheduler/taint_manager.go#L244
 func PriorityChannel() {
 	wg := sync.WaitGroup{}
@@ -701,4 +666,49 @@ func MultiSelectReceiverChannel() {
 	c <- 1
 
 	select {}
+}
+
+// select case default 实现非阻塞发送
+func NoBlockSend() {
+	noBufferSendChan := make(chan int)
+	wg := &sync.WaitGroup{}
+	wg.Add(3)
+
+	for index := 0; index != 3; index++ {
+		go func(i int) {
+			defer wg.Done()
+			for {
+				select {
+				case noBufferSendChan <- i:
+					fmt.Println(i, "send done")
+					return
+				default:
+					fmt.Println(i, "send failed")
+					time.Sleep(time.Second)
+				}
+			}
+		}(index)
+	}
+
+	recvCount := 0
+	for {
+		recv := <-noBufferSendChan
+		fmt.Println("recv", recv)
+		recvCount++
+		if recvCount >= 3 {
+			break
+		}
+		time.Sleep(time.Second)
+		fmt.Println()
+	}
+	wg.Wait()
+}
+
+// 非阻塞接收
+func NoBlockRecv() {
+	// noBufferRecvChan := make(chan int)
+
+	for index := 0; index != 3; index++ {
+
+	}
 }

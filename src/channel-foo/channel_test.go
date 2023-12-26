@@ -111,22 +111,6 @@ func TestGoChannelBlock(t *testing.T) {
 	}
 }
 
-func TestGoSelectSendChannel(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-		{
-			"test case 1",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			GoSelectSendChannel()
-		})
-	}
-}
-
 func TestPriorityChannel(t *testing.T) {
 	tests := []struct {
 		name string
@@ -239,6 +223,22 @@ func TestMultiSelectReceiverChannel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			MultiSelectReceiverChannel()
+		})
+	}
+}
+
+func TestNoBlockSend(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			NoBlockSend()
 		})
 	}
 }
