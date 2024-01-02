@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option  go_package = "go-foo/cmd/data-exchange;data_exchange";
+package data_exchange;
+
+message FightPlayerData
+{
+    int32             GroupID    = 1;  
+    uint64            PlayerID   = 2;  
+    int32             RobotID    = 3;  
+    string            PlayerName = 4;  
+    int32             MaxHP      = 5;  
+    int32             CurrentHP  = 6;  
+    int32             Wave       = 7;  
+    int32             Score      = 8;  
+    int32             ScoreLevel = 9;  
+    bool              Finished   = 10; 
+    map<int32, int32> Attacked   = 11; 
+}
+
+message RobotsFightData
+{
+    repeated FightPlayerData Robots = 1;
+}
