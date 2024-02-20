@@ -1,3 +1,0 @@
-package optionsfoo
-
-// type Option

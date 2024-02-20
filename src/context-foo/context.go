@@ -481,6 +481,55 @@ func TimeoutContextFoo(timeoutSeconds, businessSeconds int, businessPanic bool) 
 	return &fooError{e: fooErrorString}
 }
 
-func ControlContextTree() {
+func SubContextCancelFoo() {
+	wg := &sync.WaitGroup{}
 
+	ctx := context.Background()
+	subCtx, canceler := context.WithCancel(ctx)
+	child1Func := func(ctx context.Context, i int) {
+		timer := time.NewTimer(time.Second * 6)
+		select {
+		case <-timer.C:
+			fmt.Println("child1Func", i, "timer done")
+		case <-ctx.Done():
+			fmt.Println("child1Func", i, "done")
+		}
+		wg.Done()
+	}
+	child2Func := func(ctx context.Context, i int) {
+		<-ctx.Done()
+		fmt.Println("child2Func", i, "done")
+		wg.Done()
+	}
+	parent1Func := func(ctx context.Context, i int) {
+		subCtx, canceler := context.WithCancel(ctx)
+		wg.Add(1)
+		go child1Func(ctx, i+1)
+		wg.Add(1)
+		go child2Func(subCtx, i+2)
+		timer := time.NewTimer(time.Second * 5)
+		select {
+		case <-timer.C:
+			fmt.Println("parent1Func", i, "timer done")
+		case <-ctx.Done():
+			fmt.Println("parent1Func", i, "done")
+		}
+		fmt.Println("parent1Func", i, "call canceler")
+		canceler()
+		wg.Done()
+	}
+
+	wg.Add(1)
+	go parent1Func(ctx, 1)
+	wg.Add(1)
+	go child1Func(subCtx, 10)
+	wg.Add(1)
+	go child2Func(subCtx, 100)
+
+	time.Sleep(time.Second)
+	fmt.Println("main call canceler")
+	canceler()
+
+	wg.Wait()
+	fmt.Println("main wait done")
 }

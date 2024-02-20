@@ -3,7 +3,6 @@ package randfoo
 import (
 	"reflect"
 	"testing"
-	"time"
 )
 
 func TestGetRandSlice(t *testing.T) {
@@ -18,8 +17,8 @@ func TestGetRandSlice(t *testing.T) {
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{time.Now().UnixNano() % time.Now().Unix()},
-			[]int{1, 0, 1, 0},
+			args{seed: 202401051712},
+			[]int{1, 0, 0, 1},
 		},
 	}
 	for _, tt := range tests {
@@ -42,6 +41,10 @@ func TestRandSlice(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{seed: 202401051712},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
