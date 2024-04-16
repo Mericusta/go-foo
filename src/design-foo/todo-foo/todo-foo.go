@@ -8,12 +8,12 @@ func todoFoo() {
 	// - Basic 实现控制逻辑，负责业务的开始和结束
 	// - Derivative 实现业务逻辑，负责业务的输入和输出
 
-	type basic struct{
-		event chan any
+	type basic struct {
+		event  chan any
 		cancel chan any
 	}
-	
+
 	f := func() {
-		for := 
+		// for :=
 	}
 }

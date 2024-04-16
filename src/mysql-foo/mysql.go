@@ -184,3 +184,16 @@ func BatchInsertPrayRecordData() {
 	}
 	db.Close()
 }
+
+// --------------------------------
+
+func queryNilFoo() {
+	db := connect(MYSQL_DATABASE_FOO)
+	if db == nil {
+		panic(MYSQL_DATABASE_FOO)
+	}
+
+	r, e := db.Query("select * from insert_or_update_table where primary_key = -1")
+	fmt.Println("r =", r)
+	fmt.Println("e =", e)
+}

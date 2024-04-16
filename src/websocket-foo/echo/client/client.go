@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "ws://192.168.2.203:6666/dial", "http service address")
 
 func main() {
 	flag.Parse()
@@ -24,11 +24,15 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
-	log.Printf("connecting to %s", u.String())
+	_, err := url.Parse(*addr)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("dial connection by url %s", *addr)
 
 	websocket.DefaultDialer.HandshakeTimeout = time.Hour
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, _, err := websocket.DefaultDialer.Dial(*addr, nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
