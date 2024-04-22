@@ -13,7 +13,7 @@ func Test_dialFoo(t *testing.T) {
 		// TODO: Add test cases.
 		{
 			"test case 1",
-			args{urlStr: "ws://192.168.2.203:6666/dial"},
+			args{urlStr: "ws://192.168.2.203:6666"},
 		},
 	}
 	for _, tt := range tests {

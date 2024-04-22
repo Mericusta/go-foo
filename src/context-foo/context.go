@@ -3,6 +3,7 @@ package contextfoo
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -532,4 +533,88 @@ func SubContextCancelFoo() {
 
 	wg.Wait()
 	fmt.Println("main wait done")
+}
+
+// 树状分层控制
+// 父级协程可以控制关闭其所有子协程
+// 子协程无法影响父级协程
+func contextTreeControl() {
+	moduleG := func(ctx context.Context) {
+		counter, ticker, panicSecond := 0, time.NewTicker(time.Second), rand.Intn(60)
+		defer func() {
+			panicInfo := recover()
+			if panicInfo != nil {
+				fmt.Println(panicInfo)
+			}
+		}()
+		for {
+			select {
+			case <-ticker.C:
+				counter++
+				fmt.Println(ctx.Value("target"), "index", ctx.Value("index"), "ticker at", counter)
+				if counter == panicSecond {
+					reportChan := ctx.Value("report").(chan struct{})
+					reportChan <- struct{}{}
+					panic(fmt.Sprintf("%v index %v panic at %v", ctx.Value("target"), ctx.Value("index"), counter))
+				}
+			case <-ctx.Done():
+				fmt.Println(ctx.Value("target"), "index", ctx.Value("index"), "receive canceler on ticker", counter)
+				return
+			}
+		}
+	}
+
+	controllerG := func(ctx context.Context) {
+		reportCount, reportChan, moduleMap := 0, make(chan struct{}), make(map[int]context.CancelFunc)
+		for index := 0; index != 5; index++ {
+			moduleCtx, moduleCanceler := context.WithCancel(
+				context.WithValue(
+					context.WithValue(
+						context.WithValue(
+							ctx, "target", "module",
+						), "report", reportChan,
+					), "index", index,
+				),
+			)
+			moduleMap[index] = moduleCanceler
+			go moduleG(moduleCtx)
+		}
+		for {
+			select {
+			case <-reportChan:
+				reportCount++
+				if reportCount >= 4 {
+					fmt.Println(ctx.Value("target"), "receive enough panic reports")
+					for _, moduleCanceler := range moduleMap {
+						moduleCanceler()
+					}
+				}
+			case <-ctx.Done():
+				fmt.Println(ctx.Value("target"), "receive canceler")
+				for _, moduleCanceler := range moduleMap {
+					moduleCanceler()
+				}
+				return
+			}
+		}
+	}
+
+	rootG := func(ctx context.Context) {
+		controllerCtx, controllerCanceler := context.WithCancel(context.WithValue(ctx, "target", "controller"))
+		go controllerG(controllerCtx)
+		select {
+		case <-ctx.Done():
+			fmt.Println(ctx.Value("target"), "receive canceler")
+			controllerCanceler()
+			return
+		}
+	}
+
+	rootCtx, rootCanceler := context.WithCancel(context.WithValue(context.Background(), "target", "root"))
+	go rootG(rootCtx)
+
+	cancelSecond := rand.Intn(30)
+	timer := time.NewTimer(time.Second * time.Duration(cancelSecond))
+	<-timer.C
+	rootCanceler()
 }
