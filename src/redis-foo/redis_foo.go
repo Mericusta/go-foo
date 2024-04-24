@@ -2,6 +2,7 @@ package redisfoo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -176,4 +177,61 @@ func distributedLockerFoo(url, password string, DB int) {
 		}(index, wg)
 	}
 	wg.Wait()
+}
+
+type rogueData struct {
+	OptionEventList []*optionEvent `json:"optionEventList"`
+}
+
+type optionEvent struct {
+	EventID  int     `json:"eventID"`
+	TodoList []*todo `json:"todoList"`
+}
+
+type todo struct {
+	TodoID int   `json:"todoID"`
+	NextID []int `json:"nextID"`
+}
+
+func SearchAndFix(url, password string, DB int) {
+	rdb := connect(url, password, DB)
+	keys, err := rdb.Keys(context.Background(), "*_ROGUE_data").Result()
+	if err != nil {
+		panic(err)
+	}
+	for _, key := range keys {
+		value, err := rdb.Get(context.Background(), key).Result()
+		if err != nil {
+			panic(err)
+		}
+		// fmt.Printf("key = %v\n, value = %v\n", key, value)
+		rd := &rogueData{}
+		err = json.Unmarshal([]byte(value), rd)
+		if err != nil {
+			panic(err)
+		}
+		// fmt.Printf("key = %v\n", key)
+		for _, oe := range rd.OptionEventList {
+			// fmt.Printf("eventID %v\n", oe.EventID)
+			todoArray := stp.NewArray(oe.TodoList)
+			for _, t := range oe.TodoList {
+				// fmt.Printf("todoID %v, nextID %v\n", t.TodoID, t.NextID)
+				for _, nextID := range t.NextID {
+					if nextID == -1 {
+						continue
+					}
+					index := todoArray.FindIndex(func(v *todo, i int) bool {
+						return v.TodoID == nextID
+					})
+					if index == -1 {
+						fmt.Printf("wrong data, key %v\n", key)
+						goto NEXT
+					}
+				}
+			}
+		}
+		fmt.Printf("no problem data, key %v\n", key)
+	NEXT:
+		fmt.Println()
+	}
 }

@@ -23,7 +23,8 @@ func dialFoo(urlStr string) {
 	}
 	defer c.Close()
 
-	select {}
+	timer := time.NewTimer(time.Second * 5)
+	<-timer.C
 
 	// done := make(chan struct{})
 

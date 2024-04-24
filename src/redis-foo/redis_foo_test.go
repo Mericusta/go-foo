@@ -223,3 +223,30 @@ func Test_hgetallFoo(t *testing.T) {
 		})
 	}
 }
+
+func Test_SearchAndFix(t *testing.T) {
+	type args struct {
+		url      string
+		password string
+		DB       int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				url:      "192.168.2.93:6379",
+				password: "123456",
+				DB:       2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SearchAndFix(tt.args.url, tt.args.password, tt.args.DB)
+		})
+	}
+}
