@@ -224,7 +224,7 @@ func Test_hgetallFoo(t *testing.T) {
 	}
 }
 
-func Test_SearchAndFix(t *testing.T) {
+func Test_SearchAndFixFromRedis(t *testing.T) {
 	type args struct {
 		url      string
 		password string
@@ -246,7 +246,7 @@ func Test_SearchAndFix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SearchAndFix(tt.args.url, tt.args.password, tt.args.DB)
+			SearchAndFixFromRedis(tt.args.url, tt.args.password, tt.args.DB)
 		})
 	}
 }

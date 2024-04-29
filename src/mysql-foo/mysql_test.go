@@ -121,3 +121,32 @@ func Test_queryNilFoo(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchAndFixFromMySQL(t *testing.T) {
+	type args struct {
+		user     string
+		password string
+		url      string
+		dbName   string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{
+				user:     "root",
+				password: "Fengxiangbiao@123",
+				url:      "192.168.2.141:3306",
+				dbName:    "vr_user",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SearchAndFixFromMySQL(tt.args.user, tt.args.password, tt.args.url, tt.args.dbName)
+		})
+	}
+}

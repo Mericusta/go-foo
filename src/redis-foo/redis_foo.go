@@ -193,7 +193,10 @@ type todo struct {
 	NextID []int `json:"nextID"`
 }
 
-func SearchAndFix(url, password string, DB int) {
+func SearchAndFixFromRedis(url, password string, DB int) {
+	fmt.Println("---------------- search from redis ----------------")
+	fmt.Println()
+
 	rdb := connect(url, password, DB)
 	keys, err := rdb.Keys(context.Background(), "*_ROGUE_data").Result()
 	if err != nil {
@@ -225,13 +228,14 @@ func SearchAndFix(url, password string, DB int) {
 					})
 					if index == -1 {
 						fmt.Printf("wrong data, key %v\n", key)
+						fmt.Println()
 						goto NEXT
 					}
 				}
 			}
 		}
-		fmt.Printf("no problem data, key %v\n", key)
+		// fmt.Printf("no problem data, key %v\n", key)
+		// fmt.Println()
 	NEXT:
-		fmt.Println()
 	}
 }
