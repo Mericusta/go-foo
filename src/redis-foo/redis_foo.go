@@ -227,7 +227,7 @@ func SearchAndFixFromRedis(url, password string, DB int) {
 						return v.TodoID == nextID
 					})
 					if index == -1 {
-						fmt.Printf("wrong data, key %v\n", key)
+						fmt.Printf("wrong data, key %v, value: %v\n", key, value)
 						fmt.Println()
 						goto NEXT
 					}
@@ -236,6 +236,33 @@ func SearchAndFixFromRedis(url, password string, DB int) {
 		}
 		// fmt.Printf("no problem data, key %v\n", key)
 		// fmt.Println()
+		continue
 	NEXT:
+		// maxTodoID := -1
+		// for _, oe := range rd.OptionEventList {
+		// 	todoArray := stp.NewArray(oe.TodoList)
+		// 	duplicatedTodoIDIndex := make([]int, 0, 4)
+		// 	for i, t := range oe.TodoList {
+		// 		if t.TodoID > maxTodoID || maxTodoID == -1 {
+		// 			maxTodoID = t.TodoID
+		// 		}
+		// 		index := todoArray.FindIndex(func(v *todo, j int) bool {
+		// 			return v.TodoID == t.TodoID && i != j
+		// 		})
+		// 		if index == -1 {
+		// 			continue
+		// 		}
+		// 		duplicatedTodoIDIndex = append(duplicatedTodoIDIndex, index)
+		// 	}
+		// 	fmt.Printf("duplicated todo index slice %v, maxTodoID %v\n", duplicatedTodoIDIndex, maxTodoID)
+		// 	for _, index := range duplicatedTodoIDIndex {
+		// 		fmt.Printf("duplicated todo index %v node todoID %v nextID %v\n", index, oe.TodoList[index].TodoID, oe.TodoList[index].NextID)
+		// 	}
+		// }
 	}
+}
+
+func SetToRedis(url, password string, DB int, key, value string) {
+	rdb := connect(url, password, DB)
+
 }
