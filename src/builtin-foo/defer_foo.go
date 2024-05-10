@@ -58,3 +58,11 @@ func deferRecoverInFunc() {
 
 	panic("panic here")
 }
+
+func deferValueCatch() {
+	var i int = 11
+	defer func() {
+		fmt.Printf("defer i = %v\n", i)
+	}()
+	i = 10
+}
