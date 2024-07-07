@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
 type littleStruct struct {
@@ -146,4 +148,83 @@ func SyncFoolWithSliceFoo() {
 
 	// go func(p *sync.Pool) {
 	// }(p)
+}
+
+// 原子操作测试
+func atomicFoo(withAtomicWrite bool) {
+	value := int64(1)
+	// 又读又写协程
+	rwFunc := func() {
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			// fmt.Printf("rwFunc, read %v\n", value)
+			if withAtomicWrite {
+				atomic.AddInt64(&value, 1)
+			} else {
+				value++
+			}
+			fmt.Printf("rwFunc, write %v\n", value)
+		}
+	}
+
+	// 高频读取协程
+	rFunc := func() {
+		ticker := time.NewTicker(time.Millisecond)
+		for range ticker.C {
+			fmt.Printf("rFunc, read %v\n", atomic.LoadInt64(&value))
+		}
+	}
+
+	go rwFunc()
+	go rFunc()
+
+	timer := time.NewTimer(time.Second * 5)
+	<-timer.C
+}
+
+const dequeueBits = 32
+
+func unpack(ptrs uint64) (uint32, uint32) {
+	const mask = 1<<dequeueBits - 1
+	return uint32((ptrs >> dequeueBits) & mask), uint32(ptrs & mask)
+}
+
+func pack(slotCursor, handlerSlicePtr uint32) uint64 {
+	const mask = 1<<dequeueBits - 1
+	return (uint64(slotCursor) << dequeueBits) | uint64(handlerSlicePtr&mask)
+}
+
+func lockFreeDoubleVectorSlice() {
+	const (
+		// 槽数量
+		slotCount = 60
+		// 槽游标
+		slotCursor = 0
+		// 生产者数量
+		producerCount = 1 << 0
+		// 消费者数量
+		consumerCount = 1
+	)
+
+	// 槽和列表，60个槽，每个槽都有一个 slice
+	slots := [slotCount][]int{}
+
+	for index := 0; index != slotCount; index++ {
+		slots[index] = make([]int, 0, 64)
+	}
+
+	// 槽游标，列表聚合指针
+	var cursorHandlerPtr atomic.Uint64
+	// TODO: uintptr 是 uint64，转换成 uint32 会被截断
+	cursorHandlerPtr.Store(pack(slotCursor, uint64(uintptr(unsafe.Pointer(&slots[0])))))
+
+	// 生产者
+	producer := func() {
+
+	}
+
+	// 消费者
+	consumer := func() {
+
+	}
 }

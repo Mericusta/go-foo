@@ -1,6 +1,11 @@
 package builtinfoo
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+	"strconv"
+	"unsafe"
+)
 
 func Float32ZeroDivide() {
 	var zero int
@@ -84,6 +89,38 @@ func BitOp3() {
 		fmt.Printf("- slotIndex = %v, %b\n", slotIndex, slotIndex)
 		fmt.Println()
 	}
+}
+
+func BitOp4() {
+	ss := make([][]int, 0, 10)
+	for index := 0; index != 10; index++ {
+		ss = append(ss, make([]int, 0, 8))
+	}
+	var cursor, slicePtr, mask uint32 = 1, uint32(uintptr(unsafe.Pointer(&ss))), 1<<32 - 1
+	fmt.Printf("cursor = %v\n", cursor)
+	fmt.Printf("slicePtr = %v, uintptr = %v\n", slicePtr, uintptr(unsafe.Pointer(&ss)))
+	fmt.Printf("mask = %v\n", mask)
+}
+
+func BitOp5() {
+	s := make([]int, 0, 10)
+	sPtrUint64Value := uint64(uintptr(unsafe.Pointer(&s)))
+	hexStr := strconv.FormatUint(sPtrUint64Value, 16)
+	fmt.Printf("hexStr = %v\n", hexStr)
+
+	revertPtrUint64Value, err := strconv.ParseUint(hexStr, 16, 64)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("revertPtrUint64Value == sPtrUint64Value = %v\n", revertPtrUint64Value == sPtrUint64Value)
+
+	// atomic.Uint64
+
+	hexStr = strconv.FormatUint(math.MaxUint64, 16)
+	fmt.Printf("hexStr = %v\n", hexStr)
+
+	hexStr = strconv.FormatUint(math.MaxUint64, 36)
+	fmt.Printf("hexStr = %v\n", hexStr)
 }
 
 func Mod() {

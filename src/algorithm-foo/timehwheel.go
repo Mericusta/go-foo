@@ -5,134 +5,153 @@ import (
 	"time"
 )
 
-var TestDuration time.Duration
-var MinScale time.Duration
-var Ticker *time.Ticker
-var TaskTimer *time.Timer
-var ExitTimer *time.Timer
-var ExitChan chan int64
-
-type TimeWheelTask struct {
-	Delay time.Duration
-	GUID  int
-	F     func()
+type Timer struct {
+	expire  int64
+	round   int
+	slot    int
+	payload interface{}
 }
 
 type TimeWheel struct {
-	GUID             int
-	Scale            time.Duration
-	SlotSize         int
-	CurrentSlotIndex int
-	ParentTimeWheel  *TimeWheel
-	TaskListSlice    [][]*TimeWheelTask
+	tick            int64
+	wheelSize       int
+	interval        int64
+	currentTime     int64
+	slots           [][]*Timer
+	next            *TimeWheel
+	addTimerChan    chan *Timer
+	removeTimerChan chan *Timer
+	stopChan        chan struct{}
 }
 
-func (tw *TimeWheel) Run() {
-	fmt.Printf("Timewheel %v run at slot index %v\n", tw.GUID, tw.CurrentSlotIndex)
-	for index, task := range tw.TaskListSlice[tw.CurrentSlotIndex] {
-		if task != nil {
-			task.F()
-		}
-		tw.TaskListSlice[tw.CurrentSlotIndex][index] = nil
+func NewTimeWheel(tick int64, wheelSize int, currentTime int64) *TimeWheel {
+	slots := make([][]*Timer, wheelSize)
+	for i := 0; i < wheelSize; i++ {
+		slots[i] = make([]*Timer, 0)
 	}
-	tw.TaskListSlice[tw.CurrentSlotIndex] = nil
-}
-
-func (tw *TimeWheel) Tick() {
-	fmt.Printf("Timewheel %v tw.CurrentSlotIndex = %v, tw.SlotSize = %v, (tw.CurrentSlotIndex) MOD tw.SlotSize = %v\n", tw.GUID, tw.CurrentSlotIndex, tw.SlotSize, (tw.CurrentSlotIndex)%tw.SlotSize)
-	if tw.CurrentSlotIndex%tw.SlotSize == tw.SlotSize-1 {
-		fmt.Printf("Timewheel %v Round End\n", tw.GUID)
-		tw.CurrentSlotIndex = 0
-		if tw.ParentTimeWheel != nil {
-			tw.ParentTimeWheel.Tick()
-			for _, taskInParentTimeWheel := range tw.ParentTimeWheel.TaskListSlice[tw.ParentTimeWheel.CurrentSlotIndex] {
-				fmt.Printf("Timewheel %v add task %v from parent timewheel %v\n", tw.GUID, taskInParentTimeWheel.GUID, tw.ParentTimeWheel.GUID)
-				tw.AddTask(taskInParentTimeWheel.Delay, taskInParentTimeWheel.F, taskInParentTimeWheel.GUID)
-			}
-		}
-	} else {
-		tw.CurrentSlotIndex++
+	return &TimeWheel{
+		tick:            tick,
+		wheelSize:       wheelSize,
+		interval:        tick * int64(wheelSize),
+		currentTime:     currentTime,
+		slots:           slots,
+		addTimerChan:    make(chan *Timer),
+		removeTimerChan: make(chan *Timer),
+		stopChan:        make(chan struct{}),
 	}
 }
 
-// 任务延迟时间所对轮数 = ((延迟时间 + 当前轮已经过时长) / 刻度 * 槽数) 取整
-// 任务延迟时间所对下标 = (当前轮已经过时长 + (延迟时间 / 刻度) 取整) % 槽数
-// 任务延迟时间指的是定时器达到延迟指定的时刻后，立刻开始执行任务，下标需要-1
-// 任务延迟时间无法被最小轮刻度整除的，在下一个时刻执行
-func (tw *TimeWheel) AddTask(delay time.Duration, op func(), opGUID int) {
-	fmt.Printf("timewheel %v current slot index %v add task %v with delay seconds %v\n", tw.GUID, tw.CurrentSlotIndex, opGUID, delay.Seconds())
-	round := int((delay + tw.Scale*time.Duration(tw.CurrentSlotIndex)) / (tw.Scale * time.Duration(tw.SlotSize)))
-	if round == 0 {
-		index := (tw.CurrentSlotIndex+int(delay/tw.Scale))%tw.SlotSize - 1
-		if index < 0 {
-			index = 0
-		}
-		fmt.Printf("timewheel %v add task %v at round %v index %v\n", tw.GUID, opGUID, round, index)
-		tw.TaskListSlice[index] = append(tw.TaskListSlice[index], &TimeWheelTask{
-			Delay: delay,
-			GUID:  opGUID,
-			F:     op,
-		})
-	} else {
-		if tw.ParentTimeWheel != nil {
-			fmt.Printf("timewheel %v add task %v at parent timewheel %v\n", tw.GUID, opGUID, tw.ParentTimeWheel.GUID)
-			tw.ParentTimeWheel.AddTask(delay-time.Duration(round)*tw.Scale*time.Duration(tw.SlotSize), op, opGUID)
-		} else {
-			fmt.Printf("task %v is out of time range\n", opGUID)
-		}
-	}
-	fmt.Printf("\n")
+func (tw *TimeWheel) AddTimer(t *Timer) {
+	tw.addTimerChan <- t
 }
 
-var tw *TimeWheel
+func (tw *TimeWheel) RemoveTimer(t *Timer) {
+	tw.removeTimerChan <- t
+}
 
-func TickerRun() {
+func (tw *TimeWheel) Start() {
+	go tw.run()
+}
+
+func (tw *TimeWheel) Stop() {
+	close(tw.stopChan)
+}
+
+func (tw *TimeWheel) run() {
+	ticker := time.NewTicker(time.Duration(tw.tick) * time.Millisecond)
 	for {
 		select {
-		// 添加任务必须在改变 Tick 之前添加
-		case <-TaskTimer.C:
-			fmt.Printf("\nTask Timer Add Task\n")
-			tw.AddTask(2*time.Second, func() { fmt.Printf("Task 4\n") }, 4)
-		case <-Ticker.C:
-			fmt.Printf("\nTick On Slot Index %v, Second %v\n", tw.CurrentSlotIndex, tw.CurrentSlotIndex+1)
-			tw.Run()
-			tw.Tick()
-		case <-ExitTimer.C:
-			fmt.Printf("\nTime's up\n")
-			ExitChan <- time.Now().Unix()
+		case <-ticker.C:
+			tw.advance()
+		case t := <-tw.addTimerChan:
+			tw.add(t)
+		case t := <-tw.removeTimerChan:
+			tw.remove(t)
+		case <-tw.stopChan:
+			ticker.Stop()
 			return
 		}
 	}
 }
 
+func (tw *TimeWheel) advance() {
+	tw.currentTime += tw.tick
+	idx := (tw.currentTime / tw.tick) % int64(tw.wheelSize)
+	timers := tw.slots[idx]
+	tw.slots[idx] = []*Timer{}
+	for _, t := range timers {
+		if t.round > 0 {
+			t.round--
+			tw.add(t)
+		} else {
+			go tw.trigger(t)
+		}
+	}
+}
+
+func (tw *TimeWheel) add(t *Timer) {
+	if t.expire < tw.currentTime {
+		go tw.trigger(t)
+		return
+	}
+	if t.expire < tw.currentTime+tw.interval {
+		idx := (t.expire / tw.tick) % int64(tw.wheelSize)
+		t.slot = int(idx)
+		tw.slots[idx] = append(tw.slots[idx], t)
+	} else if tw.next != nil {
+		tw.next.AddTimer(t)
+	} else {
+		go tw.trigger(t)
+	}
+}
+
+func (tw *TimeWheel) remove(t *Timer) {
+	idx := (t.expire / tw.tick) % int64(tw.wheelSize)
+	slot := tw.slots[idx]
+	for i, timer := range slot {
+		if timer == t {
+			tw.slots[idx] = append(slot[:i], slot[i+1:]...)
+			return
+		}
+	}
+}
+
+func (tw *TimeWheel) trigger(t *Timer) {
+	fmt.Println("Timer triggered:", t.payload)
+}
+
 func timewheelFoo() {
-	MinScale = time.Second
-	tw = &TimeWheel{
-		GUID:     1,
-		Scale:    MinScale,
-		SlotSize: 5,
-	}
-	tw.TaskListSlice = make([][]*TimeWheelTask, tw.SlotSize)
+	tw1 := NewTimeWheel(100, 10, 0)   // 每个槽 100 毫秒，共 10 个槽，总时间 1 秒
+	tw2 := NewTimeWheel(1000, 10, 0)  // 每个槽 1 秒，共 10 个槽，总时间 10 秒
+	tw3 := NewTimeWheel(10000, 10, 0) // 每个槽 10 秒，共 10 个槽，总时间 100 秒
 
-	tw.ParentTimeWheel = &TimeWheel{
-		GUID:     2,
-		Scale:    tw.Scale * time.Duration(tw.SlotSize),
-		SlotSize: 6,
-	}
-	tw.ParentTimeWheel.TaskListSlice = make([][]*TimeWheelTask, tw.SlotSize)
+	// 设置多级时间轮
+	tw1.next = tw2
+	tw2.next = tw3
 
-	tw.AddTask(1*time.Second, func() { fmt.Printf("Execute Task 1\n") }, 1) // 0 - 0
-	tw.AddTask(3*time.Second, func() { fmt.Printf("Execute Task 2\n") }, 2) // 0 - 2
-	tw.AddTask(9*time.Second, func() { fmt.Printf("Execute Task 3\n") }, 3) // 1 - 0 -> 0 - 3
+	tw1.Start()
+	tw2.Start()
+	tw3.Start()
 
-	Ticker = time.NewTicker(tw.Scale)
-	TestDuration = MinScale * 10
-	ExitTimer = time.NewTimer(TestDuration)
-	TaskTimer = time.NewTimer(time.Second * 4)
-	ExitChan = make(chan int64)
+	defer tw1.Stop()
+	defer tw2.Stop()
+	defer tw3.Stop()
 
-	go TickerRun()
+	// 添加定时器
+	now := time.Now().UnixNano() / int64(time.Millisecond)
+	tw1.AddTimer(&Timer{
+		expire:  now + 1500, // 1.5 秒后触发
+		payload: "Timer 1",
+	})
+	tw1.AddTimer(&Timer{
+		expire:  now + 6500, // 6.5 秒后触发
+		payload: "Timer 2",
+	})
+	tw1.AddTimer(&Timer{
+		expire:  now + 25000, // 25 秒后触发
+		payload: "Timer 3",
+	})
 
-	exitUnix := <-ExitChan
-	fmt.Printf("exit at unix %v\n", time.Unix(exitUnix, 0))
+	// 运行一段时间以查看输出
+	time.Sleep(30 * time.Second)
 }

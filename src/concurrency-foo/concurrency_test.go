@@ -40,3 +40,28 @@ func TestSyncFoolWithSliceFoo(t *testing.T) {
 		})
 	}
 }
+
+func Test_atomicFoo(t *testing.T) {
+	type args struct {
+		withAtomicWrite bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{withAtomicWrite: false},
+		},
+		// {
+		// 	"test case 1",
+		// 	args{true},
+		// },
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			atomicFoo(tt.args.withAtomicWrite)
+		})
+	}
+}
