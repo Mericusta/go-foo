@@ -1,3 +1,8 @@
+// Package queue provides a lock-free queue and two-Lock concurrent queue which use the algorithm proposed by Michael and Scott.
+// https://doi.org/10.1145/248052.248106.
+//
+// see pseudocode at https://www.cs.rochester.edu/research/synchronization/pseudocode/queues.html
+// It will be refactored after go generic is released.
 package benchmarkfoo
 
 import (
@@ -5,86 +10,74 @@ import (
 	"unsafe"
 )
 
-// Queue implements lock-free FIFO freelist based queue.
-// ref: https://dl.acm.org/citation.cfm?doid=248052.248106
-type Queue[T any] struct {
+// LKQueue is a lock-free unbounded queue.
+type LKQueue[T any] struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
-	len  uint64
 }
 
-// NewQueue creates a new lock-free queue.
-func NewQueue[T any]() *Queue[T] {
-	head := directItem[T]{next: nil, v: getZero[T]()} // allocate a free item
-	return &Queue[T]{
-		tail: unsafe.Pointer(&head), // both head and tail points
-		head: unsafe.Pointer(&head), // to the free item
-	}
+type node[T any] struct {
+	value T
+	next  unsafe.Pointer
+}
+
+// NewLKQueue returns an empty queue.
+func NewLKQueue[T any]() *LKQueue[T] {
+	n := unsafe.Pointer(&node[T]{})
+	return &LKQueue[T]{head: n, tail: n}
 }
 
 // Enqueue puts the given value v at the tail of the queue.
-func (q *Queue[T]) Enqueue(v T) {
-	i := &directItem[T]{next: nil, v: v} // allocate new item
-	var last, lastnext *directItem[T]
+func (q *LKQueue[T]) Enqueue(v T) {
+	n := &node[T]{value: v}
 	for {
-		last = loaditem[T](&q.tail)
-		lastnext = loaditem[T](&last.next)
-		if loaditem[T](&q.tail) == last { // are tail and next consistent?
-			if lastnext == nil { // was tail pointing to the last node?
-				if casitem(&last.next, lastnext, i) { // try to link item at the end of linked list
-					casitem(&q.tail, last, i) // enqueue is done. try swing tail to the inserted node
-					atomic.AddUint64(&q.len, 1)
+		tail := load[T](&q.tail)
+		next := load[T](&tail.next)
+		if tail == load[T](&q.tail) { // are tail and next consistent?
+			if next == nil {
+				if cas(&tail.next, next, n) {
+					cas(&q.tail, tail, n) // Enqueue is done.  try to swing tail to the inserted node
 					return
 				}
 			} else { // tail was not pointing to the last node
-				casitem(&q.tail, last, lastnext) // try swing tail to the next node
+				// try to swing Tail to the next node
+				cas(&q.tail, tail, next)
 			}
 		}
 	}
 }
 
 // Dequeue removes and returns the value at the head of the queue.
-// It returns nil if the queue is empty.
-func (q *Queue[T]) Dequeue() (T, bool) {
-	var first, last, firstnext *directItem[T]
+// It returns the zero value if the queue is empty.
+func (q *LKQueue[T]) Dequeue() T {
+	var t T
 	for {
-		first = loaditem[T](&q.head)
-		last = loaditem[T](&q.tail)
-		firstnext = loaditem[T](&first.next)
-		if first == loaditem[T](&q.head) { // are head, tail and next consistent?
-			if first == last { // is queue empty?
-				if firstnext == nil { // queue is empty, couldn't dequeue
-					return getZero[T](), false
+		head := load[T](&q.head)
+		tail := load[T](&q.tail)
+		next := load[T](&head.next)
+		if head == load[T](&q.head) { // are head, tail, and next consistent?
+			if head == tail { // is queue empty or tail falling behind?
+				if next == nil { // is queue empty?
+					return t
 				}
-				casitem(&q.tail, last, firstnext) // tail is falling behind, try to advance it
-			} else { // read value before cas, otherwise another dequeue might free the next node
-				v := firstnext.v
-				if casitem(&q.head, first, firstnext) { // try to swing head to the next node
-					atomic.AddUint64(&q.len, ^uint64(0))
-					return v, true // queue was not empty and dequeue finished.
+				// tail is falling behind.  try to advance it
+				cas(&q.tail, tail, next)
+			} else {
+				// read value before CAS otherwise another dequeue might free the next node
+				v := next.value
+				if cas(&q.head, head, next) {
+					return v // Dequeue is done.  return
 				}
 			}
 		}
 	}
 }
 
-// Length returns the length of the queue.
-func (q *Queue[T]) Length() uint64 {
-	return atomic.LoadUint64(&q.len)
+func load[T any](p *unsafe.Pointer) (n *node[T]) {
+	return (*node[T])(atomic.LoadPointer(p))
 }
 
-type directItem[T any] struct {
-	next unsafe.Pointer
-	v    T
-}
-
-func loaditem[T any](p *unsafe.Pointer) *directItem[T] {
-	return (*directItem[T])(atomic.LoadPointer(p))
-}
-func casitem[T any](p *unsafe.Pointer, old, new *directItem[T]) bool {
-	return atomic.CompareAndSwapPointer(p, unsafe.Pointer(old), unsafe.Pointer(new))
-}
-func getZero[T any]() T {
-	var result T
-	return result
+func cas[T any](p *unsafe.Pointer, old, new *node[T]) (ok bool) {
+	return atomic.CompareAndSwapPointer(
+		p, unsafe.Pointer(old), unsafe.Pointer(new))
 }
