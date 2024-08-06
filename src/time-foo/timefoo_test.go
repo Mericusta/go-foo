@@ -1,6 +1,8 @@
 package timefoo
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_tickerAndSleep(t *testing.T) {
 	type args struct {
@@ -19,6 +21,22 @@ func Test_tickerAndSleep(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tickerAndSleep(tt.args.count)
+		})
+	}
+}
+
+func Test_zoneDifference(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			zoneDifference()
 		})
 	}
 }

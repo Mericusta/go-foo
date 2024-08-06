@@ -1,23 +1,27 @@
-package timingwheel
+package moduleTimingWheel
 
 import (
-	"fmt"
 	"time"
+
+	sgs "github.com/Mericusta/go-sgs"
 )
 
-// tickHandler 时刻行为
-type tickHandler struct {
-	id            string        // 唯一标识
-	delay         time.Duration // 多久后触发
-	placeCounter  int           // 放置时的计数器
-	expectCounter int           // 预期的计数器
+type ITickHandler interface {
+	Delay() time.Duration
+	Update(time.Duration)
+	Trigger(sgs.IModuleEventContext, ...any)
+
+	// 调试接口
+	String() string
+
+	GetPlaceCounter() int
+	SetPlaceCounter(int)
+
+	GetExpectCounter() int
+	SetExpectCounter(int)
+
+	SetUID(int)
+	GetUID() int
 }
 
-// NewTickerHandler 新建一个时刻行为
-func NewTickerHandler(id string, delay time.Duration) *tickHandler {
-	return &tickHandler{id: id, delay: delay}
-}
-
-func (th *tickHandler) String() string {
-	return fmt.Sprintf("[id %v, place at %vs, expect at %vs]", th.id, th.placeCounter, th.expectCounter)
-}
+// TODO: base tick handler

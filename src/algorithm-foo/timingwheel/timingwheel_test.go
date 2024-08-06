@@ -1,19 +1,16 @@
-package timingwheel
+package moduleTimingWheel
 
 import (
-	"fmt"
 	"testing"
 	"time"
-
-	"golang.org/x/exp/rand"
 )
 
 func Test_timingWheel(t *testing.T) {
 	// 新建一个时间轮
-	timingWheel := NewTimingWheel()
+	timingWheel := Service.New()
 
 	// 挂载时间轮轮盘的刻度
-	err := timingWheel.MountSeriesTimingWheelRound(
+	err := timingWheel.mountSeriesTimingWheelRound(
 		RoundMinute,
 		RoundHour,
 		RoundDay,
@@ -24,32 +21,33 @@ func Test_timingWheel(t *testing.T) {
 	}
 
 	// 挂载初始任务
-	err = timingWheel.AddTickerHandler(
-		NewTickerHandler("uid_init_0", 0),
-		NewTickerHandler("uid_init_15s", time.Second*15),
-		NewTickerHandler("uid_init_1min", time.Minute),
-		NewTickerHandler("uid_init_1min15s", time.Second*15+time.Minute),
-		NewTickerHandler("uid_init_1h", time.Hour),
-		NewTickerHandler("uid_init_1h1min15s", time.Second*15+time.Minute+time.Hour),
-		NewTickerHandler("uid_init_1d1h1min15s", time.Second*15+time.Minute+time.Hour+time.Hour*24),
+	err = timingWheel.addTickerHandler(
+	// obj.NewTimingBehavior("uid_init_0", 0, "behavior"),
+	// obj.NewTimingBehavior("uid_init_15s", time.Second*15, "behavior"),
+	// obj.NewTimingBehavior("uid_init_1min", time.Minute, "behavior"),
+	// obj.NewTimingBehavior("uid_init_1min15s", time.Second*15+time.Minute, "behavior"),
+	// obj.NewTimingBehavior("uid_init_1h", time.Hour, "behavior"),
+	// obj.NewTimingBehavior("uid_init_1h1min15s", time.Second*15+time.Minute+time.Hour, "behavior"),
+	// obj.NewTimingBehavior("uid_init_1d1h1min15s", time.Second*15+time.Minute+time.Hour+time.Hour*24, "behavior"),
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	// 运行过程中随机挂载任务
-	go func(tw ITimingWheel) {
+	go func(tw *ModuleTimingWheel) {
 		uid := 0
 		t := time.NewTicker(time.Second)
 		for range t.C {
 			uid++
-			delay := time.Second * time.Duration(rand.Intn(60))
-			handler := NewTickerHandler(fmt.Sprintf("uid_%v", uid), delay)
-			err := tw.AddTickerHandler(handler)
-			if err != nil {
-				fmt.Printf("add ticker handler %s occurs error: %v\n", handler, err)
-			}
+			// delay := time.Second * time.Duration(rand.Intn(60))
+			// handler := obj.NewTimingBehavior(fmt.Sprintf("uid_%v", uid), delay, "behavior")
+			// err := tw.AddTickerHandler(handler)
+			// if err != nil {
+			// 	fmt.Printf("add ticker handler %s occurs error: %v\n", handler, err)
+			// }
 		}
+
 		// roundPosition := 8
 		// delay := time.Second * 55
 		// t := time.NewTimer(time.Second * time.Duration(roundPosition))
@@ -58,8 +56,5 @@ func Test_timingWheel(t *testing.T) {
 	}(timingWheel)
 
 	// 启动时间轮
-	err = timingWheel.Start()
-	if err != nil {
-		panic(err)
-	}
+	timingWheel.Run()
 }

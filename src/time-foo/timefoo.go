@@ -27,3 +27,13 @@ func tickerAndSleep(count int) {
 		}
 	}
 }
+
+func zoneDifference() {
+	nowUnix := time.Now().Unix()
+	nowLocalUnix := time.Now().Local().Unix()
+	fmt.Println("nowUnix", nowUnix, "nowLocalUnix", nowLocalUnix, "equal", nowUnix == nowLocalUnix)
+	nowUTCStr := time.Now().UTC().String()
+	nowLocalStr := time.Now().Local().String()
+	fmt.Println("nowUTCStr", nowUTCStr)
+	fmt.Println("nowLocalStr", nowLocalStr)
+}

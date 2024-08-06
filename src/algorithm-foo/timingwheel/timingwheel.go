@@ -1,198 +1,126 @@
-package timingwheel
+package moduleTimingWheel
 
 import (
 	"fmt"
-	"sync/atomic"
+	"sort"
 	"time"
-	"unsafe"
+
+	sgs "github.com/Mericusta/go-sgs"
+	"go.uber.org/zap"
 )
 
-type ITimingWheel interface {
-	// AddTickerHandler 在时间轮中添加时刻行为
-	AddTickerHandler(...*tickHandler) error
+var (
+	errorTimingWheelAlreadyRunning          error = fmt.Errorf("timing wheel already running")
+	errorTimingWheelRoundAlreadyExists      error = fmt.Errorf("timing wheel round already exists")
+	errorInvalidTimingWheelConcurrencyCount error = fmt.Errorf("timing wheel concurrency count is invalid")
+	errorTimingWheelDiscNotExists           error = fmt.Errorf("timing wheel disc not exists")
+)
+
+var (
+	DefaultTick             time.Duration = time.Second // 默认最小刻度
+	DefaultConcurrencyCount int           = 1           // 默认并发数
+)
+
+// ModuleTimingWheel 时间轮模块
+type ModuleTimingWheel struct {
+	// 组合基础模块
+	sgs.ModuleBase
+
+	uidGenerator     int                 // ID 生成器
+	rounds           []*timingWheelRound // 时间刻度
+	pointer          *timingWheelPointer // 时间轮的指针
+	initTickHandlers []ITickHandler      // 时间轮的初始时刻挂载的行为
 }
 
-// timingWheelDisc 时间轮轮盘
-type timingWheelDisc struct {
-	// 位置 - 行为列表 聚合指针
-	rhsPtr atomic.Uintptr
-	// TODO: 挂一个引用防止被 GC
-	rhs           *roundHandlers
-	roundPosition int64 // 当前轮盘所处周期内的位置
-	// TODO: 暂时使用 slice 来处理,后续改成 lock-free queue
-	slots [][]*tickHandler  // 该轮盘下所有槽位的待执行行为，所有行为均采用进入时执行
-	round *timingWheelRound // 刻度x槽位=当前轮一周期的总时长
-	next  *timingWheelDisc  // 下一级轮，必须比当前轮的刻度大
-}
+// 时间轮有精度问题，可以通过添加更高精度的时间轮盘来解决
+// 精度问题举例：假如当前高精度是1s，那么嵌套的轮盘的 slot 分布如下所示
+// |   轮盘  | slot                                                            ...|
+// |小时级轮盘| 0                                                               ...|
+// |分钟级轮盘| 0                                1                              ...|
+// |秒钟级轮盘| 0 1 2 3 4 5 ... 55 56 57 58 59 | 0 1 2 3 4 5 ... 55 56 57 58 59 ...|
+// - 初始启动时，立刻执行秒钟级轮盘 slot 0 的所有行为，指针 round 为 0
+// - tick 时的执行顺序如下：
+//   - 触发 tick，获取需要执行的行为
+//   - 轮盘的指针发生变化 round++
+//   - 客观计数器发生变化 counter++
+//   - 执行 handler
+// - 假设存在某个行为：每 n 秒执行一次，需要应用层在执行时手动添加下一次执行
+// - 假设在秒钟级轮盘 slot 2 添加行为，那么预期的执行 round/counter 是 2+n
+// - 假设当前正在进行 2+n 的 tick 的逻辑，由于 tick 和 add 在同一协程下阻塞执行，所以执行流程如下：
+//   - round 2+n -> 2+n+1
+//   - counter 2+n -> 2+n+1
+//   - 执行 handler，然后添加行为，此时 round 和 counter 已经是 2+n+1
+// - 由此，会导致 执行行为 和 添加行为 分布在两个不同的 round/counter 中，这两个不同的 round/counter 的差值就是最高精度的值
+// - 要解决以上问题，可以提供一个 recycle 行为模式，将 执行行为 和 添加行为 包装在一起，从而使得 round/counter 没有差值
 
-type roundHandlers struct {
-	roundPosition   int64
-	tickHandlersPtr unsafe.Pointer
-}
+func (mtw *ModuleTimingWheel) Mounted() {
+	mtw.Logger().Debug("OBSERVE: Mounted, mount series timing wheel rounds", zap.Any("rounds", mtw.rounds))
 
-// newTimingWheelDisc 新建一个时间轮轮盘
-// @param1            刻度
-// @param2            下一级时间轮轮盘
-func newTimingWheelDisc(round *timingWheelRound, next *timingWheelDisc) *timingWheelDisc {
-	slots := make([][]*tickHandler, round.slot)
-	for index := int64(0); index != round.slot; index++ {
-		slots[index] = nil
+	if len(mtw.rounds) == 0 {
+		// 没有指定轮盘刻度
+		return
+	}
+	err := mtw.mountSeriesTimingWheelRound(mtw.rounds...)
+	if err != nil {
+		panic(err)
 	}
 
-	twd := &timingWheelDisc{round: round, slots: slots, next: next}
-	// rhs := &roundHandlers{roundPosition: 0, tickHandlersPtr: unsafe.Pointer(&slots[0])}
-	// twd.rhsPtr.Store(uintptr(unsafe.Pointer(rhs)))
-	return twd
+	mtw.uidGenerator = 0
 }
 
-// newSeriesTimingWheelDisc 新建一系列时间轮轮盘
-// @param                   系列刻度
-func newSeriesTimingWheelDisc(rounds ...*timingWheelRound) *timingWheelDisc {
-	// 构造
-	timingWheels := make([]*timingWheelDisc, 0, len(rounds))
-	for _, round := range rounds {
-		timingWheels = append(timingWheels, newTimingWheelDisc(round, nil))
-	}
-	// 转换成链表
-	for i, tw := range timingWheels {
-		if i == 0 {
+// mountSeriesTimingWheelRound 挂载一系列时间刻度
+func (mtw *ModuleTimingWheel) mountSeriesTimingWheelRound(rounds ...*timingWheelRound) error {
+	// 去重，去错
+	roundsMap := make(map[time.Duration]int)
+	for index, round := range rounds {
+		if round == nil || time.Duration(round.slot)*round.tick == 0 {
 			continue
 		}
-		timingWheels[i-1].next = tw
+		roundsMap[round.tick] = index
 	}
-	if len(timingWheels) == 0 {
-		return nil
+	// 排序
+	_rounds := make([]*timingWheelRound, 0, len(roundsMap))
+	for _, index := range roundsMap {
+		_rounds = append(_rounds, rounds[index])
 	}
-	return timingWheels[0]
+	sort.Slice(_rounds, func(i, j int) bool { return _rounds[i].tick < _rounds[j].tick })
+	// 设置
+	mtw.pointer = newTimingWheelPointer(newSeriesTimingWheelDisc(rounds...))
+	return nil
 }
 
-// tick 时间轮盘前进
-func (twd *timingWheelDisc) tick(pointer *timingWheelPointer) []*tickHandler {
-	// rhs := &roundHandlers{roundPosition: twd.roundPosition + 1, tickHandlersPtr: nil}
-	// oldRhsPtr := twd.rhsPtr.Swap(uintptr(unsafe.Pointer(rhs)))
-	// oldRhs := (*roundHandlers)(unsafe.Pointer(oldRhsPtr))
+// Start 启动时间轮
+func (mtw *ModuleTimingWheel) Run() {
+	mtw.Logger().Debug("OBSERVE: Run")
 
-	// 获取并清空当前 tick 的行为列表
-	handlers := twd.slots[twd.roundPosition]
-	twd.slots[twd.roundPosition] = nil
-	// 所处周期内的位置发生变化
-	twd.roundPosition++
-
-	// 达到当前周期最大值时，进位
-	if twd.roundPosition == twd.round.slot {
-		// 重置当前轮盘的位置
-		twd.roundPosition = 0
-		fmt.Printf("timingWheelDisc.tick, current %s, reach disc round %vs, reset round position\n", twd.round, twd.round.duration.Seconds())
-		// 下一级时间轮盘前进
-		if twd.next != nil {
-			// 获得下一级时间轮的行为列表
-			nextRoundHandlers := twd.next.tick(pointer)
-			fmt.Printf("timingWheelDisc.tick, current %s, get and place from next round %s handlers count %v\n", twd.round, twd.next.round, len(nextRoundHandlers))
-			// 将行为放置到当前轮盘合适的槽内
-			for _, handler := range nextRoundHandlers {
-				twd.place(handler)
-			}
-		} else {
-			// TODO: 从无限时间轮中获取若干可以放置到当前时间轮下的行为
-		}
-	}
-
-	return handlers
+	mtw.pointer.start(mtw)
 }
 
-// place 放置行为
-func (twd *timingWheelDisc) place(handler *tickHandler) {
-	// 使用指针所在的位置和进位的偏移量计算 handler 的相对时刻
-	relativeDuration := time.Duration(twd.roundPosition)*twd.round.tick + handler.delay
-	// 超过当前周期的总时长
-	if relativeDuration > twd.round.duration {
-		// 进位减去当前刻度的周期
-		handler.delay = relativeDuration - twd.round.duration
-		twd.next.place(handler)
-		return
-	}
-	// handler 的合适的位置
-	placePosition := int64(relativeDuration/twd.round.tick) - 1
-	if placePosition >= twd.round.slot {
-		fmt.Printf("timingWheelDisc.place, handler %s, in %s invalid place position %v, relativeDuration %vs\n", handler, twd.round, placePosition, relativeDuration.Seconds())
-		return
-	} else if placePosition < 0 {
-		placePosition = 0
-	}
-	// 放入到指定位置的队列中
-	fmt.Printf("timingWheelDisc.place, handler %v, place to %s position %v, relativeDuration %vs\n", handler, twd.round, placePosition, relativeDuration.Seconds())
-	twd.slots[placePosition] = append(twd.slots[placePosition], handler)
-}
-
-// timingWheelPointer 时间轮的指针，指针的顶层轮盘决定每次 tick 经过多久
-type timingWheelPointer struct {
-	ticker *time.Ticker     // 直接依赖 golang 的 ticker，它是 runtime 实现的
-	disc   *timingWheelDisc // 当前时间轮的指针所使用的轮盘
-	// TODO: 暂时使用 chan 来接收行为,后续改成 lock-free queue
-	receiver chan *tickHandler // 接收时刻行为的 chan
-	// debug
-	counter int // 计数器
-}
-
-// newTimingWheelPointer 新建时间轮指针
-func newTimingWheelPointer(disc *timingWheelDisc) *timingWheelPointer {
-	return &timingWheelPointer{
-		ticker:   time.NewTicker(disc.round.tick),
-		disc:     disc,
-		receiver: make(chan *tickHandler, 256), // 每个 tick 超过 256 个行为可能会导致精度下降（TODO: 这里应该是所有 disc 的可接收数量加起来，暂时使用最低精度的）
-	}
-}
-
-// start 启动时间轮指针
-func (tmp *timingWheelPointer) start() {
-	// 执行启动时，即0秒的行为
-	for {
-		select {
-		case <-tmp.ticker.C: // 首次 tick 是经过了 disc.round.tick 时间之后的
-			// TODO: 这里有可能因为 tmp.receiver 中阻塞
-			// 进入第 counter 秒
-			tmp.counter++
-			// TODO: 这里有可能因为执行时间过长而导致精度下降
-			tmp.tick()
-		case handler, ok := <-tmp.receiver: // TODO: 有了 lock-free queue 之后不再使用这种形式
-			// TODO: 这里有可能因为 ticker.C 中阻塞住导致 receiver 达到上限而被阻塞
-			if !ok {
-				// TODO: log
-				continue
-			}
-			// 小于最低级时间轮盘的最小刻度直接执行
-			if handler.delay <= tmp.disc.round.tick {
-				fmt.Printf("trigger tick handler %s, trigger at counter %vs\n", handler, tmp.counter)
-			} else {
-				if tmp.counter != handler.placeCounter {
-					fmt.Printf("timingWheelPointer.start, receive and place handler %s at counter %vs not equal\n", handler, tmp.counter)
-				}
-				tmp.disc.place(handler)
-			}
-		}
-	}
-}
-
-// tick 时间轮指针前进
-func (tmp *timingWheelPointer) tick() {
-	// 指针所用的轮盘前进
-	tickHandlers := tmp.disc.tick(tmp)
-	for _, handler := range tickHandlers {
-		fmt.Printf("trigger tick handler %s, trigger at counter %vs\n", handler, tmp.counter)
-	}
-}
-
-// AddTickerHandler 在时间轮中添加时刻行为
-func (tmp *timingWheelPointer) addTickerHandler(ths ...*tickHandler) error {
-	if tmp.disc == nil {
+// addTickerHandler 添加时刻回调
+func (mtw *ModuleTimingWheel) addTickerHandler(ths ...ITickHandler) error {
+	if mtw.pointer == nil {
 		return errorTimingWheelDiscNotExists
 	}
-	for _, handler := range ths {
-		// 	tmp.disc.place(th, 0, nil)
-		handler.placeCounter = tmp.counter
-		handler.expectCounter = tmp.counter + int(handler.delay/time.Second)
-		fmt.Printf("timingWheelPointer.AddTickerHandler %s delay %vs at counter %vs\n", handler, handler.delay.Seconds(), tmp.counter)
-		tmp.receiver <- handler
+	for _, th := range ths {
+		mtw.uidGenerator++
+		th.SetUID(mtw.uidGenerator)
 	}
-	return nil
+	return mtw.pointer.addTickerHandler(ths...)
+}
+
+func (mtw *ModuleTimingWheel) HandleEvent(event *sgs.ModuleEvent) {
+	switch data := event.Data().(type) {
+	case ITickHandler:
+		mtw.handleTimingBehavior(data)
+	default:
+		// 处理 原生 ModuleEvent
+		panic("default")
+	}
+}
+
+func (mtw *ModuleTimingWheel) handleTimingBehavior(timingBehavior ITickHandler) {
+	err := mtw.addTickerHandler(timingBehavior)
+	if err != nil {
+		panic(err)
+	}
 }

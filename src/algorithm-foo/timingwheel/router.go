@@ -1,5 +1,6 @@
-package timingwheel
+package moduleTimingWheel
 
+// TODO:
 // ITimingWheelRouter 时间轮路由器接口
 type ITimingWheelRouter interface {
 	// PointerCount 挂载到路由器的时间轮的指针数量
@@ -20,19 +21,3 @@ var DefaultRouter *timingWheelRouter = &timingWheelRouter{pointerCount: 1}
 func (twr *timingWheelRouter) PointerCount() int {
 	return twr.pointerCount
 }
-
-// func (twr *TimingWheelRouter) mountPointer(pointer *timingWheelPointer) error {
-// 	twr.pointers = append(twr.pointers, pointer)
-// 	return nil
-// }
-
-// func (twr *TimingWheelRouter) Route(ths ...*tickHandler) error {
-// 	for index, th := range ths {
-// 		twr.pointers[index%twr.counter].disc.place(th, 0)
-// 	}
-// 	return nil
-// }
-
-// func (twr *TimingWheelRouter) Slot(index int) {
-
-// }
