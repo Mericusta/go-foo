@@ -346,30 +346,6 @@ func PriorityChannel() {
 	wg.Wait()
 }
 
-// 关闭一个 buffer 中还有数据的 channel 时
-// channel 的接收协程的表现
-func closeBufferChannelFoo() {
-	count := 16
-	c := make(chan int, count)
-	for index := 0; index != count; index++ {
-		c <- index
-	}
-
-	close(c)
-
-	for {
-		select {
-		case v, ok := <-c:
-			fmt.Printf("receive v %v, ok %v\n", v, ok)
-			if !ok {
-				fmt.Printf("receive close\n")
-				goto EXIT
-			}
-		}
-	}
-EXIT:
-}
-
 // select case 中同时存在已关闭和未关闭的 channel
 func SelectClosedAndUnclosedChannelFoo() {
 	wg := sync.WaitGroup{}
@@ -704,11 +680,84 @@ func NoBlockSend() {
 	wg.Wait()
 }
 
-// 非阻塞接收
-func NoBlockRecv() {
-	// noBufferRecvChan := make(chan int)
+// 构造带有 buffer 的 chan 后预发送，后开启监听
+// 先发送的不会阻塞，后监听的可以处理之前发送的
+// 切忌监听时使用 for range 会有引用的问题
+func PreSendToBufferedChannel() {
+	c := make(chan int, 64)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-	for index := 0; index != 3; index++ {
+	go func() {
+		index := 0
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			if index < 10 {
+				index++
+				c <- index
+				fmt.Printf("send c %v at %v\n", index, time.Now())
+			} else {
+				close(c)
+				wg.Done()
+				return
+			}
+		}
+	}()
 
+	go func() {
+		time.Sleep(time.Second * 5)
+		for {
+			select {
+			case v, ok := <-c:
+				if !ok {
+					wg.Done()
+					return
+				}
+				fmt.Printf("receive c %v at %v\n", v, time.Now())
+			}
+		}
+	}()
+
+	wg.Wait()
+}
+
+// 关闭一个 buffer 中还有数据的 channel 时
+// channel 的接收协程的表现
+// 还未监听时关闭，则开启监听后依次处理完其中的内容
+// 监听时关闭，则依次处理完其中的内容
+func closeBufferChannelFoo() {
+	count := 16
+	c := make(chan int, count)
+	for index := 0; index != count; index++ {
+		c <- index
 	}
+
+	select {
+	case c <- 999:
+		fmt.Printf("send to full chan ok")
+	default:
+	}
+	fmt.Printf("send to full chan failed\n")
+
+	close(c)
+
+	select {
+	case c <- 999:
+		fmt.Printf("send to closed chan ok")
+	default:
+		fmt.Printf("send to closed chan default")
+	}
+	fmt.Printf("send to closed chan failed")
+
+	for {
+		select {
+		case v, ok := <-c:
+			fmt.Printf("receive v %v, ok %v\n", v, ok)
+			if !ok {
+				fmt.Printf("receive close\n")
+				goto EXIT
+			}
+		}
+	}
+EXIT:
 }

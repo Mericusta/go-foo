@@ -79,3 +79,36 @@ func TestCalculateNumberLenByLog(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateDigits(t *testing.T) {
+	type args struct {
+		v int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			args{v: 9},
+		},
+		{
+			"test case 1",
+			args{v: 99},
+		},
+		{
+			"test case 1",
+			args{v: 999},
+		},
+		{
+			"test case 1",
+			args{v: 9999},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			CalculateDigits(tt.args.v)
+		})
+	}
+}

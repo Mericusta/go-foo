@@ -1,6 +1,9 @@
 package algorithmfoo
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 func CalculateNumberLenByCycling(n int) int {
 	l := 0
@@ -24,4 +27,10 @@ func CalculateNumberLenByRecursive(n int) int {
 
 func CalculateNumberLenByLog(n int) int {
 	return int(math.Log10(float64(n))) + 1
+}
+
+func CalculateDigits(v int) {
+	digits := int(math.Log10(float64(v))) + 1
+	fmt.Println("v", v, "digits is", digits)
+	fmt.Println("Pow10", int64(math.Pow10(digits)))
 }
