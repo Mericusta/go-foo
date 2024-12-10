@@ -2,6 +2,7 @@ package genericfoo
 
 import (
 	"fmt"
+	"go/ast"
 )
 
 // 真·接口
@@ -265,4 +266,80 @@ func register[T any, C any](m map[ProtocolID]func(C, MessageProtocol), handler f
 	}
 	m[msgID] = f
 	return msgID
+}
+
+// 类型约束 的 变量 无法断言为 约束的具体类型
+
+type ExampleStruct struct{}
+
+type ExampleTypeConstraints interface {
+	*ExampleStruct
+}
+
+func TypeAssertTypeConstraintsFoo[T ExampleTypeConstraints](v T) {
+	// _ = v.(*ExampleStruct) -> 无法断言
+
+	// 可以用如下方式使用：类型约束的变量赋值为具体类型的变量上
+	var _es *ExampleStruct = v
+	fmt.Printf("%v\n", _es)
+}
+
+// 函数通过类型推导返回的 带有具体类型的泛型结构体 无法赋值给 具有相同类型约束 的 结构体变量
+type meta[T ast.Node] struct {
+	node T
+}
+
+func newMeta[T ast.Node](node T) *meta[T] {
+	return &meta[T]{node: node}
+}
+
+type GoFileMetaTypeConstraints interface {
+	*ast.File
+
+	ast.Node
+}
+
+type GoFileMeta[T GoFileMetaTypeConstraints] struct {
+	// 组合基本 meta 数据
+	// ast 节点，要求为 *ast.File
+	// 以 ast 节点 为单位执行 AST/PrintAST/Expression/Format
+	*meta[T]
+}
+
+func assignMeta[T GoFileMetaTypeConstraints]() {
+	var fileAST *ast.File
+	_ = &GoFileMeta[T]{
+		// // newMeta(fileAST) 推导为 *meta[*ast.File]
+		// // *meta[*ast.File] 无法赋值给 一个 *meta[T] 类型对象
+		// meta: newMeta(fileAST), // -> 这样不行
+
+		// 可以用如下方式：禁用类型推导明确指定类型
+		meta: newMeta[T](fileAST),
+	}
+}
+
+// 具有多个类型的类型约束 的 变量 无法断言为 任意一个约束的具体类型
+
+type ExampleStruct1 struct{}
+type ExampleStruct2 struct{}
+
+type ExampleMultiTypeConstraints interface {
+	*ExampleStruct1 | *ExampleStruct2
+}
+
+func TypeAssertMultiTypeConstraintsFoo[T ExampleMultiTypeConstraints](v T) {
+	// _ = v.(*ExampleStruct) -> 无法断言
+
+	// var _es1 *ExampleStruct1 = v // -> 无法赋值
+	// fmt.Printf("%v\n", _es1)
+
+	// var _es2 *ExampleStruct2 = v // -> 无法赋值
+	// fmt.Printf("%v\n", _es2)
+
+	// 可以用如下方式处理：通过转换成一个通用的接口然后在运行时断言
+	var i any = v
+	switch i.(type) {
+	case *ExampleStruct1:
+	case *ExampleStruct2:
+	}
 }

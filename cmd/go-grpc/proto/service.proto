@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = "./myservice";
+package myservice;
+
+message Point {
+  int32 latitude = 1;
+  int32 longitude = 2;
+}
+
+message RouteSummary {
+  // The number of points received.
+  int32 point_count = 1;
+
+  // The number of known features passed while traversing the route.
+  int32 feature_count = 2;
+
+  // The distance covered in metres.
+  int32 distance = 3;
+
+  // The duration of the traversal in seconds.
+  int32 elapsed_time = 4;
+}
+
+service RouteGuide {
+  rpc RecordRoute(stream Point) returns (RouteSummary) {}
+}

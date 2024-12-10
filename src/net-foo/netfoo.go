@@ -17,7 +17,10 @@ func CloseConnectorFoo(closedBy int) {
 	wg.Add(1)
 	ctx, canceler := context.WithCancel(context.Background())
 	go func(ctx context.Context) {
-		listener, _ := net.Listen("tcp", "127.0.0.1:6666")
+		listener, err := net.Listen("tcp", "127.0.0.1:6677")
+		if err != nil {
+			panic(err)
+		}
 		for {
 			connection, acceptError := listener.Accept()
 			if acceptError != nil {
