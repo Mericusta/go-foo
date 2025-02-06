@@ -27,24 +27,39 @@ func main() {
 		server1PublicJID = "server1_public@conference." + xmppHost
 		server2PublicJID = "server2_public@conference." + xmppHost
 		p1p2PrivateJID   = "p1p2_private@conference." + xmppHost
+		p1p3PrivateJID   = "p1p3_private@conference." + xmppHost
 	)
 
 	client1 := newXmppClient(jid1)
 	client2 := newXmppClient(jid2)
 
+	// 客户端1加入server1公共聊天房间，代表 server1
 	_, err = client1.JoinMUCNoHistory(server1PublicJID, "server1_delegate")
 	if err != nil {
 		panic(err)
 	}
+	// 客户端2加入server2公共聊天房间，代表 server2
 	_, err = client2.JoinMUCNoHistory(server2PublicJID, "server2_delegate")
 	if err != nil {
 		panic(err)
 	}
+	// 客户端1加入 player1 player2 私人聊天房间，代表 player1
 	_, err = client1.JoinMUCNoHistory(p1p2PrivateJID, "s1p1_delegate")
 	if err != nil {
 		panic(err)
 	}
+	// 客户端2加入 player1 player2 私人聊天房间，代表 player2
 	_, err = client2.JoinMUCNoHistory(p1p2PrivateJID, "s2p2_delegate")
+	if err != nil {
+		panic(err)
+	}
+	// 客户端1加入 player1 player3 私人聊天房间，代表 player1
+	_, err = client1.JoinMUCNoHistory(p1p3PrivateJID, "s1p1_delegate")
+	if err != nil {
+		panic(err)
+	}
+	// 客户端1加入 player1 player3 私人聊天房间，代表 player3
+	_, err = client1.JoinMUCNoHistory(p1p3PrivateJID, "s1p3_delegate")
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +119,7 @@ func main() {
 	client1.Send(xmpp.Chat{
 		Remote: p1p2PrivateJID + "/" + "s2p2_delegate",
 		Type:   "chat",
-		Text:   "client1_send_to_p1p2_private",
+		Text:   "client1_send_to_p1p2_private_without_notify_s1p1",
 	})
 	fmt.Printf("client1 send again\n")
 	time.Sleep(time.Second)
@@ -116,6 +131,15 @@ func main() {
 		Text:   "client2_send_to_p1p2_private",
 	})
 	fmt.Printf("client2 send again\n")
+	time.Sleep(time.Second)
+	fmt.Println()
+
+	client1.Send(xmpp.Chat{
+		Remote: p1p3PrivateJID,
+		Type:   "groupchat",
+		Text:   "client1_send_to_p1p3_private",
+	})
+	fmt.Printf("client1 send again\n")
 	time.Sleep(time.Second)
 	fmt.Println()
 
