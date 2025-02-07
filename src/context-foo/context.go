@@ -618,3 +618,50 @@ func contextTreeControl() {
 	<-timer.C
 	rootCanceler()
 }
+
+// oneCallStackUseContext 同一个调用栈逻辑中（单协程）使用 context 做中断控制
+// - 参考自 go-v1.23@GOROOT/src/net/dial.go@sysDialer.dialSerial line 593 ~ 597
+// - 思路是利用 select-case-default 在若干次逻辑调用中不停地判断是否需要中断
+func oneCallStackUseContext() {
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+
+	// 假设存在一个超时 ctx
+	ctx, canceler := context.WithTimeout(context.Background(), time.Minute)
+
+	// 主协程，调用栈内多次使用 ctx
+	go func(ctx context.Context) {
+		defer wg.Done()
+		for index := 0; index != 10; index++ {
+			select {
+			case <-ctx.Done():
+				fmt.Println("receive ctx.Done")
+				return
+			default:
+			}
+
+			// do something ...
+			fmt.Println("do something")
+			time.Sleep(time.Second)
+		}
+	}(ctx)
+
+	// 另外一个协程，控制结束
+	go func(ctx context.Context, canceler context.CancelFunc) {
+		// 1/10 概率直接结束，9/10 概率超时结束
+		defer canceler()
+		defer wg.Done()
+		for index := rand.Intn(100); index > 10; index = rand.Intn(100) {
+			select {
+			case <-ctx.Done():
+				fmt.Println("9/10 to cancel")
+				return
+			default:
+				time.Sleep(time.Second * 1)
+			}
+		}
+		fmt.Println("1/10 to cancel")
+	}(ctx, canceler)
+
+	wg.Wait()
+}
