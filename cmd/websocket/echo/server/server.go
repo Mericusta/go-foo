@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "10.8.8.43:8080", "http service address")
 
 var upgrader = websocket.Upgrader{} // use default options
 
@@ -31,7 +31,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
+		err = c.WriteMessage(mt, []byte("test message from server"))
 		if err != nil {
 			log.Println("write:", err)
 			break

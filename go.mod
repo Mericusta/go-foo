@@ -44,6 +44,7 @@ require (
 	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/gopacket v1.1.19 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect

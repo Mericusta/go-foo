@@ -1,0 +1,8 @@
+syntax = "proto3";
+option go_package = "./pb;pb";
+package pb;
+
+message DungeonFightRole {
+   uint64 PlayerRoleGUID = 1; // 玩家角色 GUID
+   int32 PresetRoleID = 2; // 预设角色 ID
+}

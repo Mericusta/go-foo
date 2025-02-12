@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "ws://192.168.2.203:6666/dial", "http service address")
+var addr = flag.String("addr", "ws://10.8.8.43:8080/echo", "http service address")
 
 func main() {
 	flag.Parse()
@@ -59,8 +59,8 @@ func main() {
 		select {
 		case <-done:
 			return
-		case t := <-ticker.C:
-			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
+		case <-ticker.C:
+			err := c.WriteMessage(websocket.TextMessage, []byte("test message from client"))
 			if err != nil {
 				log.Println("write:", err)
 				return
