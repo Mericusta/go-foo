@@ -438,5 +438,42 @@ func asyncAwaitInterruptRoutine() {
 }
 
 func selectCaseInterruptRoutine() {
+	var (
+		cancelSignal   bool = false
+		topOfStackFunc      = func() {
+			// 调用栈内多次判断是否需要中断
+			if cancelSignal { // 第一次判断
+				return
+			}
 
+			fmt.Println("do something ...")
+
+			if cancelSignal { // 第二次判断
+				return
+			}
+
+			fmt.Println("do something again ...")
+
+			if cancelSignal { // 第三次判断
+				return
+			}
+
+			fmt.Println("do something finally ...")
+		}
+		bottomOfStackFunc = func() { // 调用栈底层函数
+			// 中断方式1：函数内轮询，类似 select-case-ctx.Done
+			for {
+				if cancelSignal { // 是否需要中断
+					return
+				}
+
+				// 中断方式2：步进，类似断点调试
+				// 入栈
+				topOfStackFunc()
+			}
+		}
+	)
+
+	// 协程入口函数
+	bottomOfStackFunc()
 }
