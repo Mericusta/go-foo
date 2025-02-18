@@ -3,6 +3,7 @@ package goroutinefoo
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -314,4 +315,128 @@ func ConcurrentlyReadWriteMap() {
 	}
 
 	select {}
+}
+
+// interrupt routine 协程中断方式模拟
+// - mode
+// - 1: async/await
+// - 2: select/case
+func interruptRoutineFoo(mode int) {
+	switch mode {
+	case 1:
+		asyncAwaitInterruptRoutine()
+	case 2:
+		selectCaseInterruptRoutine()
+	}
+}
+
+func asyncAwaitInterruptRoutine() {
+	// 协程状态
+	type routineState int8
+	const (
+		routine_init       = iota // 协程初始化
+		routine_scheduling        // 协程调度中
+		routine_suspended         // 协程挂起中
+	)
+	// 协程 -> 屏蔽细节，每次调度都从函数入口处开始调度而不是从调用栈中间恢复
+	type routine struct {
+		state    routineState // 协程状态
+		callback func()       // 协程入口函数
+	}
+	// 协程初始化函数
+	initRoutine := func(r *routine) { // method -> func
+		// 初始化协程操作：分配栈内存等
+		// ...
+
+		// 设置协程状态：空闲
+		r.state = routine_scheduling
+	}
+	// 检查协程是否需要挂起
+	checkRoutineState := func(r *routine) routineState { // method -> func
+		// 检查是否阻塞等待
+		if rand.Intn(10) < 5 {
+			r.state = routine_suspended
+		} else {
+			r.state = routine_scheduling
+		}
+		return r.state
+	}
+	// 继续协程
+	continueRoutine := func(r *routine) { // method -> func
+		// 恢复调用栈，恢复栈内存
+		// ...
+	}
+	// 终止协程
+	interruptRoutine := func(r *routine) { // method -> func
+		// 清空调用栈，释放栈内存
+		// ...
+	}
+
+	// 协程调度器 -> 类似 GPM 的 P，负责切换协程状态
+	type routineManager struct {
+		toScheduleRoutine []*routine // 待调度的协程
+		toCancelRoutine   []*routine // 待中断的协程
+	}
+	// 协程调度函数
+	scheduleRoutine := func(rm *routineManager, r *routine) { // method -> func
+		if r != nil {
+			rm.toScheduleRoutine = append(rm.toScheduleRoutine, r)
+		}
+	}
+	// 取消调度协程
+	cancelRoutine := func(rm *routineManager, r *routine) { // method -> func
+		for _, _r := range rm.toCancelRoutine {
+			if _r == r {
+				return
+			}
+		}
+		toContinueRoutine := make([]*routine, 0, 16)
+		for _, _r := range rm.toScheduleRoutine {
+			if _r == r {
+				rm.toCancelRoutine = append(rm.toCancelRoutine, _r)
+			} else {
+				toContinueRoutine = append(toContinueRoutine, _r)
+			}
+		}
+		rm.toScheduleRoutine = toContinueRoutine
+	}
+	// 协程调度器运行运行函数
+	runRoutine := func(rm *routineManager) { // method -> func
+		ticker := time.NewTicker(time.Second) // 放大 CPU 调度间隔
+		for range ticker.C {
+			// async/await interrupt 机制：调度时检测是否需要取消调度
+			for _, _r := range rm.toCancelRoutine {
+				// 终止协程
+				interruptRoutine(_r)
+			}
+
+			// 继续调度剩下的协程：抢占式调度
+			for _, _r := range rm.toScheduleRoutine {
+				// 检查状态
+				rs := checkRoutineState(_r)
+				if rs == routine_scheduling {
+					continueRoutine(_r)
+				}
+			}
+		}
+	}
+	// 协程调度器实例
+	rm := &routineManager{toScheduleRoutine: make([]*routine, 0, 16), toCancelRoutine: make([]*routine, 0, 16)}
+
+	// 协程启动函数 -> await/go 关键字
+	awaitRoutine := func(rm *routineManager, f func()) *routine {
+		r := &routine{state: routine_init, callback: f} // 设置协程状态：协程初始化
+		initRoutine(r)
+		scheduleRoutine(rm, r)
+		return r
+	}
+
+	f := func() { fmt.Println("hello async/await") } // 协程入口函数
+	go runRoutine(rm)                                // 运行协程调度器
+	r := awaitRoutine(rm, f)                         // 创建并调度协程
+	cancelRoutine(rm, r)                             // 取消调度协程
+}
+
+func selectCaseInterruptRoutine() {
+
 }
