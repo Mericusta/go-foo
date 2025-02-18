@@ -622,45 +622,73 @@ func contextTreeControl() {
 // oneCallStackUseContext 同一个调用栈逻辑中（单协程）使用 context 做中断控制
 // - 参考自 go-v1.23@GOROOT/src/net/dial.go@sysDialer.dialSerial line 593 ~ 597
 // - 思路是利用 select-case-default 在若干次逻辑调用中不停地判断是否需要中断
-func oneCallStackUseContext() {
+func oneCallStackUseContext(cancelTS int) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
 	// 假设存在一个超时 ctx
 	ctx, canceler := context.WithTimeout(context.Background(), time.Minute)
 
-	// 主协程，调用栈内多次使用 ctx
-	go func(ctx context.Context) {
-		defer wg.Done()
-		for index := 0; index != 10; index++ {
+	var (
+		// 主协程调用栈顶层函数
+		topOfStackFunc = func(ctx context.Context) {
+			// 立刻检查一次是否需要取消
 			select {
 			case <-ctx.Done():
-				fmt.Println("receive ctx.Done")
+				fmt.Println("topStackFunc, receive ctx.Done")
 				return
 			default:
 			}
-
-			// do something ...
-			fmt.Println("do something")
-			time.Sleep(time.Second)
+			fmt.Println("topStackFunc, do something")
+			time.Sleep(time.Second * 3)
 		}
-	}(ctx)
+		// 主协程调用栈底层函数
+		bottomOfStackFunc = func(ctx context.Context) {
+			defer wg.Done()
+			time.Sleep(time.Second)
+
+			// 同栈内多次调用并检查是否需要中断
+			for index := 0; index != 10; index++ {
+				// 进入调用栈，立刻检查一次是否需要取消
+				select {
+				case <-ctx.Done():
+					fmt.Println("bottomOfStackFunc, receive ctx.Done")
+					return
+				default:
+				}
+
+				// 此处不取消，表示需要一直进行到下一个 context.Done 才取消
+				// 可以认为从此处开始到下一个 context.Done 之间是一个原子操作
+
+				// do something ...
+				fmt.Println("bottomOfStackFunc, do something")
+				time.Sleep(time.Second)
+			}
+
+			// 入栈
+			topOfStackFunc(ctx)
+
+			fmt.Println("bottomOfStackFunc, return")
+		}
+	)
+	// 主协程，调用栈内多次使用 ctx
+	go bottomOfStackFunc(ctx)
 
 	// 另外一个协程，控制结束
 	go func(ctx context.Context, canceler context.CancelFunc) {
-		// 1/10 概率直接结束，9/10 概率超时结束
 		defer canceler()
 		defer wg.Done()
-		for index := rand.Intn(100); index > 10; index = rand.Intn(100) {
-			select {
-			case <-ctx.Done():
-				fmt.Println("9/10 to cancel")
-				return
-			default:
-				time.Sleep(time.Second * 1)
-			}
+		for index := 0; index < cancelTS; index++ {
+			// select {
+			// case <-ctx.Done():
+			// 	fmt.Println("call cancel")
+			// 	return
+			// default:
+			// 	time.Sleep(time.Second * 1)
+			// }
+			time.Sleep(time.Second * 1)
 		}
-		fmt.Println("1/10 to cancel")
+		fmt.Println("cancel")
 	}(ctx, canceler)
 
 	wg.Wait()

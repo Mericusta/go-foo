@@ -400,7 +400,7 @@ func asyncAwaitInterruptRoutine() {
 		}
 		rm.toScheduleRoutine = toContinueRoutine
 	}
-	// 协程调度器运行运行函数
+	// 协程调度器运行函数
 	runRoutine := func(rm *routineManager) { // method -> func
 		ticker := time.NewTicker(time.Second) // 放大 CPU 调度间隔
 		for range ticker.C {

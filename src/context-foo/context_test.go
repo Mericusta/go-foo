@@ -190,17 +190,34 @@ func Test_contextTreeControl(t *testing.T) {
 }
 
 func Test_oneCallStackUseContext(t *testing.T) {
+	type args struct {
+		cancelTS int
+	}
 	tests := []struct {
 		name string
+		args args
 	}{
 		// TODO: Add test cases.
 		{
-			"test case 1",
+			"test case 1: cancel immediately without running bottomOfStackFunc",
+			args{cancelTS: -1},
+		},
+		{
+			"test case 2: cancel on bottomOfStackFunc after running 2 times",
+			args{cancelTS: 2},
+		},
+		{
+			"test case 3: cancel on topOfStackFunc",
+			args{cancelTS: 10},
+		},
+		{
+			"test case 4: no cancel",
+			args{cancelTS: 15},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			oneCallStackUseContext()
+			oneCallStackUseContext(tt.args.cancelTS)
 		})
 	}
 }
