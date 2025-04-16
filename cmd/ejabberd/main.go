@@ -144,6 +144,31 @@ func main() {
 	fmt.Println()
 
 	time.Sleep(time.Second)
+
+	query := fmt.Sprintf(`
+	<iq type='set' id='%v'>
+		<query xmlns='urn:xmpp:mam:2'>
+			<x xmlns='jabber:x:data' type='submit'>
+				<field var='FORM_TYPE' type='hidden'>
+					<value>urn:xmpp:mam:2</value>
+				</field>
+				<field var='with'>
+					<value>%v</value>
+				</field>
+				<field var='start'>
+					<value>2024-01-01T00:00:00Z</value>
+				</field>
+			</x>
+		</query>
+	</iq>
+	`, time.Now().UnixNano(), client1.JID())
+
+	_, err = client1.SendOrg(query)
+	if err != nil {
+		panic(err)
+	}
+
+	time.Sleep(time.Second * 10)
 }
 
 func newXmppClient(jid string) *xmpp.Client {

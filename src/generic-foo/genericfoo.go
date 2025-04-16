@@ -343,3 +343,36 @@ func TypeAssertMultiTypeConstraintsFoo[T ExampleMultiTypeConstraints](v T) {
 	case *ExampleStruct2:
 	}
 }
+
+// --------
+
+// 此段golang代码在1.23版本能够编译，在1.24则编译不通过，是为什么？ - 知乎
+// https://www.zhihu.com/question/15143142502
+
+type Set[E comparable] map[E]struct{}
+
+func NewSet[E comparable](cap int) Set[E] { return make(map[E]struct{}, cap) }
+
+func (s Set[E]) AppendSelf(element E) Set[E] {
+	s[element] = struct{}{}
+	return s
+}
+
+type FromIterator[E, ES any] interface {
+	AppendSelf(E) ES
+}
+
+func Map[T, R any, RS FromIterator[R, RS]](ts []T, fn func(T) R, toFn func(int) RS) RS {
+	rs := toFn(len(ts))
+	for _, t := range ts {
+		rs = rs.AppendSelf(fn(t))
+	}
+	return rs
+}
+
+func SetFoo() {
+	s := []int{1, 2, 3, 4, 5, 6}
+	set := Map(s, func(t int) int { return t + 1 }, NewSet[int])
+	// set := Map(s, func(t int) int { return t + 1 }, NewSet) // can not infer RS
+	fmt.Println(set)
+}

@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.3
 
 require (
-	github.com/Mericusta/go-stp v0.8.11
+	github.com/Mericusta/go-stp v0.8.16
 	github.com/charmbracelet/bubbletea v0.26.3
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/coocood/freecache v1.2.3
