@@ -23,9 +23,6 @@ var (
 
 // ModuleTimingWheel 时间轮模块
 type ModuleTimingWheel struct {
-	// 组合基础模块
-	sgs.ModuleBase
-
 	uidGenerator     int                 // ID 生成器
 	rounds           []*timingWheelRound // 时间刻度
 	pointer          *timingWheelPointer // 时间轮的指针
@@ -34,16 +31,9 @@ type ModuleTimingWheel struct {
 
 var Service *ModuleTimingWheel
 
-func (*ModuleTimingWheel) New(mos ...sgs.ModuleOption) *ModuleTimingWheel {
+func (*ModuleTimingWheel) New() *ModuleTimingWheel {
 	mtw := &ModuleTimingWheel{}
-	for _, mo := range mos {
-		mo(mtw)
-	}
 	return mtw
-}
-
-func (*ModuleTimingWheel) WithTimingWheelRound(twr *timingWheelRound) sgs.ModuleOption {
-	return func(m sgs.Module) { m.(*ModuleTimingWheel).rounds = append(m.(*ModuleTimingWheel).rounds, twr) }
 }
 
 // 时间轮有精度问题，可以通过添加更高精度的时间轮盘来解决
@@ -68,7 +58,7 @@ func (*ModuleTimingWheel) WithTimingWheelRound(twr *timingWheelRound) sgs.Module
 // - 要解决以上问题，可以提供一个 recycle 行为模式，将 执行行为 和 添加行为 包装在一起，从而使得 round/counter 没有差值
 
 func (mtw *ModuleTimingWheel) Mounted() {
-	mtw.Logger().Debug("OBSERVE: Mounted, mount series timing wheel rounds", zap.Any("roundsCount", len(mtw.rounds)))
+	zap.L().Info("OBSERVE: Mounted, mount series timing wheel rounds", zap.Any("roundsCount", len(mtw.rounds)))
 
 	if len(mtw.rounds) == 0 {
 		// 没有指定轮盘刻度
