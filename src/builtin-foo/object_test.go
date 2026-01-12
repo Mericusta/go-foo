@@ -320,3 +320,19 @@ func Test_TConvertObjectToByteArray_b3541ecaa67f47e73394172a8534703e(t *testing.
 		})
 	}
 }
+
+func Test_flayWeightFoo(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flayWeightFoo()
+		})
+	}
+}

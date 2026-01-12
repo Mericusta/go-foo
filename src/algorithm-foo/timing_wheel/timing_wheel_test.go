@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type tickBehavior struct {
+	uid string
+}
+
 func Test_timingWheel(t *testing.T) {
 	// 新建一个时间轮
 	timingWheel := Service.New()

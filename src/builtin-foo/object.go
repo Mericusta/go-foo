@@ -477,3 +477,29 @@ func ConvertStringToStringStruct2(s string) *stringStruct {
 
 	return *(**stringStruct)(unsafe.Pointer(&b))
 }
+
+func flayWeightFoo() {
+	type FlyWeightObject struct {
+		Color string
+		Bold  bool
+	}
+
+	type UseFlyWeightObject struct {
+		flyWeight *FlyWeightObject
+		shape     string
+	}
+
+	flyWeight := &FlyWeightObject{Color: "red", Bold: true}
+	useFlyWeightObjects := make([]UseFlyWeightObject, 10)
+	for index := 0; index != 10; index++ {
+		useFlyWeightObjects[index].flyWeight = flyWeight
+		useFlyWeightObjects[index].shape = fmt.Sprintf("circle_r%v", index+1)
+	}
+	for _, obj := range useFlyWeightObjects {
+		fmt.Printf("before change color, %v color is %v, bold is %v\n", obj.shape, obj.flyWeight.Color, obj.flyWeight.Bold)
+	}
+	flyWeight.Color, flyWeight.Bold = "blue", false
+	for _, obj := range useFlyWeightObjects {
+		fmt.Printf("after change color, %v color is %v, bold is %v\n", obj.shape, obj.flyWeight.Color, obj.flyWeight.Bold)
+	}
+}

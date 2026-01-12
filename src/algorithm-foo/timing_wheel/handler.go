@@ -1,9 +1,8 @@
 package moduleTimingWheel
 
 import (
+	"context"
 	"time"
-
-	"github.com/Mericusta/go-sgs"
 )
 
 // 使用接口的方式防止具体逻辑中直接引用该包
@@ -11,7 +10,7 @@ import (
 type ITickHandler interface {
 	Delay() time.Duration
 	Update(time.Duration)
-	Trigger(sgs.IModuleEventContext, ...any)
+	Trigger(context.Context, ...any)
 
 	// 调试接口
 	String() string
