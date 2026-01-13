@@ -151,3 +151,22 @@ func ReadComplexDataStructConcurrently(c, s int) {
 		fmt.Printf("i %v, v %+v\n", i, m[i])
 	}
 }
+
+func forRangeMapFoo() int {
+	m := map[int]bool{
+		1: true,
+		2: false,
+		3: true,
+		4: false,
+	}
+	newMap := make(map[int]bool)
+	for k, v := range m {
+		if v {
+			m[10+k] = true
+			newMap[10+k] = true
+		}
+	}
+	fmt.Println(m)
+	fmt.Println(newMap)
+	return len(newMap)
+}

@@ -98,3 +98,25 @@ func TestReadComplexDataStructConcurrently(t *testing.T) {
 		})
 	}
 }
+
+func Test_forRangeMapFoo(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			"test case 1",
+			4,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := forRangeMapFoo()
+			// TODO: update the condition below to compare got with tt.want.
+			if true {
+				t.Errorf("forRangeMapFoo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
