@@ -1,11 +1,9 @@
 package algorithmfoo
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
-	"github.com/Mericusta/go-stp"
 	"golang.org/x/exp/slices"
 )
 
@@ -125,38 +123,38 @@ func match(player *player) *group {
 	return nil
 }
 
-func outputMatchLine() {
-	split()
-	// fmt.Printf("match line group count %v\n", len(matchLine))
-	for index, group := range matchLine {
-		players := make([]int, 0, len(group.players))
-		stp.NewArray(group.players).ForEach(func(v *player, i int) {
-			players = append(players, v.score)
-		})
-		_ = index
-		// fmt.Printf("group %v, players %v\n", index, players)
-	}
-	split()
-}
+// func outputMatchLine() {
+// 	split()
+// 	// fmt.Printf("match line group count %v\n", len(matchLine))
+// 	for index, group := range matchLine {
+// 		players := make([]int, 0, len(group.players))
+// 		stp.NewArray(group.players).ForEach(func(v *player, i int) {
+// 			players = append(players, v.score)
+// 		})
+// 		_ = index
+// 		// fmt.Printf("group %v, players %v\n", index, players)
+// 	}
+// 	split()
+// }
 
-func outputMatchDoneGroup(group *group) {
-	split()
-	players := make([]int, 0, len(group.players))
-	stp.NewArray(group.players).ForEach(func(v *player, i int) {
-		players = append(players, v.score)
-	})
-	matchDoneCount++
-	fmt.Printf("match done group players %v, match done count %v, release group %v\n", players, matchDoneCount, len(matchLine))
-	split()
-}
+// func outputMatchDoneGroup(group *group) {
+// 	split()
+// 	players := make([]int, 0, len(group.players))
+// 	stp.NewArray(group.players).ForEach(func(v *player, i int) {
+// 		players = append(players, v.score)
+// 	})
+// 	matchDoneCount++
+// 	fmt.Printf("match done group players %v, match done count %v, release group %v\n", players, matchDoneCount, len(matchLine))
+// 	split()
+// }
 
-func matchFoo() {
-	for index := 0; index != playerCount; index++ {
-		player := generatePlayer()
-		matchDoneGroup := match(player)
-		if matchDoneGroup != nil {
-			outputMatchDoneGroup(matchDoneGroup)
-		}
-		outputMatchLine()
-	}
-}
+// func matchFoo() {
+// 	for index := 0; index != playerCount; index++ {
+// 		player := generatePlayer()
+// 		matchDoneGroup := match(player)
+// 		if matchDoneGroup != nil {
+// 			outputMatchDoneGroup(matchDoneGroup)
+// 		}
+// 		outputMatchLine()
+// 	}
+// }
